@@ -26,7 +26,7 @@ struct xdaqSourcePositionDataFormat {
 namespace hcaltb {
   
   void HcalTBSourcePositionDataUnpacker::unpack(const FEDRawData&  raw,
-						HcalSourcePositionData&    hspd) {
+						HcalSourcePositionData&    hspd) const {
 
     if (raw.size()<3*8) {
       throw cms::Exception("Missing Data") << "No data in the source position data block";
