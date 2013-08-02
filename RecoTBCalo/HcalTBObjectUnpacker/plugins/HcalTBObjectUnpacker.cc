@@ -6,7 +6,7 @@ using namespace std;
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBEventPosition.h"
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBTiming.h"
 #include "TBDataFormats/HcalTBObjects/interface/HcalTBBeamCounters.h"
-#include "RecoTBCalo/HcalTBObjectUnpacker/plugins/HcalTBObjectUnpacker.h"
+#include "RecoTBCalo/HcalTBObjectUnpacker/interface/HcalTBObjectUnpacker.h"
 #include "DataFormats/Common/interface/EDCollection.h"
 #include "DataFormats/Common/interface/Handle.h"
 #include "FWCore/Framework/interface/Selector.h"
@@ -61,7 +61,6 @@ using namespace std;
     if (tdcFed_ >= 0 || qadcFed_ >=0 ) {
       calibLines_.clear();
       if(calibFile_.size()>0){
-	
 	parseCalib();
 	//  printf("I got %d lines!\n",calibLines_.size());
 	if(calibLines_.size()==0)
@@ -81,7 +80,7 @@ using namespace std;
     if (doTiming_) produces<HcalTBTiming>();
 //    if (doBeamADC_) produces<HcalTBBeamCounters>();
     if (doBeamADC_) {produces<HcalTBBeamCounters>();qadcUnpacker_.setCalib(calibLines_);}
-//    if (doSourcePos_) produces<HcalSourcePositionData>();
+    if (doSourcePos_) produces<HcalSourcePositionData>();
     if(doTiming_||doEventPosition_)tdcUnpacker_.setCalib(calibLines_);
   }
 
@@ -163,11 +162,8 @@ void HcalTBObjectUnpacker::parseCalib(){
     printf("HcalTBObjectUnpacker cowardly refuses to parse a NULL file...\n"); 
     return;
   }
-
-  edm::FileInPath fip(calibFile_);
-  
  
-  ifstream infile(fip.fullPath().c_str());
+  ifstream infile(calibFile_.c_str());
 
   char buffer [1024];
   string tmpStr;
@@ -200,8 +196,3 @@ void HcalTBObjectUnpacker::parseCalib(){
   infile.close();
   return;
 }
-
-#include "FWCore/PluginManager/interface/ModuleDef.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-
-DEFINE_FWK_MODULE(HcalTBObjectUnpacker);
