@@ -21,7 +21,7 @@ public:
   inline double driverId() const { return driverId_; }
   inline double sourceId() const { return sourceId_; }
   inline std::string tubeNameFromCoord() const { return tubeNameFromCoord_; }
-  inline std::string tubeNameFromSD() const { return tubeNameFromSD_; }
+  inline std::string tubeDescriptionFromSD() const { return tubeDescriptionFromSD_; }
   inline std::string lastCommand() const { return lastCommand_; }
   inline std::string message() const { return message_; }
 
@@ -38,11 +38,10 @@ public:
 		 double reel_counter,
 		 double motor_current,
 		 double motor_voltage,
-		 double tube_id,
 		 double driver_id,
      double source_id,
      std::string tubeNameFromCoord,
-     std::string tubeNameFromSD,
+     std::string tubeDescriptionFromSD,
      std::string lastCommand,
      std::string message);
 
@@ -61,7 +60,7 @@ private:
   double driverId_;
   double sourceId_;
   std::string tubeNameFromCoord_;
-  std::string tubeNameFromSD_;
+  std::string tubeDescriptionFromSD_;
   std::string lastCommand_;
   std::string message_;
 };
