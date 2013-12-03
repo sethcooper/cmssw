@@ -42,12 +42,12 @@ namespace hcaltb {
     map<string,double> sp_dblmap;
     map<string,string> sp_strmap;
 
-    #ifdef DEBUG
-    cout << "#doubles = "   << sp->n_doubles << endl;;
-    cout << "#strings = "   << sp->n_strings << endl;
-    cout << "key_length = " << sp->key_length << endl;
-    cout << "string_value_length = " << sp->string_value_length << endl;
-    #endif
+    //#ifdef DEBUG
+    //cout << "#doubles = "   << sp->n_doubles << endl;;
+    //cout << "#strings = "   << sp->n_strings << endl;
+    //cout << "key_length = " << sp->key_length << endl;
+    //cout << "string_value_length = " << sp->string_value_length << endl;
+    //#endif
 
     // List of doubles:
     const char   *keyptr = &sp->start_of_data;
@@ -55,9 +55,9 @@ namespace hcaltb {
       (const double *)(&sp->start_of_data + sp->n_doubles*sp->key_length);
 
     for (int i=0; i<sp->n_doubles; i++) {
-      #ifdef DEBUG
-      cout << keyptr << " = " << *valptr << endl;
-      #endif
+      //#ifdef DEBUG
+      //cout << keyptr << " = " << *valptr << endl;
+      //#endif
       sp_dblmap[keyptr] = *valptr;
       keyptr += sp->key_length;
       valptr++;
@@ -68,9 +68,9 @@ namespace hcaltb {
     const char *strptr = (keyptr + sp->n_strings*sp->key_length);
 
     for (int i=0; i<sp->n_strings; i++) {
-      #ifdef DEBUG
-      cout << keyptr << " = " << strptr << endl;
-      #endif
+      //#ifdef DEBUG
+      //cout << keyptr << " = " << strptr << endl;
+      //#endif
       sp_strmap[keyptr] = strptr;
       keyptr += sp->key_length;
       strptr += sp->string_value_length;
