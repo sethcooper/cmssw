@@ -42,7 +42,7 @@ process.HSCPTuplePath = cms.Path()
 if(not isSkimmedSample):
    process.nEventsBefSkim  = cms.EDProducer("EventCountProducer")
 
-   process.load('Configuration.Skimming.PDWG_EXOHSCP_cff')
+#   process.load('Configuration.Skimming.PDWG_EXOHSCP_cff')
    process.load('HLTrigger.HLTfilters.hltHighLevel_cfi')
    process.HSCPTrigger = process.hltHighLevel.clone()
    process.HSCPTrigger.TriggerResultsTag = cms.InputTag( "TriggerResults", "", "HLT" )
@@ -65,38 +65,30 @@ if(not isSkimmedSample):
    else:
       #do not apply trigger filter on signal
       process.HSCPTrigger.HLTPaths = ["*"]  
-
-
-
    
-   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger + process.exoticaHSCPSeq
+#   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger + process.exoticaHSCPSeq
+   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger
 
 ########################################################################
 
 #Run the HSCP EDM-tuple Sequence on skimmed sample
 process.nEventsBefEDM   = cms.EDProducer("EventCountProducer")
-process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducerFromSkim_cff") 
+process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff") 
 process.HSCPTuplePath += process.nEventsBefEDM + process.HSCParticleProducerSeq
 
 ########################################################################  
 # Only for MC samples, save skimmed genParticles
 
 if(isSignal or isBckg):
-   process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
    process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
-   process.allGenParticles = cms.EDProducer("GenParticleProducer",
-        saveBarCodes = cms.untracked.bool(False),
-        src = cms.InputTag("generator"),
-        abortOnUnknownPDGCode = cms.untracked.bool(False)
-   )
-   process.genParticles = cms.EDFilter("GenParticleSelector",
+   process.genParticlesSkimmed = cms.EDFilter("GenParticleSelector",
         filter = cms.bool(False),
-        src = cms.InputTag("allGenParticles"),
-        cut = cms.string('charge != 0 & pt > 5.0'),
+        src = cms.InputTag("genParticles"),
+        cut = cms.string('pt > 5.0'),
         stableOnly = cms.bool(True)
    )
 
-   process.HSCPTuplePath += process.allGenParticles + process.genParticles
+   process.HSCPTuplePath += process.genParticlesSkimmed
 
 ########################################################################
 
@@ -108,39 +100,30 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep LumiSummary_*_*_*",
          "keep edmMergeableCounter_*_*_*",
          "keep GenRunInfoProduct_*_*_*",
-         "keep *_genParticles_*_HSCPAnalysis",
          "keep GenEventInfoProduct_generator_*_*",
+         "keep *_genParticlesSkimmed_*_*",
          "keep *_offlinePrimaryVertices_*_*",
-         "keep SiStripClusteredmNewDetSetVector_generalTracksSkim_*_*",
-         "keep SiPixelClusteredmNewDetSetVector_generalTracksSkim_*_*",
-         "keep *_TrackRefitter_*_*",
+         "keep *_generalTracks_*_*",
          "keep *_standAloneMuons_*_*",
          "keep *_globalMuons_*_*",  
-         "keep *_muonsSkim_*_*",
+         "keep *_refittedStandAloneMuons_*_*",
+         "keep recoMuons_muons_*_*",
+         "keep recoMuonTimeExtraedmValueMap_muons_*_*",
          "keep edmTriggerResults_TriggerResults_*_*",
-         "keep *_ak5PFJetsPt15__*", 
+         "keep *_ak4PFJetsCHS__*", 
          "keep recoPFMETs_pfMet__*",     
          "keep *_HSCParticleProducer_*_*",
          "keep *_HSCPIsolation01__*",
          "keep *_HSCPIsolation03__*",
          "keep *_HSCPIsolation05__*",
-         "keep *_dedx*_*_HSCPAnalysis",
-         "keep *_muontiming_*_HSCPAnalysis",
+         "keep *_dedxHitInfo*_*_*",
          "keep triggerTriggerEvent_hltTriggerSummaryAOD_*_*",
-         "keep *_RefitMTSAMuons_*_*",
-         "keep *_MTMuons_*_*",
-         "keep *_MTSAMuons_*_*",
-         "keep *_MTmuontiming_*_*",
-         "keep *_refittedStandAloneMuons_*_*",
          "keep *_offlineBeamSpot_*_*",
-         "drop *_offlineBeamSpot_*_HSCPAnalysis", #no need to save the BS from this process
          "keep *_MuonSegmentProducer_*_*",
-         "drop TrajectorysToOnerecoTracksAssociation_TrackRefitter__",
-         "drop recoTrackExtras_*_*_*",
-         "keep recoTrackExtras_TrackRefitter_*_*",
-         "drop TrackingRecHitsOwned_*Muon*_*_*",
          "keep *_g4SimHits_StoppedParticles*_*",
-         "keep PileupSummaryInfos_addPileupInfo_*_*"
+         "keep PileupSummaryInfos_addPileupInfo_*_*",
+         "drop TrackingRecHitsOwned_refittedStandAloneMuons_*_*", #don't think this is needed
+         "drop TrackingRecHitsOwned_standAloneMuons_*_*",  #don't think this is needed
     ),
     fileName = cms.untracked.string('HSCP.root'),
     SelectEvents = cms.untracked.PSet(
@@ -150,7 +133,7 @@ process.Out = cms.OutputModule("PoolOutputModule",
 
 if(isBckg or isData):
    process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')
-
+   process.Out.outputCommands.extend(["drop triggerTriggerEvent_hltTriggerSummaryAOD_*_*"])
 
 ########################################################################
 
