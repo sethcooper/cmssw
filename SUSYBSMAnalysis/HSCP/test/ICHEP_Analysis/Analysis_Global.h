@@ -36,18 +36,24 @@
 
 double IntegratedLuminosity7TeV = 5003;
 double IntegratedLuminosity8TeV = 18823;
+double IntegratedLuminosity13TeV = 5000;
 
 #ifdef ANALYSIS2011
 double               SQRTS          = 7;
 int                  RunningPeriods = 2;
 double               IntegratedLuminosity = IntegratedLuminosity7TeV; 
 double               IntegratedLuminosityBeforeTriggerChange = 409.91; 
-#else
+#elif ANALYSIS2012
 double               SQRTS          = 8;
 int                  RunningPeriods = 1;
 double               IntegratedLuminosity = IntegratedLuminosity8TeV;
 double               IntegratedLuminosityBeforeTriggerChange = 0;
 double               IntegratedLuminosityHigherMETThreshold = 698.991;
+#else
+double               SQRTS          = 13;
+int                  RunningPeriods = 1;
+double               IntegratedLuminosity = IntegratedLuminosity13TeV;
+double               IntegratedLuminosityBeforeTriggerChange = 0;
 #endif
 
 string IntegratedLuminosityFromE(double SQRTS_){
@@ -182,15 +188,15 @@ void InitBaseDirectory(){
 
    // BaseDirectory is defined as a function of the host you are running on
    if(host.find("ucl.ac.be")!=std::string::npos){
-      //BaseDirectory = "/storage/data/cms/users/quertenmont/HSCP/CMSSW_4_2_3/11_11_01/";
-      BaseDirectory = "/storage/data/cms/users/quertenmont/HSCP/CMSSW_4_2_8/12_08_16/";
+      BaseDirectory = "/storage/data/cms/users/quertenmont/HSCP/CMSSW_4_2_8/12_08_16/"; //for run1
    }else if(host.find("cern.ch")!=std::string::npos){
       //BaseDirectory = "rfio:/castor/cern.ch/user/r/rybinska/HSCPEDMFiles/";
-      BaseDirectory = "root://eoscms//eos/cms/store/cmst3/user/querten/12_08_30_HSCP_EDMFiles/";
+      //BaseDirectory = "root://eoscms//eos/cms/store/cmst3/user/querten/12_08_30_HSCP_EDMFiles/";    //for run1
+      BaseDirectory = "root://eoscms//eos/cms/store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/";  //for run2
    }else if(host.find("fnal.gov")!=std::string::npos){
-     BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/lpchscp/2012HSCPEDMFiles/";
+     BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/lpchscp/2012HSCPEDMFiles/"; //for run1
    }else{
-      BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/venkat12/2012Data/";
+      BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/venkat12/2012Data/";  //for run1
       printf("YOUR MACHINE (%s) IS NOT KNOW --> please add your machine to the 'InitBaseDirectory' function of 'Analysis_Global.h'\n", host.c_str());
       printf("HOST=%s  USER=%s\n",host.c_str(), analyst.c_str());
       printf("In the mean time, the directory containing the HSCP EDM file is assumed to be %s\n",BaseDirectory.c_str());

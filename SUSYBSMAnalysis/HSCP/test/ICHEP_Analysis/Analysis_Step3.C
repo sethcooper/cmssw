@@ -19,6 +19,7 @@ namespace reweight{ class PoissonMeanShifter;}
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCParticle.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPIsolation.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/HSCPDeDxInfo.h"
+#include "DataFormats/TrackReco/interface/DeDxHitInfo.h"
 #include "AnalysisDataFormats/SUSYBSMObjects/interface/MuonSegment.h"
 #include "DataFormats/MuonReco/interface/MuonTimeExtraMap.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
@@ -239,7 +240,13 @@ void Analysis_Step3(string MODE="COMPILE", int TypeMode_=0, string dEdxSel_=dEdx
    for(int i=0; i<60; ++i) BgLumiMC    .push_back(Pileup_MC_Fall11[i]);
    for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2011_f[i]);
    for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2011_XSecShiftUp_f[i]);
-#else
+#elif ANALYSIS2012
+   if(samples[0].Pileup=="S10"){   for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
+   }else{                          for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
+   }
+   for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2012_f[i]);
+   for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2012_XSecShiftUp_f[i]);
+#else //FIXME for 2015.: currently use a copy of 2012 stuff
    if(samples[0].Pileup=="S10"){   for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
    }else{                          for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
    }
@@ -258,9 +265,11 @@ void Analysis_Step3(string MODE="COMPILE", int TypeMode_=0, string dEdxSel_=dEdx
 }
 
 
+
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
 {
+/*
       edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
       if(!tr.isValid())return false;
 
@@ -307,7 +316,11 @@ bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
 	   }
       #endif
       return false;
+*/
+//LQ
+    return true;
 }
+
 
 // check if one HSCP candidate is passing the preselection (the function also has many more arguments because it is used to fill some histograms AND to evaluate the systematics
 double OpenAngle = -1; //global variable needed by PassPreselection... Ugly isn't it?!
@@ -679,12 +692,12 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
 	  }
    }
    if(st){st->Basic  ->Fill(0.0,Event_Weight);}
+
    return true;
 }
 
 // check if one HSCP candidate is passing the selection (the function also has many more arguments because it is used to fill some histograms AND to evaluate the systematics
 bool PassSelection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const fwlite::ChainEvent& ev, const int& CutIndex, stPlots* st, const bool isFlip, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT){
-
    reco::TrackRef   track;
    if(TypeMode!=3) track = hscp.trackRef();
    else {
@@ -751,9 +764,9 @@ bool PassSelection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedx
           st->AS_TOFIs->Fill(CutIndex,MuonTOF     ,Is,Event_Weight);
           st->AS_TOFIm->Fill(CutIndex,MuonTOF     ,Ih,Event_Weight);
    }
-
    return true;
 }
+
 
 // all code for the filling of the ABCD related histograms --> this information will be used later in Step4 for the actual datadriven prediction
 void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, stPlots* st){
@@ -964,6 +977,7 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
          }
 }
 
+
 // Looping on all events, tracks, selection and check how many events are entering the mass distribution
 void Analysis_Step3(char* SavePath)
 {
@@ -987,7 +1001,7 @@ void Analysis_Step3(char* SavePath)
             dEdxTemplates = loadDeDxTemplate("../../data/Discrim_Templates_MC_2012.root"); //2012 tempaltes can be used after the rescale
             dEdxSF = 1.14;
          }
-      #else
+      #elif ANALYSIS2012
          if(isData){
             dEdxTemplates = NULL;
             dEdxSF = 1.00;
@@ -997,6 +1011,9 @@ void Analysis_Step3(char* SavePath)
             dEdxTemplates = loadDeDxTemplate("../../data/Discrim_Templates_MC_2012.root");
             dEdxSF = 1.05;
          }
+      #else //FIXME currently no rescale
+         dEdxTemplates = NULL;
+         dEdxSF = 1.00;
       #endif
 
 
@@ -1143,30 +1160,25 @@ void Analysis_Step3(char* SavePath)
             if(isSignal){if(HSCPGenBeta1>=0)SamplePlots->Beta_Triggered->Fill(HSCPGenBeta1, Event_Weight); if(HSCPGenBeta2>=0)SamplePlots->Beta_Triggered->Fill(HSCPGenBeta2, Event_Weight);}
 
             //load all event collection that will be used later on (HSCP COll, dEdx and TOF)
-            fwlite::Handle<susybsm::HSCParticleCollection> hscpCollHandle;
-            hscpCollHandle.getByLabel(ev,"HSCParticleProducer");
-            //if(!hscpCollHandle.isValid()){printf("HSCP Collection NotFound\n");continue;}
-            if(!hscpCollHandle.isValid())continue;
-            const susybsm::HSCParticleCollection& hscpColl = *hscpCollHandle;
+            fwlite::Handle<susybsm::HSCParticleCollection> hscpCollH;
+            hscpCollH.getByLabel(ev,"HSCParticleProducer");
+            if(!hscpCollH.isValid()){printf("HSCParticle Collection NotFound\n");continue;}
+            const susybsm::HSCParticleCollection& hscpColl = *hscpCollH;
 
-            fwlite::Handle<DeDxDataValueMap> dEdxSCollH;
-            dEdxSCollH.getByLabel(ev, dEdxS_Label.c_str());
-            if(!dEdxSCollH.isValid()){printf("Invalid dEdx Selection collection\n");continue;}
-
-            fwlite::Handle<DeDxDataValueMap> dEdxMCollH;
-            dEdxMCollH.getByLabel(ev, dEdxM_Label.c_str());
-            if(!dEdxMCollH.isValid()){printf("Invalid dEdx Mass collection\n");continue;}
+            fwlite::Handle<DeDxHitInfoAss> dedxCollH;
+            dedxCollH.getByLabel(ev, "dedxHitInfo");
+            if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
 
             fwlite::Handle<MuonTimeExtraMap> TOFCollH;
-            TOFCollH.getByLabel(ev, "muontiming",TOF_Label.c_str());
+            TOFCollH.getByLabel(ev, "muons",TOF_Label.c_str());
             if(!TOFCollH.isValid()){printf("Invalid TOF collection\n");return;}
 
             fwlite::Handle<MuonTimeExtraMap> TOFDTCollH;
-            TOFDTCollH.getByLabel(ev, "muontiming",TOFdt_Label.c_str());
+            TOFDTCollH.getByLabel(ev, "muons",TOFdt_Label.c_str());
             if(!TOFDTCollH.isValid()){printf("Invalid DT TOF collection\n");return;}
 
             fwlite::Handle<MuonTimeExtraMap> TOFCSCCollH;
-            TOFCSCCollH.getByLabel(ev, "muontiming",TOFcsc_Label.c_str());
+            TOFCSCCollH.getByLabel(ev, "muons",TOFcsc_Label.c_str());
             if(!TOFCSCCollH.isValid()){printf("Invalid CSC TOF collection\n");return;}
 
             //reinitialize the bookeeping array for each event
@@ -1211,9 +1223,10 @@ void Analysis_Step3(char* SavePath)
                //load quantity associated to this track (TOF and dEdx)
 	       const DeDxData* dedxSObj = NULL;
 	       const DeDxData* dedxMObj = NULL;
+               const DeDxHitInfo* dedxHits = NULL;
 	       if(TypeMode!=3 && !track.isNull()) {
-		 dedxSObj  = &dEdxSCollH->get(track.key());
-		 dedxMObj  = &dEdxMCollH->get(track.key());
+                  DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());		 
+                  if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
 	       }
 
                const reco::MuonTimeExtra* tof = NULL;
@@ -1221,13 +1234,11 @@ void Analysis_Step3(char* SavePath)
                const reco::MuonTimeExtra* csctof = NULL;
               if(TypeMode>1 && !hscp.muonRef().isNull()){ tof  = &TOFCollH->get(hscp.muonRef().key()); dttof = &TOFDTCollH->get(hscp.muonRef().key());  csctof = &TOFCSCCollH->get(hscp.muonRef().key());}
 
-               //Recompute dE/dx on the fly
-               if(dedxSObj){
-                  dedxMObj = dEdxEstimOnTheFly(ev, track, dedxMObj, dEdxSF, false, useClusterCleaning);
-                  dedxSObj = dEdxOnTheFly(ev, track, dedxSObj, dEdxSF, dEdxTemplates, TypeMode==5, useClusterCleaning);
-
+               //Compute dE/dx on the fly
+               dedxMObj = computedEdx(dedxHits, dEdxSF, false, useClusterCleaning);
+               dedxSObj = computedEdx(dedxHits, dEdxSF, TypeMode==5, useClusterCleaning);
+//               dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, TypeMode==5, useClusterCleaning);
                   if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
-               }
 
                //compute systematic uncertainties on signal
                if(isSignal){
@@ -1238,9 +1249,14 @@ void Analysis_Step3(char* SavePath)
                   double MRescale = 1.036;
 		  double TRescale = -0.02; // added to the 1/beta value
 		  if(tof) if(csctof->nDof()==0) TRescale = -0.003;
-#else
+#elif ANALYSIS2012
                   bool   PRescale = true;
 //                  double IRescale = RNG->Gaus(0, 0.05)+0.05; // added to the Ias value
+                  double IRescale = 0.05; // added to the Ias value
+                  double MRescale = 1.03;
+		  double TRescale = -0.005; // added to the 1/beta value
+#else //FIXME to be measured on 2015 data, currently assume 2012
+                  bool   PRescale = true;
                   double IRescale = 0.05; // added to the Ias value
                   double MRescale = 1.03;
 		  double TRescale = -0.005; // added to the 1/beta value
@@ -1572,6 +1588,9 @@ double SegSep(const susybsm::HSCParticle& hscp, const fwlite::ChainEvent& ev, do
 
 //Counts the number of muon stations used in track fit only counting DT and CSC stations.
 int  muonStations(reco::HitPattern hitPattern) {
+  //LQ FIXME
+  return 0;
+/*
   int stations[4] = { 0,0,0,0 };
 
   for (int i=0; i<hitPattern.numberOfHits(); i++) {
@@ -1586,6 +1605,7 @@ int  muonStations(reco::HitPattern hitPattern) {
   }
 
   return stations[0]+stations[1]+stations[2]+stations[3];
+*/
 }
 
 double scaleFactor(double eta) {

@@ -8,25 +8,8 @@ import SUSYBSMAnalysis.HSCP.LaunchOnCondor as LaunchOnCondor
 import glob
 
 
-def skipSamples(type, name):
-   if(type==3):
-      if(name.find("Gluino")==-1 and name.find("Stop")==-1 and name.find("Stau")==-1 and name.find("o3")==-1):return True;
-   elif(type==4):
-      if(name.find("DY")==-1 or name.find("o3")>=0):return True;
-   elif(type==5):
-      if(name.find("DY")==-1 or (name.find("1o3")==-1 and name.find("2o3")==-1 and name.find("Q1")==-1)):return True;
-   
-   return False
-
-
 #the vector below contains the "TypeMode" of the analyses that should be run
-AnalysesToRun = [0,2,3,4,5]
-
-
-CMSSW_VERSION = os.getenv('CMSSW_VERSION','CMSSW_VERSION')
-if CMSSW_VERSION == 'CMSSW_VERSION':
-  print 'please setup your CMSSW environement'
-  sys.exit(0)
+AnalysesToRun = [0]#,2,3,4,5]
 
 
 if len(sys.argv)==1:
@@ -39,7 +22,24 @@ if len(sys.argv)==1:
         print "  5 - Run the exclusion plot macro                                   --> submitting              0 jobs"
 	sys.exit()
 
-elif sys.argv[1]=='0':	
+
+CMSSW_VERSION = os.getenv('CMSSW_VERSION','CMSSW_VERSION')
+if CMSSW_VERSION == 'CMSSW_VERSION':
+  print 'please setup your CMSSW environement'
+  sys.exit(0)
+
+
+def skipSamples(type, name):
+   if(type==3):
+      if(name.find("Gluino")==-1 and name.find("Stop")==-1 and name.find("Stau")==-1 and name.find("o3")==-1):return True;
+   elif(type==4):
+      if(name.find("DY")==-1 or name.find("o3")>=0):return True;
+   elif(type==5):
+      if(name.find("DY")==-1 or (name.find("1o3")==-1 and name.find("2o3")==-1 and name.find("Q1")==-1)):return True;
+   
+   return False
+
+if sys.argv[1]=='0':	
         print 'ANALYSIS'
         FarmDirectory = "FARM"
         JobName = "HscpAnalysis"

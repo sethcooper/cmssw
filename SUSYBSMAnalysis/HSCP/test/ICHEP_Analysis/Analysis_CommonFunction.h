@@ -567,6 +567,8 @@ bool IncreasedTreshold(const trigger::TriggerEvent& trEv, const edm::InputTag& I
 }
 
 reco::DeDxData* dEdxOnTheFly(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double scaleFactor=1.0, TH3* templateHisto=NULL, bool reverseProb=false, bool useClusterCleaning=true){
+//LQ
+/*
      fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
      dEdxHitsH.getByLabel(ev, "dedxHitInfo");
      if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
@@ -628,9 +630,13 @@ reco::DeDxData* dEdxOnTheFly(const fwlite::ChainEvent& ev, const reco::TrackRef&
 //                  dedxSObj = new DeDxData(1.0-dedxSObj->dEdx(), dedxSObj->numberOfSaturatedMeasurements(), dedxSObj->numberOfMeasurements());
 
      return new DeDxData(P, dedxSObj->numberOfSaturatedMeasurements(), size);
+*/
+     return new DeDxData(0.5, 0, 10);
 }
 
 reco::DeDxData* dEdxEstimOnTheFly(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=true){
+//LQ
+/*
      fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
      dEdxHitsH.getByLabel(ev, "dedxHitInfo");
      if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
@@ -674,6 +680,8 @@ reco::DeDxData* dEdxEstimOnTheFly(const fwlite::ChainEvent& ev, const reco::Trac
 //     printf(" : %f\n",result);
 
      return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
+*/
+     return new DeDxData(3.5, 0, 10);
 }
 
 
@@ -738,6 +746,8 @@ TH2F* loadDeDxTemplate2D(string path){
 
 
 TProfile2D* loadHOTEff(string path){
+//LQ
+/*
    TFile* InputFile = new TFile(path.c_str());
    TProfile2D* Eff_ = (TProfile2D*)GetObjectFromPath(InputFile, "signal");
    if(!Eff_){printf("dEdx HOT Efficiency in file %s can't be open\n", path.c_str()); exit(0);}
@@ -746,9 +756,13 @@ TProfile2D* loadHOTEff(string path){
    Eff->SetDirectory(0); 
    InputFile->Close();
    return Eff;
+*/
+   return NULL;
 }
 
 double dEdxHOT(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double threshold, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=false){
+//LQ
+/*
      fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
      dEdxHitsH.getByLabel(ev, "dedxHitInfo");
      if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
@@ -789,10 +803,14 @@ double dEdxHOT(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, cons
 //     printf(" : %f\n",result);
 
 //     return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
+*/
+    return 1.0;     
 }
 
 
 reco::DeDxData* dEdxHIPIX(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, unsigned int run, double scaleFactor=1.0, bool usePixel=true, bool useClusterCleaning=false, TH2D* histoToFill=NULL){
+//LQ
+/*
      fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
      dEdxHitsH.getByLabel(ev, "dedxHitInfo");
      if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
@@ -857,6 +875,9 @@ reco::DeDxData* dEdxHIPIX(const fwlite::ChainEvent& ev, const reco::TrackRef&   
 //     printf(" : %f\n",result);
 
      return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
+*/
+
+     return new DeDxData(3.5, 0, 10);
 }
 
 
@@ -864,6 +885,8 @@ reco::DeDxData* dEdxHIPIX(const fwlite::ChainEvent& ev, const reco::TrackRef&   
 
 
 double dEdxCS(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double threshold, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=false){
+//LQ
+/*
    double meanCS = 0; int N=0;
    for(unsigned int h=0;h<track->recHitsSize();h++){
         TrackingRecHit* recHit = (track->recHit(h))->clone();
@@ -880,12 +903,17 @@ double dEdxCS(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const
        }      
    }
    return (meanCS / N);
+*/
+   return 0.1;
 }
 
 
 
 
 reco::DeDxData* dEdxUpgradeDiscrim(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double beta, unsigned int run, double scaleFactor=1.0, bool usePixel=true, bool useStrip=false, TProfile2D* StripEffTemplate=NULL, TH2* PixelTemplate=NULL, TH3* StripTemplate=NULL, int NStripLay=3){
+//LQ
+
+/*
      fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
      dEdxHitsH.getByLabel(ev, "dedxHitInfo");
      if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
@@ -989,6 +1017,9 @@ reco::DeDxData* dEdxUpgradeDiscrim(const fwlite::ChainEvent& ev, const reco::Tra
 
      result = sqrt(result * resultStrip);    
      return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
+*/
+
+     return new DeDxData(0.5, 0, 10);
 }
 
 
@@ -1010,6 +1041,60 @@ double FastestHSCP(const fwlite::ChainEvent& ev){
    }
    return MaxBeta;
 }
+
+
+
+
+
+
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=true){
+     if(!dedxHits) return NULL;
+
+     std::vector<double> vect_charge;
+     for(unsigned int h=0;h<dedxHits->size();h++){
+        DetId detid(dedxHits->detId(h));  
+        if(!usePixel && detid.subdetId()<3)continue; // skip pixels
+//        if(useClusterCleaning && !hscpHitsInfo.shapetest[h])continue;  //FIXME to be enabled in fwlite code
+
+        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
+//        Norm*=10.0; //mm --> cm
+
+        //Remove hits close to the border  //FIXME to be activated in this code
+        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
+        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
+        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
+        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
+        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
+        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
+        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
+        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
+        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
+
+        vect_charge.push_back(scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h));
+     }
+     int size = vect_charge.size();
+
+     double result=0;
+
+     //harmonic 2 calculation
+     double expo = -2;
+     for(int i = 0; i< size; i ++){
+        result+=pow(vect_charge[i],expo); 
+     }
+     result = (size>0)?pow(result/size,1./expo):0.;
+
+     return new DeDxData(result, -1, size);  //Nsaturated must replace the -1 here
+}
+
+
+
+
+
+
+
+
+
+
 
 
 #endif
