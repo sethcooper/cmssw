@@ -309,103 +309,13 @@ void FindRangeBetweenTwoGraphs(TGraph* obs, TGraph* th, double Min, double Max, 
 }
 
 
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-// some functions that where defined in the nSigma.cc code of Greg Landsberg
-// v1.1, updated by Greg Landsberg 5/21/09
-//
-// This Root code computes the probability for the expectd background Bkgr with the FRACTIONAL
-// uncertainty sFfrac (i.e., B = Bkgr*(1 +/- sBfrac)) to fluctuate to or above the
-// observed number of events nobs
-//
-// To find 3/5 sigma evidence/discovery points, one should use nobs = int(<S+B>),
-// where <S+B> is the expected mean of the signal + background.
-//
-// Usage: nSigma(Double_t Bkgr, Int_t nobs, Double_t sBfrac) returns the one sided probability
-// of an upward backround fluctuations, expressed in Gaussian sigmas. It is suggested to run
-// this code in the compiled mode, i.e. .L nSigma.cc++
-//
-// 5 sigma corresponds to the p-value of 2.85E-7; 3 sigma corresponds to p-value of 1.35E-3
-//---------------------------------------------------------------------------------------------
-
-namespace nSigma{
-   Double_t nSigma(Double_t Bkgr, Int_t nobs, Double_t sBfrac);
-   Double_t Poisson(Double_t Mu, Int_t n);
-   Double_t PoissonAve(Double_t Mu, Int_t n, Double_t ErrMu);
-   Double_t Inner(Double_t *x, Double_t *par);
-   Double_t ErfcInverse(Double_t x);
-
-   static const Double_t Eps = 1.e-9;
-
-   Double_t nSigma(Double_t Bkgr, Int_t nobs, Double_t sBfrac) {
-           //caluculate poisson probability 
-           Double_t probLess = 0.;
-           Int_t i = nobs;
-           Double_t eps = 0;
-           do {
-                   eps = 2.*PoissonAve(Bkgr, i++, sBfrac*Bkgr);
-                   probLess += eps;
-           } while (eps > 0.);
-           return TMath::Sqrt(2.)*ErfcInverse(probLess);	
-   }
-
-   Double_t Poisson(Double_t Mu, Int_t n){
-           Double_t logP;
-           logP = -Mu + n*TMath::Log(Mu);
-           for (Int_t i = 2; i <= n; i++) logP -= TMath::Log((Double_t) i);
-           return TMath::Exp(logP);
-   }
-
-   Double_t PoissonAve(Double_t Mu, Int_t n, Double_t ErrMu) {
-           Double_t par[3], retval;
-           par[0]=Mu;  // background value
-           par[1]=ErrMu;  // background error
-           par[2]=n; // n
-           TF1 *in = new TF1("Inner",Inner,0.,Mu + 5.*ErrMu,3);   
-           Double_t low = Mu > 5.*ErrMu ? Mu - 5.*ErrMu : 0.;
-           if (ErrMu < Eps) {
-                   Double_t x[1];
-                   x[0] = Mu;
-                   par[1] = 1./sqrt(2.*TMath::Pi());
-                   retval = Inner(x,par);
-           } else retval = in->Integral(low,Mu+5.*ErrMu,par);
-           delete in;
-           return retval;
-   }
-
-   Double_t Inner(Double_t *x, Double_t *par){
-       Double_t B, sB;
-       B = par[0];
-       sB = par[1];
-       Int_t n = par[2];
-       return 1./sqrt(2.*TMath::Pi())/sB*exp(-(x[0]-B)*(x[0]-B)/2./sB/sB)*Poisson(x[0],n);
-   }
-
-   Double_t ErfcInverse(Double_t x){
-           Double_t xmin = 0., xmax = 20.;
-           Double_t sig = xmin;
-           if (x >=1) return sig;
-           do {
-                   Double_t erf = TMath::Erfc(sig);
-                   if (erf > x) {    xmin = sig;
-                                     sig = (sig+xmax)/2.;
-                   } else {          xmax = sig;
-                                     sig = (xmin + sig)/2.;
-                   }
-           } while (xmax - xmin > Eps);
-           return sig;
-   }
-
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Genertic code related to samples processing in FWLITE --> functions below will be loaded only if FWLITE compiler variable is defined
 
 #ifdef FWLITE
 double DistToHSCP        (const susybsm::HSCParticle& hscp, const std::vector<reco::GenParticle>& genColl, int& IndexOfClosest);
 int    HowManyChargedHSCP(const std::vector<reco::GenParticle>& genColl);
+double FastestHSCP       (const fwlite::ChainEvent& ev);
 void   GetGenHSCPBeta    (const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged=true);
 
 // compute the distance between a "reconstructed" HSCP candidate and the closest geenrated HSCP
@@ -459,6 +369,29 @@ void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& bet
       if(beta1<0){beta1=genColl[g].p()/genColl[g].energy();}else if(beta2<0){beta2=genColl[g].p()/genColl[g].energy();return;}
    }
 }
+
+double FastestHSCP(const fwlite::ChainEvent& ev){
+   fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
+   genCollHandle.getByLabel(ev, "genParticles");
+   if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");return -1;}
+   std::vector<reco::GenParticle> genColl = *genCollHandle;
+
+   double MaxBeta=-1;
+   for(unsigned int g=0;g<genColl.size();g++){
+      if(genColl[g].pt()<5)continue;
+      if(genColl[g].status()!=1)continue;
+      int AbsPdg=abs(genColl[g].pdgId());
+      if(AbsPdg<1000000 && AbsPdg!=17)continue;
+
+      double beta=genColl[g].p()/genColl[g].energy();
+      if(MaxBeta<beta)MaxBeta=beta;
+   }
+   return MaxBeta;
+}
+
+
+
+
 
 #include "TVector3.h"
 double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp){
@@ -521,169 +454,12 @@ class DuplicatesClass{
  
 
 #ifdef FWLITE
-bool IncreasedTreshold(const trigger::TriggerEvent& trEv, const edm::InputTag& InputPath, double NewThreshold, double etaCut, int NObjectAboveThreshold, bool averageThreshold)
-{
-   unsigned int filterIndex = trEv.filterIndex(InputPath);
-   //if(filterIndex<trEv.sizeFilters())printf("SELECTED INDEX =%i --> %s    XXX   %s\n",filterIndex,trEv.filterTag(filterIndex).label().c_str(), trEv.filterTag(filterIndex).process().c_str());
-
-   if (filterIndex<trEv.sizeFilters()){
-      const trigger::Vids& VIDS(trEv.filterIds(filterIndex));
-      const trigger::Keys& KEYS(trEv.filterKeys(filterIndex));
-      const int nI(VIDS.size());
-      const int nK(KEYS.size());
-      assert(nI==nK);
-      const int n(std::max(nI,nK));
-      const trigger::TriggerObjectCollection& TOC(trEv.getObjects());
 
 
-      if(!averageThreshold){
-         int NObjectAboveThresholdObserved = 0;
-         for (int i=0; i!=n; ++i) {
-	   if(TOC[KEYS[i]].pt()> NewThreshold && fabs(TOC[KEYS[i]].eta())<etaCut) NObjectAboveThresholdObserved++;
-            //cout << "   " << i << " " << VIDS[i] << "/" << KEYS[i] << ": "<< TOC[KEYS[i]].id() << " " << TOC[KEYS[i]].pt() << " " << TOC[KEYS[i]].eta() << " " << TOC[KEYS[i]].phi() << " " << TOC[KEYS[i]].mass()<< endl;
-         }
-         if(NObjectAboveThresholdObserved>=NObjectAboveThreshold)return true;
-
-      }else{
-         std::vector<double> ObjPt;
-
-         for (int i=0; i!=n; ++i) {
-            ObjPt.push_back(TOC[KEYS[i]].pt());
-            //cout << "   " << i << " " << VIDS[i] << "/" << KEYS[i] << ": "<< TOC[KEYS[i]].id() << " " << TOC[KEYS[i]].pt() << " " << TOC[KEYS[i]].eta() << " " << TOC[KEYS[i]].phi() << " " << TOC[KEYS[i]].mass()<< endl;
-         }
-         if((int)(ObjPt.size())<NObjectAboveThreshold)return false;
-         std::sort(ObjPt.begin(), ObjPt.end());
-
-         double Average = 0;
-         for(int i=0; i<NObjectAboveThreshold;i++){
-            Average+= ObjPt[ObjPt.size()-1-i];
-         }Average/=NObjectAboveThreshold;
-         //cout << "AVERAGE = " << Average << endl;
-
-         if(Average>NewThreshold)return true;
-      }
-   }
-   return false;
-}
-
-reco::DeDxData* dEdxOnTheFly(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double scaleFactor=1.0, TH3* templateHisto=NULL, bool reverseProb=false, bool useClusterCleaning=true){
-//LQ
-/*
-     fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
-     dEdxHitsH.getByLabel(ev, "dedxHitInfo");
-     if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
-     const ValueMap<HSCPDeDxInfo>& dEdxHitMap = *dEdxHitsH.product();
-
-     const HSCPDeDxInfo& hscpHitsInfo = dEdxHitMap.get((size_t)track.key());
-
-     std::vector<double> vect_probs;
-     for(unsigned int h=0;h<hscpHitsInfo.charge.size();h++){
-        DetId detid(hscpHitsInfo.detIds[h]);  
-        if(detid.subdetId()<3)continue; // skip pixels
-        if(useClusterCleaning && !hscpHitsInfo.shapetest[h])continue;
-
-        //Remove hits close to the border
-        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
-
-        double Prob = hscpHitsInfo.probability[h];
-
-        if(templateHisto){
-           int    BinX   = templateHisto->GetXaxis()->FindBin(50.0);//trajState.localMomentum().mag()); //our template does not depends on this variable currently
-           int    BinY   = templateHisto->GetYaxis()->FindBin(hscpHitsInfo.pathlength[h]);
-           int    BinZ   = templateHisto->GetZaxis()->FindBin(scaleFactor*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-           Prob          = templateHisto->GetBinContent(BinX,BinY,BinZ);
-        }
-
-        if(reverseProb)Prob = 1.0 - Prob;
-        vect_probs.push_back(Prob);
-     }
-     int size = vect_probs.size();
-
-     //Prod
-//     double P = 1;
-//     for(int i=0;i<size;i++){
-//        if(vect_probs[i]<=0.0001){P *= pow(0.0001       , 1.0/size);}
-//        else                     {P *= pow(vect_probs[i], 1.0/size);}
-//     }
-
-     //Ias
-     double P = 1.0/(12*size);
-     std::sort(vect_probs.begin(), vect_probs.end(), std::less<double>() );
-     for(int i=1;i<=size;i++){
-        P += vect_probs[i-1] * pow(vect_probs[i-1] - ((2.0*i-1.0)/(2.0*size)),2);
-     }
-     P *= (3.0/size);
-
-
-     if(size<=0)P=-1;
-
-//     printf("%f vs %f (%i vs %i)\n",dedxSObj->dEdx(), P, dedxSObj->numberOfMeasurements(), size);
-
-//                  dedxSObj = new DeDxData(1.0-dedxSObj->dEdx(), dedxSObj->numberOfSaturatedMeasurements(), dedxSObj->numberOfMeasurements());
-
-     return new DeDxData(P, dedxSObj->numberOfSaturatedMeasurements(), size);
-*/
-     return new DeDxData(0.5, 0, 10);
-}
-
-reco::DeDxData* dEdxEstimOnTheFly(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=true){
-//LQ
-/*
-     fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
-     dEdxHitsH.getByLabel(ev, "dedxHitInfo");
-     if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
-     const ValueMap<HSCPDeDxInfo>& dEdxHitMap = *dEdxHitsH.product();
-
-     const HSCPDeDxInfo& hscpHitsInfo = dEdxHitMap.get((size_t)track.key());
-
-     std::vector<double> vect_charge;
-     for(unsigned int h=0;h<hscpHitsInfo.charge.size();h++){
-        DetId detid(hscpHitsInfo.detIds[h]);  
-        if(!usePixel && detid.subdetId()<3)continue; // skip pixels
-        if(useClusterCleaning && !hscpHitsInfo.shapetest[h])continue;
-
-        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-        Norm*=10.0; //mm --> cm
-
-        //Remove hits close to the border
-        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
-
-        vect_charge.push_back(scaleFactor*Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-//        printf("%f ", Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-     }
-     int size = vect_charge.size();
-
-     double result=0;
-
-     //harmonic 2
-     double expo = -2;
-     for(int i = 0; i< size; i ++){
-        result+=pow(vect_charge[i],expo); 
-     }
-     result = (size>0)?pow(result/size,1./expo):0.;
-//     printf(" : %f\n",result);
-
-     return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
-*/
-     return new DeDxData(3.5, 0, 10);
-}
-
+TH3F* loadDeDxTemplate(string path);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false);
+bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
+void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
 TH3F* loadDeDxTemplate(string path){
    TFile* InputFile = new TFile(path.c_str());
@@ -715,352 +491,22 @@ TH3F* loadDeDxTemplate(string path){
    return Prob_ChargePath;
 }
 
-TH2F* loadDeDxTemplate2D(string path){
-   TFile* InputFile = new TFile(path.c_str());
-   TH2F* DeDxMap_ = (TH2F*)GetObjectFromPath(InputFile, "Charge_Vs_Path");
-   if(!DeDxMap_){printf("dEdx templates in file %s can't be open\n", path.c_str()); exit(0);}
-
-   TH2F* Prob_ChargePath  = (TH2F*)(DeDxMap_->Clone("Prob_ChargePath")); 
-   Prob_ChargePath->Reset();
-   Prob_ChargePath->SetDirectory(0); 
-
-      for(int j=0;j<=Prob_ChargePath->GetXaxis()->GetNbins()+1;j++){
-         double Ni = 0;
-         for(int k=0;k<=Prob_ChargePath->GetYaxis()->GetNbins()+1;k++){ Ni+=DeDxMap_->GetBinContent(j,k);}
-
-         for(int k=0;k<=Prob_ChargePath->GetYaxis()->GetNbins()+1;k++){
-            double tmp = 0;
-            for(int l=0;l<=k;l++){ tmp+=DeDxMap_->GetBinContent(j,l);}
-
-            if(Ni>0){
-               Prob_ChargePath->SetBinContent (j, k, tmp/Ni);
-            }else{
-               Prob_ChargePath->SetBinContent (j, k, 0);
-            }
-         }
-      }
-   InputFile->Close();
-   return Prob_ChargePath;
-}
-
-
-
-TProfile2D* loadHOTEff(string path){
-//LQ
-/*
-   TFile* InputFile = new TFile(path.c_str());
-   TProfile2D* Eff_ = (TProfile2D*)GetObjectFromPath(InputFile, "signal");
-   if(!Eff_){printf("dEdx HOT Efficiency in file %s can't be open\n", path.c_str()); exit(0);}
-
-   TProfile2D* Eff = (TProfile2D*)(Eff_->Clone("Eff")); 
-   Eff->SetDirectory(0); 
-   InputFile->Close();
-   return Eff;
-*/
-   return NULL;
-}
-
-double dEdxHOT(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double threshold, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=false){
-//LQ
-/*
-     fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
-     dEdxHitsH.getByLabel(ev, "dedxHitInfo");
-     if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
-     const ValueMap<HSCPDeDxInfo>& dEdxHitMap = *dEdxHitsH.product();
-
-     const HSCPDeDxInfo& hscpHitsInfo = dEdxHitMap.get((size_t)track.key());
-
-     std::vector<double> vect_charge;
-     for(unsigned int h=0;h<hscpHitsInfo.charge.size();h++){
-        DetId detid(hscpHitsInfo.detIds[h]);  
-        if(!usePixel && detid.subdetId()<3)continue; // skip pixels
-        if(useClusterCleaning && !hscpHitsInfo.shapetest[h])continue;
-
-        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-        Norm*=10.0; //mm --> cm
-
-        //Remove hits close to the border
-        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
-
-        vect_charge.push_back(scaleFactor*Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-//        printf("%f ", Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-     }
-     int size = vect_charge.size();
-
-     double result=0;
-     for(int i=0;i<size;i++){if(vect_charge[i]>threshold)result+=1.0;}
-     result/=size;
-     return result;
-
-//     printf(" : %f\n",result);
-
-//     return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
-*/
-    return 1.0;     
-}
-
-
-reco::DeDxData* dEdxHIPIX(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, unsigned int run, double scaleFactor=1.0, bool usePixel=true, bool useClusterCleaning=false, TH2D* histoToFill=NULL){
-//LQ
-/*
-     fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
-     dEdxHitsH.getByLabel(ev, "dedxHitInfo");
-     if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
-     const ValueMap<HSCPDeDxInfo>& dEdxHitMap = *dEdxHitsH.product();
-
-     const HSCPDeDxInfo& hscpHitsInfo = dEdxHitMap.get((size_t)track.key());
-
-     int NSiStripHit=0;
-
-     std::vector<double> vect_charge;
-     for(unsigned int h=0;h<hscpHitsInfo.charge.size();h++){
-        DetId detid(hscpHitsInfo.detIds[h]);
-        if(!usePixel && detid.subdetId()<3)continue; // skip pixels
-        if(detid.subdetId()>=3){NSiStripHit++;if(NSiStripHit>1)continue;} //only consider 1 strip hit in addition of the pixels
-        if(useClusterCleaning && !hscpHitsInfo.shapetest[h])continue;
-
-        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-
-//        if(detid.subdetId()<3)printf("%i %f/%fx%f --> %f\n", h, hscpHitsInfo.charge[h],hscpHitsInfo.pathlength[h],Norm, Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h] );
-
-
-        if(detid.subdetId()<3){
-           //simple calibration of the pixel detector
-                 if(run<100000){ Norm*=  1.00000;
-           }else if(run<196531){ Norm*=  1.07146;
-           }else if(run<199336){ Norm*=  1.04044;
-           }else if(run<203002){ Norm*=  1.12348;
-           }else if(run<205781){ Norm*=  1.10735;
-           }else{                Norm*=  1.1654;
-           }
-        }else{
-           Norm*=10.0; //mm --> cm
-           Norm*= scaleFactor;
-        }
-
-        //Remove hits close to the border
-        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
-
-        
-        if(histoToFill && detid.subdetId()<3)histoToFill->Fill(hscpHitsInfo.pathlength[h]*10, Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-        vect_charge.push_back(Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-//        printf("%f ", Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-     }
-     int size = vect_charge.size();
-
-     double result=0;
-
-     //harmonic 2
-     double expo = -2;
-     for(int i = 0; i< size; i ++){
-        result+=pow(vect_charge[i],expo);
-     }
-     result = (size>0)?pow(result/size,1./expo):0.;
-//     printf(" : %f\n",result);
-
-     return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
-*/
-
-     return new DeDxData(3.5, 0, 10);
-}
-
-
-
-
-
-double dEdxCS(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double threshold, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=false){
-//LQ
-/*
-   double meanCS = 0; int N=0;
-   for(unsigned int h=0;h<track->recHitsSize();h++){
-        TrackingRecHit* recHit = (track->recHit(h))->clone();
-//      if(const SiStripMatchedRecHit2D* matchedHit=dynamic_cast<const SiStripMatchedRecHit2D*>(recHit)){
-//          meanCS += (matchedHit->monoHit()->cluster()).get()->amplitudes().size(); N++;
-//          meanCS += (matchedHit->stereoHit()->cluster()).get()->amplitudes().size(); N++;
-//       }else
-       if(const SiStripRecHit2D* singleHit=dynamic_cast<const SiStripRecHit2D*>(recHit)){
-          meanCS += (singleHit->cluster()).get()->amplitudes().size(); N++;
-       }else if(const SiStripRecHit1D* single1DHit=dynamic_cast<const SiStripRecHit1D*>(recHit)){
-          meanCS += (single1DHit->cluster()).get()->amplitudes().size(); N++;
-       }else if(const SiPixelRecHit* pixelHit=dynamic_cast<const SiPixelRecHit*>(recHit)){
-          continue;
-       }      
-   }
-   return (meanCS / N);
-*/
-   return 0.1;
-}
-
-
-
-
-reco::DeDxData* dEdxUpgradeDiscrim(const fwlite::ChainEvent& ev, const reco::TrackRef&   track, const reco::DeDxData* dedxSObj, double beta, unsigned int run, double scaleFactor=1.0, bool usePixel=true, bool useStrip=false, TProfile2D* StripEffTemplate=NULL, TH2* PixelTemplate=NULL, TH3* StripTemplate=NULL, int NStripLay=3){
-//LQ
-
-/*
-     fwlite::Handle<HSCPDeDxInfoValueMap> dEdxHitsH;
-     dEdxHitsH.getByLabel(ev, "dedxHitInfo");
-     if(!dEdxHitsH.isValid()){printf("Invalid dEdxHitInfo\n");return NULL;}
-     const ValueMap<HSCPDeDxInfo>& dEdxHitMap = *dEdxHitsH.product();
-
-     const HSCPDeDxInfo& hscpHitsInfo = dEdxHitMap.get((size_t)track.key());
-
-     int NSiStripHit=0;
-
-     std::vector<double> vect_charge;
-     std::vector<double> vect_chargeStrip;
-
-//     printf("------------------- %i - %i\n", usePixel?1:0, useStrip?1:0);
-     for(unsigned int h=0;h<hscpHitsInfo.charge.size();h++){
-        DetId detid(hscpHitsInfo.detIds[h]);
-        if(detid.subdetId()>=3){NSiStripHit++;}
-        if(!usePixel && (detid.subdetId()<3 || NSiStripHit<=1))continue; // skip pixels
-        if(!useStrip && detid.subdetId()>=3 && NSiStripHit>1)continue; //only consider 1 strip hit in addition of the pixels
-        if(detid.subdetId()>=3 && NSiStripHit>(1+NStripLay))continue;
-
-        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-
-//        if(detid.subdetId()<3)printf("%i %f/%fx%f --> %f\n", h, hscpHitsInfo.charge[h],hscpHitsInfo.pathlength[h],Norm, Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h] );
-
-
-        if(detid.subdetId()<3){
-           //simple calibration of the pixel detector
-                 if(run<100000){ Norm*=  1.00000;
-           }else if(run<196531){ Norm*=  1.07146;
-           }else if(run<199336){ Norm*=  1.04044;
-           }else if(run<203002){ Norm*=  1.12348;
-           }else if(run<205781){ Norm*=  1.10735;
-           }else{                Norm*=  1.1654;
-           }
-        }else{
-           Norm*=10.0; //mm --> cm
-           Norm*= scaleFactor;
-        }
-
-        //Remove hits close to the border
-        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
-
-        double Prob = 1.0; 
-        if(detid.subdetId()<3){  
-           Prob = PixelTemplate->GetBinContent(PixelTemplate->GetXaxis()->FindBin(hscpHitsInfo.pathlength[h]*10), PixelTemplate->GetYaxis()->FindBin(Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]));
-//           printf("Add a pixel Hit: with pathlength = %f and charge/path = %f --> Prob = %f\n", hscpHitsInfo.pathlength[h]*10, Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h], Prob);
-            vect_charge.push_back(Prob);
-        }else{
-           if(NSiStripHit<=1){
-              if(!StripTemplate){
-                 Prob = hscpHitsInfo.probability[h];
-              }else{
-                 int    BinX   = StripTemplate->GetXaxis()->FindBin(50.0);//trajState.localMomentum().mag()); //our template does not depends on this variable currently
-                 int    BinY   = StripTemplate->GetYaxis()->FindBin(hscpHitsInfo.pathlength[h]);
-                 int    BinZ   = StripTemplate->GetZaxis()->FindBin(scaleFactor*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h]);
-                 Prob          = StripTemplate->GetBinContent(BinX,BinY,BinZ);
-//                 printf("Bin = %i %i %i\n", BinX, BinY, BinZ);
-              }
-//              printf("Add a fake pixel Hit: with pathlength = %f and charge/path = %f --> Prob = %f\n", hscpHitsInfo.pathlength[h], Norm*hscpHitsInfo.charge[h]/hscpHitsInfo.pathlength[h], Prob);
-               vect_charge.push_back(Prob);
-           }else{
-              double chargeFactor = std::min(4.90, 1 + (2.56/2.72)*((1-beta*beta)/(beta*beta)));
-              Prob = StripEffTemplate->GetBinContent(StripEffTemplate->GetXaxis()->FindBin(fabs(hscpHitsInfo.cosine[h])) , StripEffTemplate->GetYaxis()->FindBin(chargeFactor)  ); 
-              
-              vect_chargeStrip.push_back(rand()%1000<=Prob*1000?1.0:0.0);
-//              printf("Add a fake strip Hit: with costheta = %f and beta = %f --> Prob = %f\n", hscpHitsInfo.cosine[h], chargeFactor, Prob);
-           }
-        }
-
-
-
-     }
-     int size = vect_charge.size();
-
-     double result=1.0;
-
-     if(usePixel){
-        for(int i = 0; i< size; i ++){
-           result*=vect_charge[i];
-        }
-//     printf("Final Prob for %i hits = %f --> %f\n", (int)size, result, (size>0)?pow(result,1./size):0.);
-        result = (size>0)?pow(result,1.0/size):0.;
-     }
-
-
-
-     double resultStrip=1.0;
-     if(useStrip){
-        resultStrip = 0.0;
-        for(int i = 0; i< vect_chargeStrip.size();i++){resultStrip+=vect_chargeStrip[i];}resultStrip/=vect_chargeStrip.size();
-        resultStrip = std::min(0.99, resultStrip);
-     }
-
-     result = sqrt(result * resultStrip);    
-     return new DeDxData(result, dedxSObj->numberOfSaturatedMeasurements(), size);
-*/
-
-     return new DeDxData(0.5, 0, 10);
-}
-
-
-double FastestHSCP(const fwlite::ChainEvent& ev){
-   fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
-   genCollHandle.getByLabel(ev, "genParticles");
-   if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");return -1;}
-   std::vector<reco::GenParticle> genColl = *genCollHandle;
-
-   double MaxBeta=-1;
-   for(unsigned int g=0;g<genColl.size();g++){
-      if(genColl[g].pt()<5)continue;
-      if(genColl[g].status()!=1)continue;
-      int AbsPdg=abs(genColl[g].pdgId());
-      if(AbsPdg<1000000 && AbsPdg!=17)continue;
-
-      double beta=genColl[g].p()/genColl[g].energy();
-      if(MaxBeta<beta)MaxBeta=beta;
-   }
-   return MaxBeta;
-}
-
-
-
-
-
-
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, bool usePixel=false, bool useClusterCleaning=true){
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb){
      if(!dedxHits) return NULL;
+     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
-     std::vector<double> vect_charge;
+
+     std::vector<double> vect;
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
         if(!usePixel && detid.subdetId()<3)continue; // skip pixels
-//        if(useClusterCleaning && !hscpHitsInfo.shapetest[h])continue;  //FIXME to be enabled in fwlite code
+        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
+         //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
         double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-//        Norm*=10.0; //mm --> cm
+        double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
         //Remove hits close to the border  //FIXME to be activated in this code
-        //for unknown reasons, localx,localy, modwidth,modlength is not saved in all ntuples!
         //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
         //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
         //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
@@ -1070,31 +516,289 @@ reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0,
         //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
         //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
 
-        vect_charge.push_back(scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h));
+
+        if(templateHisto){  //save discriminator probability
+           int    BinX   = templateHisto->GetXaxis()->FindBin(50.0);//trajState.localMomentum().mag()); //our template does not depends on this variable currently
+           int    BinY   = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h));
+           int    BinZ   = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
+           double Prob   = templateHisto->GetBinContent(BinX,BinY,BinZ);
+           if(reverseProb)Prob = 1.0 - Prob;
+           vect.push_back(Prob);
+        }else{              //save charge
+           vect.push_back(ChargeOverPathlength);
+        }
      }
-     int size = vect_charge.size();
 
-     double result=0;
+     double result;
+     int size = vect.size();
 
-     //harmonic 2 calculation
-     double expo = -2;
-     for(int i = 0; i< size; i ++){
-        result+=pow(vect_charge[i],expo); 
+     if(size>0){
+        if(templateHisto){  //dEdx discriminator
+           //Prod discriminator
+           //double result = 1;
+           //for(int i=0;i<size;i++){
+           //   if(vect[i]<=0.0001){result *= pow(0.0001 , 1.0/size);}
+           //   else               {result *= pow(vect[i], 1.0/size);}
+           //}
+
+           //Ias discriminator
+           double result = 1.0/(12*size);
+           std::sort(vect.begin(), vect.end(), std::less<double>() );
+           for(int i=1;i<=size;i++){
+              result += vect[i-1] * pow(vect[i-1] - ((2.0*i-1.0)/(2.0*size)),2);
+           }
+           result *= (3.0/size);
+
+        }else{  //dEdx estimator
+           //harmonic2 estimator
+           result=0;
+           double expo = -2;
+           for(int i = 0; i< size; i ++){
+              result+=pow(vect[i],expo); 
+           }
+           result = pow(result/size,1./expo);
+        }
+     }else{
+        result = -1;
      }
-     result = (size>0)?pow(result/size,1./expo):0.;
-
      return new DeDxData(result, -1, size);  //Nsaturated must replace the -1 here
 }
 
 
 
+void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId)
+{
+        if(!cluster)return;
+        const vector<unsigned char>&  ampls       = cluster->amplitudes();
+
+        int Charge=0;
+        for(unsigned int i=0;i<ampls.size();i++){Charge+=ampls[i];}
+        char clusterCleaningOutput = clusterCleaning(cluster) ? 'V' : 'X';
+
+        fprintf(pFile,"DetId = %7i --> %4i = %3i ",DetId.rawId(),Charge,ampls[0]);
+        for(unsigned int i=1;i<ampls.size();i++){
+           fprintf(pFile,"%3i ",ampls[i]);
+        }
+        fprintf(pFile,"   %c\n", clusterCleaningOutput);
+}
 
 
 
 
+std::vector<int> convert(const vector<unsigned char>& input)
+{
+  std::vector<int> output;
+  for(unsigned int i=0;i<input.size();i++){
+        output.push_back((int)input[i]);
+  }
+  return output;
+}
+
+
+std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
+std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat) {
+  const unsigned N=Q.size();
+  std::vector<int> QII;
+  std::vector<float> QI(N,0);
+  Double_t a=1-2*x1-2*x2;
+//  bool debugbool=false;
+  TMatrix A(N,N);
+
+//---  que pour 1 max bien net 
+ if(Q.size()<2 || Q.size()>8){
+	for (unsigned int i=0;i<Q.size();i++){
+		QII.push_back((int) Q[i]);
+  	}
+	return QII;
+  }
+ if(way){ 
+	  vector<int>::const_iterator mQ = max_element(Q.begin(), Q.end())	;
+	  if(*mQ>253){
+	 	 if(*mQ==255 && *(mQ-1)>253 && *(mQ+1)>253 ) return Q ;
+	 	 if(*(mQ-1)>thresholdSat && *(mQ+1)>thresholdSat && *(mQ-1)<254 && *(mQ+1)<254 &&  abs(*(mQ-1) - *(mQ+1)) < 40 ){
+		     QII.push_back((10*(*(mQ-1))+10*(*(mQ+1)))/2); return QII;}
+	  }
+  }
+//---
+
+  for(unsigned int i=0; i<N; i++) {
+        A(i,i) =a;
+        if(i<N-1){ A(i+1,i)=x1;A(i,i+1)=x1;}
+        else continue; 
+        if(i<N-2){ A(i+2,i)=x2;A(i,i+2)=x2;}
+  }
+
+  if(N==1) A(0,0)=1/a;
+  else  A.InvertFast();
+
+  for(unsigned int i=0; i<N; i++) {
+        for(unsigned int j=0; j<N; j++) {
+        QI[i]+=A(i,j)*(float)Q[j];
+        }
+  }
+
+ for (unsigned int i=0;i<QI.size();i++){
+	if(QI[i]<threshold) QI[i]=0; 
+	QII.push_back((int) QI[i]);
+  }
+
+return QII;
+}
+
+
+bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv)
+{
+   if(!cluster) return true;
+   vector<int>  ampls = convert(cluster->amplitudes());
+   if(crosstalkInv)ampls = CrossTalkInv(ampls,0.10,0.04, true);
+      
+
+  // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------
+  //----------------------------------------------------------------------------
+         Int_t NofMax=0; Int_t recur255=1; Int_t recur254=1;
+         bool MaxOnStart=false;bool MaxInMiddle=false, MaxOnEnd =false;
+         Int_t MaxPos=0;
+        // Début avec max
+         if(ampls.size()!=1 && ((ampls[0]>ampls[1])
+            || (ampls.size()>2 && ampls[0]==ampls[1] && ampls[1]>ampls[2] && ampls[0]!=254 && ampls[0]!=255) 
+            || (ampls.size()==2 && ampls[0]==ampls[1] && ampls[0]!=254 && ampls[0]!=255)) ){
+          NofMax=NofMax+1;  MaxOnStart=true;  }
+
+        // Maximum entouré
+         if(ampls.size()>2){
+          for (unsigned int i =1; i < ampls.size()-1; i++) {
+                if( (ampls[i]>ampls[i-1] && ampls[i]>ampls[i+1]) 
+                    || (ampls.size()>3 && i>0 && i<ampls.size()-2 && ampls[i]==ampls[i+1] && ampls[i]>ampls[i-1] && ampls[i]>ampls[i+2] && ampls[i]!=254 && ampls[i]!=255) ){ 
+                 NofMax=NofMax+1; MaxInMiddle=true;  MaxPos=i; 
+                }
+                if(ampls[i]==255 && ampls[i]==ampls[i-1]) {
+                        recur255=recur255+1;
+                        MaxPos=i-(recur255/2);
+                        if(ampls[i]>ampls[i+1]){NofMax=NofMax+1;MaxInMiddle=true;}
+                }
+                if(ampls[i]==254 && ampls[i]==ampls[i-1]) {
+                        recur254=recur254+1;
+                        MaxPos=i-(recur254/2);
+                        if(ampls[i]>ampls[i+1]){NofMax=NofMax+1;MaxInMiddle=true;}
+                }
+            }
+         }
+        // Fin avec un max
+         if(ampls.size()>1){
+          if(ampls[ampls.size()-1]>ampls[ampls.size()-2]
+             || (ampls.size()>2 && ampls[ampls.size()-1]==ampls[ampls.size()-2] && ampls[ampls.size()-2]>ampls[ampls.size()-3] ) 
+             ||  ampls[ampls.size()-1]==255){
+           NofMax=NofMax+1;  MaxOnEnd=true;   }
+         }
+        // Si une seule strip touchée
+        if(ampls.size()==1){    NofMax=1;}
 
 
 
+  // ---  SELECTION EN FONCTION DE LA FORME POUR LES MAXIMA UNIQUES ---------
+  //------------------------------------------------------------------------
+//  
+//               ____
+//              |    |____
+//          ____|    |    |
+//         |    |    |    |____
+//     ____|    |    |    |    |
+//    |    |    |    |    |    |____
+//  __|____|____|____|____|____|____|__
+//    C_Mnn C_Mn C_M  C_D  C_Dn C_Dnn
+//  
+//   bool shapetest=true;
+   bool shapecdtn=false;
 
+      if(crosstalkInv){
+        if(NofMax==1){shapecdtn=true;}
+        return shapecdtn;
+      }
 
+//      Float_t C_M;    Float_t C_D;    Float_t C_Mn;   Float_t C_Dn;   Float_t C_Mnn;  Float_t C_Dnn;
+        Float_t C_M=0.0;        Float_t C_D=0.0;        Float_t C_Mn=10000;     Float_t C_Dn=10000;     Float_t C_Mnn=10000;    Float_t C_Dnn=10000;
+        Int_t CDPos;
+        Float_t coeff1=1.7;     Float_t coeff2=2.0;
+        Float_t coeffn=0.10;    Float_t coeffnn=0.02; Float_t noise=4.0;
+
+        if(NofMax==1){
+
+                if(MaxOnStart==true){
+                        C_M=(Float_t)ampls[0]; C_D=(Float_t)ampls[1];
+                                if(ampls.size()<3) shapecdtn=true ;
+                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[2] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true;}
+                                else if(ampls.size()>3){ C_Dn=(Float_t)ampls[2];  C_Dnn=(Float_t)ampls[3] ;
+                                                        if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
+                                                           && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise){
+                                                         shapecdtn=true;}
+                                }
+                }
+
+                if(MaxOnEnd==true){
+                        C_M=(Float_t)ampls[ampls.size()-1]; C_D=(Float_t)ampls[ampls.size()-2];
+                                if(ampls.size()<3) shapecdtn=true ;
+                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[0] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true;}
+                                else if(ampls.size()>3){C_Dn=(Float_t)ampls[ampls.size()-3] ; C_Dnn=(Float_t)ampls[ampls.size()-4] ; 
+                                                        if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
+                                                           && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise){ 
+                                                         shapecdtn=true;}
+                                }
+                }
+
+                if(MaxInMiddle==true){
+                        C_M=(Float_t)ampls[MaxPos];
+                        int LeftOfMaxPos=MaxPos-1;if(LeftOfMaxPos<=0)LeftOfMaxPos=0;
+                        int RightOfMaxPos=MaxPos+1;if(RightOfMaxPos>=(int)ampls.size())RightOfMaxPos=ampls.size()-1;
+                        //int after = RightOfMaxPos; int before = LeftOfMaxPos; if (after>=(int)ampls.size() ||  before<0)  std::cout<<"invalid read MaxPos:"<<MaxPos <<"size:"<<ampls.size() <<std::endl; 
+                        if(ampls[LeftOfMaxPos]<ampls[RightOfMaxPos]){ C_D=(Float_t)ampls[RightOfMaxPos]; C_Mn=(Float_t)ampls[LeftOfMaxPos];CDPos=RightOfMaxPos;} else{ C_D=(Float_t)ampls[LeftOfMaxPos]; C_Mn=(Float_t)ampls[RightOfMaxPos];CDPos=LeftOfMaxPos;}
+                        if(C_Mn<coeff1*coeffn*C_M+coeff2*coeffnn*C_D+2*noise || C_M==255){ 
+                                if(ampls.size()==3) shapecdtn=true ;
+                                else if(ampls.size()>3){
+                                        if(CDPos>MaxPos){
+                                                if(ampls.size()-CDPos-1==0){
+                                                        C_Dn=0; C_Dnn=0;
+                                                }
+                                                if(ampls.size()-CDPos-1==1){
+                                                        C_Dn=(Float_t)ampls[CDPos+1];
+                                                        C_Dnn=0;
+                                                }
+                                                if(ampls.size()-CDPos-1>1){
+                                                        C_Dn=(Float_t)ampls[CDPos+1];
+                                                        C_Dnn=(Float_t)ampls[CDPos+2];
+                                                }
+                                                if(MaxPos>=2){
+                                                        C_Mnn=(Float_t)ampls[MaxPos-2];
+                                                }
+                                                else if(MaxPos<2) C_Mnn=0;
+                                        }
+                                        if(CDPos<MaxPos){
+                                                if(CDPos==0){
+                                                        C_Dn=0; C_Dnn=0;
+                                                }
+                                                if(CDPos==1){
+                                                        C_Dn=(Float_t)ampls[0];
+                                                        C_Dnn=0;
+                                                }
+                                                if(CDPos>1){
+                                                        C_Dn=(Float_t)ampls[CDPos-1];
+                                                        C_Dnn=(Float_t)ampls[CDPos-2];
+                                                }
+                                                if(ampls.size()-LeftOfMaxPos>1 && MaxPos+2<(int)(ampls.size())-1){
+                                                        C_Mnn=(Float_t)ampls[MaxPos+2];
+                                                }else C_Mnn=0;                                                  
+                                        }
+                                        if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
+                                           && C_Mnn<=coeff1*coeffn*C_Mn+coeff2*coeffnn*C_M+2*noise
+                                           && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise) {
+                                                shapecdtn=true;
+                                        }
+
+                                }
+                        }                       
+                }
+        }
+        if(ampls.size()==1){shapecdtn=true;}
+
+   return shapecdtn;
+}
 #endif
