@@ -32,6 +32,13 @@ class stSample{
       char line[4096];
       char* toReturn = fgets(line, 4096, pFile);
       if(!toReturn)return EOF;
+
+      //delete comments
+      bool commenterFound = false;
+      int i=0;while(toReturn[i]!='\0'){if(toReturn[i]=='#'){commenterFound=true; break;} i++; }
+      if(commenterFound)while(toReturn[i]!='\0'){toReturn[i]='\0'; i++;}
+
+      Name = ""; //just to make sure that the sample name is properly initialized
       char* pch=strtok(line,","); int Arg=0; string tmp; int temp;
       while (pch!=NULL){
          switch(Arg){
@@ -95,7 +102,7 @@ void GetSampleDefinition(std::vector<stSample>& samples, std::string sampleTxtFi
       FILE* pFile = fopen(sampleTxtFile.c_str(),"r");
          if(!pFile){printf("Can't open %s\n","Analysis_Samples.txt"); return;}
          stSample newSample;      
-         while(newSample.readFromFile(pFile)!=EOF){samples.push_back(newSample);}
+         while(newSample.readFromFile(pFile)!=EOF){if(newSample.Name!="")samples.push_back(newSample);}
       fclose(pFile);
 }
 
@@ -109,15 +116,23 @@ void GetInputFiles(stSample sample, std::string BaseDirectory_, std::vector<std:
    }
 
    for(unsigned int f=0;f<fileNames.size();f++){  
-      if(sample.Type>=2){ //MC Signal
-        if(fileNames[f].find("7TeV")<string::npos){ //7TeV
-           if (period==0) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX0.root");
-           if (period==1) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX1.root");
-         }else{ //8TeV
-	  inputFiles.push_back(BaseDirectory_ + fileNames[f] + ".root");
+      if(fileNames[f].find('/')==0){//full file path is provided)
+         if(fileNames[f].find("/store/")==0){
+            inputFiles.push_back(string("root://eoscms//eos/cms") + fileNames[f]);
+         }else{
+            inputFiles.push_back(fileNames[f]);
          }
-      }else{ //Data or MC Background
-        inputFiles.push_back(BaseDirectory_ + fileNames[f] + ".root");
+      }else{
+         if(sample.Type>=2){ //MC Signal
+           if(fileNames[f].find("7TeV")<string::npos){ //7TeV
+              if (period==0) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX0.root");
+              if (period==1) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX1.root");
+            }else{ //8TeV
+   	      inputFiles.push_back(BaseDirectory_ + fileNames[f] + ".root");
+            }
+         }else{ //Data or MC Background
+           inputFiles.push_back(BaseDirectory_ + fileNames[f] + ".root");
+         }
       }
    }
 }

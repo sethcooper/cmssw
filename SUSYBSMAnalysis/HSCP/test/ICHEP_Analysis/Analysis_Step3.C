@@ -232,7 +232,8 @@ void Analysis_Step3(string MODE="COMPILE", int TypeMode_=0)
    LumiWeightsMCSyst = edm::LumiReWeighting(BgLumiMC, TrueDistSyst);
 
    //create histogram file and run the analyis
-   HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+samples[0].FileName+".root").c_str(),"RECREATE");
+//   HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+samples[0].FileName+".root").c_str(),"RECREATE");
+   HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+".root").c_str(),"RECREATE");      
    Analysis_Step3(Buffer);
    HistoFile->Write();
    HistoFile->Close();

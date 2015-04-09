@@ -84,7 +84,7 @@ void Analysis_Step5()
    PredictionAndControlPlot(InputPattern, "Data7TeV", CutIndex, CutIndex_Flip);
    PredictionAndControlPlot(InputPattern, "Data8TeV", CutIndex, CutIndex_Flip);
    InputPattern = "Results/Type5/";   CutIndex = 48; CutIndexTight = 48; CutIndex_Flip=2;
-   InitdEdx("dedxRASmi");
+//   InitdEdx("dedxRASmi");
    PredictionAndControlPlot(InputPattern, "Data7TeV", CutIndex, CutIndex_Flip);
    PredictionAndControlPlot(InputPattern, "Data8TeV", CutIndex, CutIndex_Flip);
    return;
@@ -165,7 +165,7 @@ void Analysis_Step5()
    //   CompareRecoAndGenPt(InputPattern);
 
    InputPattern = "Results/Type5/";   CutIndex = 48; CutIndexTight = 48; CutIndex_Flip=2;
-   InitdEdx("dedxRASmi");
+//   InitdEdx("dedxRASmi");
    Make2DPlot_Core(InputPattern, 0);
    PredictionAndControlPlot(InputPattern, "Data7TeV", CutIndex, CutIndex_Flip);
    PredictionAndControlPlot(InputPattern, "Data8TeV", CutIndex, CutIndex_Flip);
