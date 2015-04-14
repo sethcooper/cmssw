@@ -45,7 +45,7 @@ using namespace reweight;
 
 //the define here is simply need to load FWLITE code from the include
 #define FWLITE
-#include "../../ICHEP_Analysis/Analysis_Step3.C"
+#include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
 
 /////////////////////////// FUNCTION DECLARATION /////////////////////////////
 

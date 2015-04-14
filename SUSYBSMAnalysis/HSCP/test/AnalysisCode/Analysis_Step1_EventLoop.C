@@ -56,7 +56,7 @@ using namespace reweight;
 /////////////////////////// FUNCTION DECLARATION /////////////////////////////
 
 void InitHistos(stPlots* st=NULL);
-void Analysis_Step3(char* SavePath);
+void Analysis_Step1_EventLoop(char* SavePath);
 
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic=false);
 bool   PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev, stPlots* st=NULL, const double& GenBeta=-1, bool RescaleP=false, const double& RescaleI=0.0, const double& RescaleT=0.0);
@@ -105,7 +105,7 @@ double dEdxSF = 1.0;
 bool useClusterCleaning = true;
 /////////////////////////// CODE PARAMETERS /////////////////////////////
 
-void Analysis_Step3(string MODE="COMPILE", int TypeMode_=0)
+void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0)
 {
    if(MODE=="COMPILE")return;
 
@@ -234,7 +234,7 @@ void Analysis_Step3(string MODE="COMPILE", int TypeMode_=0)
    //create histogram file and run the analyis
 //   HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+samples[0].FileName+".root").c_str(),"RECREATE");
    HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+".root").c_str(),"RECREATE");      
-   Analysis_Step3(Buffer);
+   Analysis_Step1_EventLoop(Buffer);
    HistoFile->Write();
    HistoFile->Close();
    return;
@@ -932,7 +932,7 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
 
 
 // Looping on all events, tracks, selection and check how many events are entering the mass distribution
-void Analysis_Step3(char* SavePath)
+void Analysis_Step1_EventLoop(char* SavePath)
 {
    //Initialize a RandomNumberGenerator
    TRandom3* RNG = new TRandom3();

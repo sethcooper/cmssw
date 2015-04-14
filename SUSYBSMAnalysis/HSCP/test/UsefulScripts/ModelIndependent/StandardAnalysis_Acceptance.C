@@ -45,7 +45,7 @@ using namespace reweight;
 
 //the define here is simply need to load FWLITE code from the include
 #define FWLITE
-#include "../../ICHEP_Analysis/Analysis_Step3.C"
+#include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
 /////////////////////////// FUNCTION DECLARATION /////////////////////////////
 
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
@@ -324,7 +324,7 @@ void StandardAnalysis_Acceptance(string MODE="COMPILE", int TypeMode_=0, double 
 
        //determine the list of models that are considered
        std::vector<stSample> samples;
-       GetSampleDefinition(samples, "../../ICHEP_Analysis/Analysis_Samples.txt");
+       GetSampleDefinition(samples, "../../AnalysisCode/Analysis_Samples.txt");
        InitBaseDirectory();
        int s  = JobIdToIndex(sampleName,samples);
        if(s<0){printf("Current Sample (%s) Not Found!  Exit now\n", sampleName.c_str());exit(0);}

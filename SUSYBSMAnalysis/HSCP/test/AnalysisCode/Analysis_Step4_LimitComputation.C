@@ -145,7 +145,7 @@ std::map<std::string, std::vector<stSample> > modelMap;
 string SHAPESTRING="";
 
 
-void Analysis_Step6(string MODE="COMPILE", string InputPattern="", string signal=""){
+void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern="", string signal=""){
   setTDRStyle();
   gStyle->SetPadTopMargin   (0.06);
   gStyle->SetPadBottomMargin(0.12);
@@ -258,7 +258,7 @@ void Analysis_Step6(string MODE="COMPILE", string InputPattern="", string signal
    TLegend* LEG;
    double LInt = 0;
 
-   FILE* pFile    = fopen((outpath+string("Analysis_Step6_Result") + ".txt").c_str(),"w");
+   FILE* pFile    = fopen((outpath+string("Analysis_Step4_LimitComputation_Result") + ".txt").c_str(),"w");
    FILE* talkFile = fopen((outpath + "TalkPlots" + ".txt").c_str(),"w");
 
    fprintf(pFile   , "\\documentclass{article}\n");

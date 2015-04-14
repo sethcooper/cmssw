@@ -40,7 +40,7 @@ std::vector<stSample> samples;
 
 /////////////////////////// CODE PARAMETERS /////////////////////////////
 
-void Analysis_Step5()
+void Analysis_Step3_MakePlots()
 {
    setTDRStyle();
    gStyle->SetPadTopMargin   (0.06);

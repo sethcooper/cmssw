@@ -66,7 +66,7 @@ double             MassHistoUpperBound = 2000;
 int		   MassNBins           = 200;
 double             IPbound             = 1.0;
 
-// Thresholds for candidate preselection --> note that some of the followings can be replaced at the beginning of Analysis_Step3 function
+// Thresholds for candidate preselection --> note that some of the followings can be replaced at the beginning of Analysis_Step1_EventLoop function
 double             GlobalMaxEta       =   2.1;    // cut on inner tracker track eta
 double             GlobalMaxV3D       =   99999;  //0.50;   // cut on 3D distance (cm) to closest vertex
 double             GlobalMaxDZ        =   0.50;   // cut on 1D distance (cm) to closest vertex in "Z" direction

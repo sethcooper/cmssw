@@ -26,9 +26,9 @@
 #include "TCutG.h"
 #include "TProfile.h"
 
-#include "../../ICHEP_Analysis/Analysis_PlotFunction.h"
-#include "../../ICHEP_Analysis/Analysis_Samples.h"
-//#include "../../ICHEP_Analysis/Analysis_Step6.C"
+#include "../../AnalysisCode/Analysis_PlotFunction.h"
+#include "../../AnalysisCode/Analysis_Samples.h"
+//#include "../../AnalysisCode/Analysis_Step4_LimitComputation.C"
 
 //#include "roostats_cl95.C"
 

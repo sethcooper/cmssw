@@ -53,11 +53,11 @@ if sys.argv[1]=='0':
            if((vals[0].replace('"','')) in CMSSW_VERSION):
               for Type in AnalysesToRun:
                  if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
-                 if  (Type==0):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step3.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 0])
-                 elif(Type==2):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step3.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 2])
-                 elif(Type==3):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step3.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 3])
-                 elif(Type==4):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step3.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 4])
-                 elif(Type==5):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step3.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 5])
+                 if  (Type==0):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 0])
+                 elif(Type==2):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 2])
+                 elif(Type==3):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 3])
+                 elif(Type==4):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 4])
+                 elif(Type==5):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 5])
         f.close()
 	LaunchOnCondor.SendCluster_Submit()
 
@@ -71,11 +71,11 @@ elif sys.argv[1]=='1':
            Path = "Results/Type"+str(Type)+"/"
            os.system('rm -f ' + Path + 'Histos.root')
            os.system('hadd -f ' + Path + 'Histos.root ' + Path + '*.root')
-           LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4.C", '"'+Path+'"'])
+           LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step2_BackgroundPrediction.C", '"'+Path+'"'])
         LaunchOnCondor.SendCluster_Submit()
 elif sys.argv[1]=='2':
         print 'PLOTTING'
-	os.system('root Analysis_Step5.C++ -l -b -q')
+	os.system('root Analysis_Step3_MakePlots.C++ -l -b -q')
 
 elif sys.argv[1]=='3':
         print 'OPTIMIZATION & LIMIT COMPUTATION'
@@ -92,7 +92,7 @@ elif sys.argv[1]=='3':
               if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
               if(vals[2].find("8TeV")<0):continue
               Path = "Results/Type"+str(Type)+"/"
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step6.C", '"OPTIMIZE"', '"'+Path+'"', vals[2] ])
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"OPTIMIZE"', '"'+Path+'"', vals[2] ])
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 
@@ -125,13 +125,13 @@ elif sys.argv[1]=='4':
               #print vals[2] + "   " + str(skip)
 
               Path = "Results/Type"+str(Type)+"/"
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step6.C", '"COMBINE"', '"'+Path+'"', vals[2] ]) #compute 2011, 2012 and 2011+2012 in the same job
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE"', '"'+Path+'"', vals[2] ]) #compute 2011, 2012 and 2011+2012 in the same job
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 
 elif sys.argv[1]=='5':
         print 'EXCLUSION'
-        os.system('sh Analysis_Step6.sh')
+        os.system('sh Analysis_Step4_LimitComputation.sh')
 else:
 	print 'Unknown case: use an other argument or no argument to get help'
 

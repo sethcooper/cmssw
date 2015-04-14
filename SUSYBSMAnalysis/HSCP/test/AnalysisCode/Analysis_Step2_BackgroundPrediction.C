@@ -35,7 +35,7 @@ using namespace std;
 
 /////////////////////////// CODE PARAMETERS /////////////////////////////
 
-void Analysis_Step4(std::string InputPattern)
+void Analysis_Step2_BackgroundPrediction(std::string InputPattern)
 {
    if(InputPattern=="COMPILE")return;
 

@@ -25,8 +25,8 @@
 #include "TCutG.h"
 #include "TProfile.h"
 
-#include "../../ICHEP_Analysis/Analysis_PlotFunction.h"
-#include "../../ICHEP_Analysis/Analysis_Samples.h"
+#include "../../AnalysisCode/Analysis_PlotFunction.h"
+#include "../../AnalysisCode/Analysis_Samples.h"
 
 
 void DumpHistoToASCIIFile(string fileName, TH3* Histo){
