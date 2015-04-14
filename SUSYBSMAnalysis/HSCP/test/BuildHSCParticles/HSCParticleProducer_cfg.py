@@ -66,7 +66,6 @@ if(not isSkimmedSample):
       #do not apply trigger filter on signal
       process.HSCPTrigger.HLTPaths = ["*"]  
    
-#   process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger + process.exoticaHSCPSeq
    process.HSCPTuplePath += process.nEventsBefSkim + process.HSCPTrigger
 
 ########################################################################

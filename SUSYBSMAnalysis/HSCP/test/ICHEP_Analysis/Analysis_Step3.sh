@@ -1,8 +1,8 @@
 root -l -b << EOF
   TString makeshared(gSystem->GetMakeSharedLib());
-  TString dummy = makeshared.ReplaceAll("-W ", "-Wno-deprecated-declarations -Wno-deprecated -Wno-unused-local-typedefs -Wno-attributes ");
-  TString dummy = makeshared.ReplaceAll("-Woverloaded-virtual ", " ");
-  TString dummy = makeshared.ReplaceAll("-Wshadow ", " -std=c++0x -D__USE_XOPEN2K8 ");
+  makeshared.ReplaceAll("-W ", "-Wno-deprecated-declarations -Wno-deprecated -Wno-unused-local-typedefs -Wno-attributes ");
+  makeshared.ReplaceAll("-Woverloaded-virtual ", " ");
+  makeshared.ReplaceAll("-Wshadow ", " -std=c++0x -D__USE_XOPEN2K8 ");
   cout << "Compilling with the following arguments: " << makeshared << endl;
   gSystem->SetMakeSharedLib(makeshared);
   gSystem->Load("libFWCoreFWLite");
