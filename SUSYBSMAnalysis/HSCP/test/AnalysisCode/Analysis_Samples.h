@@ -33,7 +33,7 @@ class stSample{
       char* toReturn = fgets(line, 4096, pFile);
       if(!toReturn)return EOF;
 
-      //delete comments
+      //delete whatever is found after the comment delimeter
       bool commenterFound = false;
       int i=0;while(toReturn[i]!='\0'){if(toReturn[i]=='#'){commenterFound=true; break;} i++; }
       if(commenterFound)while(toReturn[i]!='\0'){toReturn[i]='\0'; i++;}
@@ -69,10 +69,12 @@ class stSample{
       char strMass[255];sprintf(strMass, "_M%.0f",Mass);
       char str7TeV[]="_7TeV";
       char str8TeV[]="_8TeV";
+      char str13TeV[]="_13TeV";
       string toReturn=Name;
-      if(toReturn.find(strMass)!=string::npos)toReturn.erase(toReturn.find(strMass), string(strMass).length());
-      if(toReturn.find(str7TeV)!=string::npos)toReturn.erase(toReturn.find(str7TeV), string(str7TeV).length());
-      if(toReturn.find(str8TeV)!=string::npos)toReturn.erase(toReturn.find(str8TeV), string(str8TeV).length());
+      if(toReturn.find(strMass) !=string::npos)toReturn.erase(toReturn.find( strMass), string( strMass).length());
+      if(toReturn.find(str7TeV) !=string::npos)toReturn.erase(toReturn.find( str7TeV), string( str7TeV).length());
+      if(toReturn.find(str8TeV) !=string::npos)toReturn.erase(toReturn.find( str8TeV), string( str8TeV).length());
+      if(toReturn.find(str13TeV)!=string::npos)toReturn.erase(toReturn.find(str13TeV), string(str13TeV).length());
       return toReturn;
    }
 
@@ -102,7 +104,7 @@ void GetSampleDefinition(std::vector<stSample>& samples, std::string sampleTxtFi
       FILE* pFile = fopen(sampleTxtFile.c_str(),"r");
          if(!pFile){printf("Can't open %s\n","Analysis_Samples.txt"); return;}
          stSample newSample;      
-         while(newSample.readFromFile(pFile)!=EOF){if(newSample.Name!="")samples.push_back(newSample);}
+         while(newSample.readFromFile(pFile)!=EOF){samples.push_back(newSample);}
       fclose(pFile);
 }
 
@@ -196,8 +198,9 @@ void keepOnlySamplesAt7and8TeVX(std::vector<stSample>& samples, double SQRTS_){
    }else{
       for(unsigned int s=0;s<samples.size();s++){
          string tmpName = samples[s].Name;
-         if(     SQRTS_==7 && tmpName.find("_7TeV")==string::npos){samples.erase(samples.begin()+s);s--;}
-         if(     SQRTS_==8 && tmpName.find("_8TeV")==string::npos){samples.erase(samples.begin()+s);s--;}
+         if(     SQRTS_== 7 && tmpName.find("_7TeV" )==string::npos){samples.erase(samples.begin()+s);s--;}
+         if(     SQRTS_== 8 && tmpName.find("_8TeV" )==string::npos){samples.erase(samples.begin()+s);s--;}
+         if(     SQRTS_==13 && tmpName.find("_13TeV")==string::npos){samples.erase(samples.begin()+s);s--;}
       }
    }
 }

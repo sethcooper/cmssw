@@ -12,14 +12,14 @@ import glob
 AnalysesToRun = [0]#,2,3,4,5]
 
 
-if len(sys.argv)==1:
-	print "Please pass in argument a number between 0 and 2"
-        print "  0 - Submit the Core of the (TkOnly+TkTOF) Analysis                 --> submitting 5xSignalPoints jobs"
-        print "  1 - Merge all output files and estimate backgrounds                --> submitting              5 jobs"
-        print "  2 - Run the control plot macro                                     --> submitting              0 jobs"
-        print "  3 - Run the Optimization macro based on best Exp Limit             --> submitting 5xSignalPoints jobs (OPTIONAL)"
-        print "  4 - compute the limits from the cuts set in Analysis_Cuts.txt file --> submitting 5xSignalPoints jobs (must edit by hand Analysis_Cuts.txt)"
-        print "  5 - Run the exclusion plot macro                                   --> submitting              0 jobs"
+if len(sys.argv)==1:       
+	print "Please pass in argument a number between 1 and 5"
+        print "  1  - Submit the Core of the (TkOnly+TkTOF) Analysis                 --> submitting %d x #SignalPoints jobs" % len(AnalysesToRun)
+        print "  2  - Merge all output files and estimate backgrounds                --> submitting %d                 jobs"  % len(AnalysesToRun)
+        print "  3  - Run the control plot macro                                     --> interactive"
+        print "  4o - Run the Optimization macro based on best Exp Limit             --> submitting %d x #SignalPoints jobs (OPTIONAL)"  % len(AnalysesToRun)
+        print "  4  - compute the limits from the cuts set in Analysis_Cuts.txt file --> submitting %d x #SignalPoints jobs (cut must edited by hand in Analysis_Cuts.txt)"  % len(AnalysesToRun)
+        print "  5  - Run the exclusion plot macro                                   --> interactive"
 	sys.exit()
 
 
@@ -39,7 +39,7 @@ def skipSamples(type, name):
    
    return False
 
-if sys.argv[1]=='0':	
+if sys.argv[1]=='1':	
         print 'ANALYSIS'
         FarmDirectory = "FARM"
         JobName = "HscpAnalysis"
@@ -48,20 +48,17 @@ if sys.argv[1]=='0':
         f= open('Analysis_Samples.txt','r')
         index = -1
         for line in f :
-           index+=1
+           index+=1           
+           if(line.startswith('#')):continue
            vals=line.split(',')
            if((vals[0].replace('"','')) in CMSSW_VERSION):
               for Type in AnalysesToRun:
                  if(int(vals[1])>=2 and skipSamples(Type, vals[2])==True):continue
-                 if  (Type==0):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 0])
-                 elif(Type==2):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 2])
-                 elif(Type==3):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 3])
-                 elif(Type==4):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 4])
-                 elif(Type==5):LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , 5])
+                 LaunchOnCondor.SendCluster_Push(["FWLITE", os.getcwd()+"/Analysis_Step1_EventLoop.C", '"ANALYSE_'+str(index)+'_to_'+str(index)+'"'  , Type, vals[2].rstrip() ])
         f.close()
 	LaunchOnCondor.SendCluster_Submit()
 
-elif sys.argv[1]=='1':
+elif sys.argv[1]=='2':
         print 'MERGING FILE AND PREDICTING BACKGROUNDS'  
         FarmDirectory = "FARM"
         JobName = "HscpPred"
@@ -73,11 +70,11 @@ elif sys.argv[1]=='1':
            os.system('hadd -f ' + Path + 'Histos.root ' + Path + '*.root')
            LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step2_BackgroundPrediction.C", '"'+Path+'"'])
         LaunchOnCondor.SendCluster_Submit()
-elif sys.argv[1]=='2':
+elif sys.argv[1]=='3':
         print 'PLOTTING'
 	os.system('root Analysis_Step3_MakePlots.C++ -l -b -q')
 
-elif sys.argv[1]=='3':
+elif sys.argv[1]=='4o':
         print 'OPTIMIZATION & LIMIT COMPUTATION'
         FarmDirectory = "FARM"
         JobName = "HscpLimits"
@@ -86,6 +83,7 @@ elif sys.argv[1]=='3':
 
         f= open('Analysis_Samples.txt','r')
         for line in f :
+           if(line.startswith('#')):continue
            vals=line.split(',')
            if(int(vals[1])!=2):continue
            for Type in AnalysesToRun:
@@ -106,6 +104,7 @@ elif sys.argv[1]=='4':
 
         f = open('Analysis_Samples.txt','r')
         for line in f :
+           if(line.startswith('#')):continue
            vals=line.split(',')
            if(int(vals[1])<2):continue
            for Type in AnalysesToRun:            

@@ -105,7 +105,7 @@ double dEdxSF = 1.0;
 bool useClusterCleaning = true;
 /////////////////////////// CODE PARAMETERS /////////////////////////////
 
-void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0)
+void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string InputSampleName="")
 {
    if(MODE=="COMPILE")return;
 
