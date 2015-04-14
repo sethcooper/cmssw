@@ -1,0 +1,9 @@
+@(#)CERN job starter $Date: 2010/06/23 14:22:16 $
+Working directory is </pool/lsf/querten/643881204> on <b6cf5c432c.cern.ch>
+
+
+Job finished at Tue Apr 14 11:57:34 CEST 2015 on node 
+ under linux version Scientific Linux CERN SLC release 6.6 (Carbon)
+
+CERN statistics: This process used approximately : 0:00:02 KSI2K hours (2 KSI2K seconds)
+                 This process corresponds to     : 0:00:11 HS06  hours (11 HS06  seconds)
