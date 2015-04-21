@@ -934,6 +934,7 @@ void stPlots_FillTree(stPlots* st, unsigned int Run, unsigned int Event, unsigne
 
 // dump a full preselection and selection cut flow table
 void stPlots_Dump(stPlots& st, FILE* pFile, int CutIndex){
+std::cout<<"TESTA\n";
    fprintf(pFile,"#################### %20s ####################\n",st.Name.c_str());
    fprintf(pFile,"#Events                       = %4.2E\n",st.TotalE->GetBinContent(1       ));
    fprintf(pFile,"#Triggered Events             = %4.2E Eff=%4.3E\n",st.TotalTE->GetBinContent(1     ),st.TotalTE->GetBinContent(1      )/st.TotalE->GetBinContent(1       ));
@@ -956,11 +957,14 @@ void stPlots_Dump(stPlots& st, FILE* pFile, int CutIndex){
    fprintf(pFile,"#Tracks passing I      cuts   = %4.2E Eff=%4.3E\n",st.I    ->GetBinContent(CutIndex+1), st.I    ->GetBinContent(CutIndex+1) /st.Pt   ->GetBinContent(CutIndex+1));
    fprintf(pFile,"#Tracks passing TOF    cuts   = %4.2E Eff=%4.3E\n",st.TOF  ->GetBinContent(CutIndex+1), st.TOF  ->GetBinContent(CutIndex+1) /st.I    ->GetBinContent(CutIndex+1));
    fprintf(pFile,"#Tracks passing selection     = %4.2E Eff=%4.3E\n",st.TOF  ->GetBinContent(CutIndex+1), st.TOF  ->GetBinContent(CutIndex+1) /st.Total->GetBinContent(1       ));   
+std::cout<<"TESTB\n";
    fprintf(pFile,"--------------------\n");
    fprintf(pFile,"HSCP Detection Efficiency Before Trigger                           Eff=%4.3E\n",st.TOF->GetBinContent(CutIndex+1) /(2*st.TotalE ->GetBinContent(1       )));
    fprintf(pFile,"HSCP Detection Efficiency After  Trigger                           Eff=%4.3E\n",st.TOF->GetBinContent(CutIndex+1) /(2*st.TotalTE->GetBinContent(1       )));
    fprintf(pFile,"#HSCPTrack per HSCPEvent (with at least one HSCPTrack)             Eff=%4.3E\n",st.TOF->GetBinContent(CutIndex+1) /(  st.HSCPE  ->GetBinContent(CutIndex+1)));
    fprintf(pFile,"HSCP Event Efficiency                                              Eff=%4.3E\n",st.HSCPE->GetBinContent(CutIndex+1) /(  st.TotalE  ->GetBinContent(1)));
+std::cout<<"TESTC\n";
+
 
    // Table1- Numbers (tracks/events) at various cut stages: with event weights
    //  fprintf(pFile,"%-24s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Signal", "#Evts", "#TrEvts", "#GlTrks", "#NOH", "#NOM", "#TOFnDOF", "#TrkQ", "#TrkChi", "#pT", "#dedx", "#TOF", "#v3D", "#Dxy","#TIsol", "#EIsol", "#SigmapT", "#Dz", "#PreSelTr", "#PreSelE", "#pT", "#Ias", "#1/beta", "#Events");

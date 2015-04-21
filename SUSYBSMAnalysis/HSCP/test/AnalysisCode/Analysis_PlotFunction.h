@@ -19,7 +19,7 @@ TObject* GetObjectFromPath(TDirectory* File, std::string Path, bool GetACopy=fal
       TDirectory* TMP = (TDirectory*)File->Get(firstPart.c_str());
       if(TMP!=NULL)return GetObjectFromPath(TMP,endPart,GetACopy);
 
-      printf("BUG: %s\n",Path.c_str());
+      printf("ObjectNotFound: %s::%s\n",File->GetName(), Path.c_str());
       return NULL;
    }else{
       if(GetACopy){
@@ -36,6 +36,15 @@ TObject* GetObjectFromPath(TDirectory* Container, TDirectory* File, std::string 
    if(TH1* th1 = dynamic_cast<TH1*>(toreturn))th1->SetDirectory(Container);
    return toreturn;
 }
+
+
+TH1D* GetProjectionFromPath(TDirectory* File, std::string Path, int CutIndex, string Name){
+      TH2D* tmp = (TH2D*)GetObjectFromPath(File, Path, false);
+      if(!tmp)return NULL;
+      return tmp->ProjectionY(Name.c_str()   ,CutIndex+1,CutIndex+1,"o");
+}
+
+
 
 // create a directory/subdirectory on disk
 void MakeDirectories(std::string path){

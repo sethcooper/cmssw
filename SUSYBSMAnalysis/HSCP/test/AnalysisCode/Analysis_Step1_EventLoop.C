@@ -958,11 +958,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
       stPlots* SamplePlots = &plotsMap[samples[s].Name];
       SamplePlots->IntLumi->Fill(0.0,IntegratedLuminosity);
 
-      string MCTrDirName = "MCTr_8TeV";
+      string MCTrDirName = "MCTr_13TeV";
       if(isMC){
 	if(samples[s].Name.find("7TeV")!=string::npos) MCTrDirName = "MCTr_7TeV";
-         if(plotsMap.find(MCTrDirName)==plotsMap.end()){plotsMap[MCTrDirName] = stPlots();}
-         stPlots_Init(HistoFile,plotsMap[MCTrDirName],MCTrDirName, CutPt.size(), false, false, CutPt_Flip.size());
+	if(samples[s].Name.find("8TeV")!=string::npos) MCTrDirName = "MCTr_8TeV";
+        if(plotsMap.find(MCTrDirName)==plotsMap.end()){plotsMap[MCTrDirName] = stPlots();}
+        stPlots_Init(HistoFile,plotsMap[MCTrDirName],MCTrDirName, CutPt.size(), false, false, CutPt_Flip.size());
       }stPlots* MCTrPlots = &plotsMap[MCTrDirName];
 
       //Initialize plot container for pure cosmic sample

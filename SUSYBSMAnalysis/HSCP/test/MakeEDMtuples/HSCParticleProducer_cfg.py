@@ -31,7 +31,7 @@ if(isSignal): process.source.duplicateCheckMode = cms.untracked.string("noDuplic
 
 
 #for i in range(0,25):
-#   process.source.fileNames.extend(["file:/afs/cern.ch/user/q/querten/workspace/public/14_08_12_Run2HSCP/CMSSW_7_2_X_2014-08-18-0200/src/SUSYBSMAnalysis/HSCP/test/BuildHSCParticles/Signals/../../../../../SampleProd/FARM_RECO/outputs/gluino1TeV_RECO_%04i.root" % i])
+#   process.source.fileNames.extend(["file:/afs/cern.ch/user/q/querten/workspace/public/14_08_12_Run2HSCP/CMSSW_7_2_X_2014-08-18-0200/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Signals/../../../../../SampleProd/FARM_RECO/outputs/gluino1TeV_RECO_%04i.root" % i])
 
 process.GlobalTag.globaltag = GTAG
 
@@ -126,7 +126,7 @@ process.Out = cms.OutputModule("PoolOutputModule",
     ),
     fileName = cms.untracked.string('HSCP.root'),
     SelectEvents = cms.untracked.PSet(
-       SelectEvents = cms.vstring('')
+       SelectEvents = cms.vstring('*')
     ),
 )
 

@@ -35,7 +35,7 @@ using namespace std;
 
 /////////////////////////// CODE PARAMETERS /////////////////////////////
 
-void Analysis_Step2_BackgroundPrediction(std::string InputPattern)
+void Analysis_Step2_BackgroundPrediction(std::string InputPattern="COMPILE")
 {
    if(InputPattern=="COMPILE")return;
 
@@ -59,6 +59,11 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern)
    //8TeV DXY/DZ/ANGLE 19/22    0/3      0/3
    double CosmicVetoInEfficiency8TeV    = 0.86 * 0.26 * 0.04 ; 
    double CosmicVetoInEfficiency8TeVErr = sqrt(pow(0.20*0.26*0.04,2) + pow(0.86*0.03*0.04,2) + pow(0.86*0.04*0.01,2) + pow(0.50*CosmicVetoInEfficiency8TeV,2)); //add 50% syst uncertainty
+
+   //13TeV DXY/DZ/ANGLE 19/22    0/3      0/3 #FIXME TO BE UPDATED... COPY FROM 8TeV
+   double CosmicVetoInEfficiency13TeV    = 0.86 * 0.26 * 0.04 ; 
+   double CosmicVetoInEfficiency13TeVErr = sqrt(pow(0.20*0.26*0.04,2) + pow(0.86*0.03*0.04,2) + pow(0.86*0.04*0.01,2) + pow(0.50*CosmicVetoInEfficiency13TeV,2)); //add 50% syst uncertainty
+
 
    double CosmicVetoInEfficiency    = CosmicVetoInEfficiency7TeV;
    double CosmicVetoInEfficiencyErr = CosmicVetoInEfficiency7TeVErr;
@@ -88,9 +93,12 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern)
           if(DirName.find("7TeV")!=string::npos){
              CosmicVetoInEfficiency    = CosmicVetoInEfficiency7TeV;
              CosmicVetoInEfficiencyErr = CosmicVetoInEfficiency7TeVErr;
-          }else{
+          }else if(DirName.find("8TeV")!=string::npos){
              CosmicVetoInEfficiency    = CosmicVetoInEfficiency8TeV;
              CosmicVetoInEfficiencyErr = CosmicVetoInEfficiency8TeVErr;
+          }else{
+             CosmicVetoInEfficiency    = CosmicVetoInEfficiency13TeV;
+             CosmicVetoInEfficiencyErr = CosmicVetoInEfficiency13TeVErr;
           }
 
 	  TDirectory* directory = InputFile->GetDirectory(list->At(d)->GetName());
@@ -142,8 +150,9 @@ void Analysis_Step2_BackgroundPrediction(std::string InputPattern)
 	  TH1D*  H_H_Cosmic_Binned[MaxPredBins];
 
 	  if(TypeMode==3 && DirName.find("Data")!=string::npos) {
-	    //Only 2012 sample has pure cosmic sample, as only ratio used can use 2012 sample to make 2011 cosmic prediction
+	    //Only 2012 sample has pure cosmic sample, as only ratio used can use 2012 sample to make 2011 cosmic prediction	    
             string CosmicDir = "Cosmic8TeV";
+            if(DirName.find("13TeV")) CosmicDir = "Cosmic13TeV";
 	    //string CosmicDir = DirName.replace(0, 4, "Cosmic");
 	    H_D_DzSidebands_Cosmic = (TH2D*)GetObjectFromPath(InputFile, (CosmicDir + "/H_D_DzSidebands").c_str());
 	    H_D_CosmicMO           = (TH1D*)GetObjectFromPath(InputFile, (CosmicDir + "/H_D" + Suffix).c_str());

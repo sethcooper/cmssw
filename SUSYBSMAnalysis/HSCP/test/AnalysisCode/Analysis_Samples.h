@@ -42,6 +42,7 @@ class stSample{
       char* pch=strtok(line,","); int Arg=0; string tmp; int temp;
       while (pch!=NULL){
          switch(Arg){
+            printf("Arg = %i\n", Arg);
             case  0: tmp = pch;  CMSSW    = tmp.substr(tmp.find("\"")+1,tmp.rfind("\"")-tmp.find("\"")-1); break;
             case  1: sscanf(pch, "%d", &Type); break;
             case  2: tmp = pch;  Name     = tmp.substr(tmp.find("\"")+1,tmp.rfind("\"")-tmp.find("\"")-1); break;
@@ -50,7 +51,7 @@ class stSample{
             case  5: tmp = pch;  Pileup   = tmp.substr(tmp.find("\"")+1,tmp.rfind("\"")-tmp.find("\"")-1); break;
             case  6: sscanf(pch, "%lf", &Mass); break;
             case  7: sscanf(pch, "%lf", &XSec); break;
-            case  8: sscanf(pch, "%d", &temp); MakePlot=(temp>0); break;
+            case  8: sscanf(pch, "%d", &temp); printf("MakePlot for %s = %i\n", Name.c_str(), temp);MakePlot=(temp>0); break;
             case  9: sscanf(pch, "%f", &WNC0); break;
             case 10: sscanf(pch, "%f", &WNC1); break;
             case 11: sscanf(pch, "%f", &WNC2); break;
