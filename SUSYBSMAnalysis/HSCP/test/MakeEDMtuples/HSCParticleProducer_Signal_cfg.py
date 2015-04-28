@@ -11,12 +11,12 @@ InputFileList = cms.untracked.vstring()
 #debug input files 
 #this list is overwritten by CRAB
 InputFileList = cms.untracked.vstring(
-   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODgen/HSCPgluinoM1000_AOD-SIM.root',
-#   'root://cmseos:1094//eos/uscms/store/user/aackert/HSCP/AODgen/HSCPgluinoM1500_AOD-SIM.root', 
-#   'root://cmseos:1094//eos/uscms/store/user/aackert/HSCP/AODgen/HSCPgmstauM308_AOD-SIM.root', 
-#   'root://cmseos:1094//eos/uscms/store/user/aackert/HSCP/AODgen/HSCPgmstauM494_AOD-SIM.root', 
-#   'root://cmseos:1094//eos/uscms/store/user/aackert/HSCP/AODgen/HSCPstopM500_AOD-SIM.root', 
-#   'root://cmseos:1094//eos/uscms/store/user/aackert/HSCP/AODgen/HSCPstopM900_AOD-SIM.root',
+#   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgluinoM1000_AOD-SIM.root',
+#   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgluinoM1500_AOD-SIM.root',
+#   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPstopM500_AOD-SIM.root', 
+#   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPstopM900_AOD-SIM.root',
+#    'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgmstauM308_AOD-SIM.root',
+   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgmstauM494_AOD-SIM.root',
 )
 
 

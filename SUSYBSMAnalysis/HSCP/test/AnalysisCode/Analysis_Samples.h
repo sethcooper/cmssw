@@ -34,15 +34,14 @@ class stSample{
       if(!toReturn)return EOF;
 
       //delete whatever is found after the comment delimeter
-      bool commenterFound = false;
-      int i=0;while(toReturn[i]!='\0'){if(toReturn[i]=='#'){commenterFound=true; break;} i++; }
+      bool commenterFound = false;  bool inQuote=false;
+      int i=0;while(toReturn[i]!='\0'){if(toReturn[i]=='"')inQuote=!inQuote; if(toReturn[i]=='#' && !inQuote){commenterFound=true; break;} i++; }
       if(commenterFound)while(toReturn[i]!='\0'){toReturn[i]='\0'; i++;}
 
       Name = ""; //just to make sure that the sample name is properly initialized
       char* pch=strtok(line,","); int Arg=0; string tmp; int temp;
       while (pch!=NULL){
          switch(Arg){
-            printf("Arg = %i\n", Arg);
             case  0: tmp = pch;  CMSSW    = tmp.substr(tmp.find("\"")+1,tmp.rfind("\"")-tmp.find("\"")-1); break;
             case  1: sscanf(pch, "%d", &Type); break;
             case  2: tmp = pch;  Name     = tmp.substr(tmp.find("\"")+1,tmp.rfind("\"")-tmp.find("\"")-1); break;
@@ -51,7 +50,7 @@ class stSample{
             case  5: tmp = pch;  Pileup   = tmp.substr(tmp.find("\"")+1,tmp.rfind("\"")-tmp.find("\"")-1); break;
             case  6: sscanf(pch, "%lf", &Mass); break;
             case  7: sscanf(pch, "%lf", &XSec); break;
-            case  8: sscanf(pch, "%d", &temp); printf("MakePlot for %s = %i\n", Name.c_str(), temp);MakePlot=(temp>0); break;
+            case  8: sscanf(pch, "%d", &temp); MakePlot=(temp>0); break;
             case  9: sscanf(pch, "%f", &WNC0); break;
             case 10: sscanf(pch, "%f", &WNC1); break;
             case 11: sscanf(pch, "%f", &WNC2); break;
@@ -128,8 +127,8 @@ void GetInputFiles(stSample sample, std::string BaseDirectory_, std::vector<std:
       }else{
          if(sample.Type>=2){ //MC Signal
            if(fileNames[f].find("7TeV")<string::npos){ //7TeV
-              if (period==0) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX0.root");
-              if (period==1) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX1.root");
+              if (period==0) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX1.root");
+              if (period==1) inputFiles.push_back(BaseDirectory_ + fileNames[f] + "_BX0.root");
             }else{ //8TeV
    	      inputFiles.push_back(BaseDirectory_ + fileNames[f] + ".root");
             }
@@ -156,6 +155,12 @@ int JobIdToIndex(string JobId, const std::vector<stSample>& samples){
    }
    return -1;
 }
+
+
+void keepOnlyValidSamples(std::vector<stSample>& samples){
+   for(unsigned int s=0;s<samples.size();s++){if(samples[s].Name==""){samples.erase(samples.begin()+s);s--;} }
+}
+
 
 void keepOnlySamplesOfTypeX(std::vector<stSample>& samples, int TypeX){
    for(unsigned int s=0;s<samples.size();s++){if(samples[s].Type!=TypeX){samples.erase(samples.begin()+s);s--;} }
@@ -252,8 +257,8 @@ double GetSampleWeight(const double& IntegratedLuminosityInPb, const double& Int
   if(IntegratedLuminosityInPb>=IntegratedLuminosityInPbBeforeTriggerChange && IntegratedLuminosityInPb>0){
     double NMCEvents = MCEvents;
     //if(MaxEntry>0)NMCEvents=std::min(MCEvents,(double)MaxEntry);
-    if      (period==0)Weight = (CrossSection * IntegratedLuminosityInPbBeforeTriggerChange) / NMCEvents;
-    else if (period==1)Weight = (CrossSection * (IntegratedLuminosityInPb-IntegratedLuminosityInPbBeforeTriggerChange)) / NMCEvents;
+    if     (period==0)Weight = (CrossSection * (IntegratedLuminosityInPb-IntegratedLuminosityInPbBeforeTriggerChange)) / NMCEvents;
+    else if(period==1)Weight = (CrossSection * IntegratedLuminosityInPbBeforeTriggerChange) / NMCEvents;
   }
   return Weight;
 }

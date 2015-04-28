@@ -211,6 +211,7 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
    if(MODE.find("ANALYSE_")==0){
       int sampleIdStart, sampleIdEnd; sscanf(MODE.c_str(),"ANALYSE_%d_to_%d",&sampleIdStart, &sampleIdEnd);
       keepOnlyTheXtoYSamples(samples,sampleIdStart,sampleIdEnd);
+      keepOnlyValidSamples(samples);
       printf("----------------------------------------------------------------------------------------------------------------------------------------------------\n");
       printf("Run on the following samples:\n");
       for(unsigned int s=0;s<samples.size();s++){samples[s].print();}
@@ -665,11 +666,8 @@ bool PassSelection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedx
       MuonTOF = tof->inverseBeta();
    }
 
-   double Is=0;
-   if(dedxSObj) Is=dedxSObj->dEdx();
-   double Ih=0;
-   if(dedxMObj) Ih=dedxMObj->dEdx();
-
+   double Is=0;   if(dedxSObj) Is=dedxSObj->dEdx();
+   double Ih=0;   if(dedxMObj) Ih=dedxMObj->dEdx();
    double PtCut=CutPt[CutIndex];
    double ICut=CutI[CutIndex];
    double TOFCut=CutTOF[CutIndex];
@@ -734,10 +732,8 @@ void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, con
          double MuonTOF = GlobalMinTOF;
          if(tof){MuonTOF = tof->inverseBeta(); }
 
-	 double Is=0;
-	 if(dedxSObj) Is=dedxSObj->dEdx();
-	 double Ih=0;
-	 if(dedxMObj) Ih=dedxMObj->dEdx();
+	 double Is=0; 	 if(dedxSObj) Is=dedxSObj->dEdx();
+	 double Ih=0;	 if(dedxMObj) Ih=dedxMObj->dEdx();
 
          if(!isCosmicSB){
 	 st->Hist_Pt->Fill(track->pt(),Event_Weight);
@@ -992,7 +988,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
       double* MaxMass_SystPU= new double[CutPt.size()];
 
       //do two loops through signal for samples with and without trigger changes.
-      for (int period=0; period<(samples[s].Type>=2?2:1); period++){
+      for (int period=0; period<(samples[s].Type>=2?RunningPeriods:1); period++){
          //load the files corresponding to this sample
          std::vector<string> FileName;
 	 GetInputFiles(samples[s], BaseDirectory, FileName, period);
@@ -1040,8 +1036,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
             if(isSignal){
                //get the collection of generated Particles
                fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
-               genCollHandle.getByLabel(ev, "genParticles");
-               if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");continue;}
+               genCollHandle.getByLabel(ev, "genParticlesSkimmed");
+               if(!genCollHandle.isValid()){
+                  genCollHandle.getByLabel(ev, "genParticles");
+                  if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");continue;}
+               }
+
                genColl = *genCollHandle;
                int NChargedHSCP=HowManyChargedHSCP(genColl);
                Event_Weight*=samples[s].GetFGluinoWeight(NChargedHSCP);
@@ -1050,6 +1050,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
                if(HSCPGenBeta1>=0)SamplePlots->Beta_Gen      ->Fill(HSCPGenBeta1, Event_Weight);  if(HSCPGenBeta2>=0)SamplePlots->Beta_Gen       ->Fill(HSCPGenBeta2, Event_Weight);
                GetGenHSCPBeta(genColl,HSCPGenBeta1,HSCPGenBeta2,true);
                if(HSCPGenBeta1>=0)SamplePlots->Beta_GenCharged->Fill(HSCPGenBeta1, Event_Weight); if(HSCPGenBeta2>=0)SamplePlots->Beta_GenCharged->Fill(HSCPGenBeta2, Event_Weight);
+
 	       for(unsigned int g=0;g<genColl.size();g++) {
 		 if(genColl[g].pt()<5)continue;
 		 if(genColl[g].status()!=1)continue;
@@ -1060,6 +1061,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		 SamplePlots->genlevelbeta->Fill(genColl[g].p()/genColl[g].energy(), Event_Weight);
 	       }
             }
+
             //check if the event is passing trigger
             SamplePlots      ->TotalE  ->Fill(0.0,Event_Weight);  
             if(isMC)MCTrPlots->TotalE  ->Fill(0.0,Event_Weight);
@@ -1146,14 +1148,11 @@ void Analysis_Step1_EventLoop(char* SavePath)
                if(isSignal && DistToHSCP(hscp, genColl, ClosestGen)>0.03)continue;
 
                //load quantity associated to this track (TOF and dEdx)
-	       const DeDxData* dedxSObj = NULL;
-	       const DeDxData* dedxMObj = NULL;
                const DeDxHitInfo* dedxHits = NULL;
 	       if(TypeMode!=3 && !track.isNull()) {
                   DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());		 
                   if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
 	       }
-
                const reco::MuonTimeExtra* tof = NULL;
                const reco::MuonTimeExtra* dttof = NULL;
                const reco::MuonTimeExtra* csctof = NULL;
@@ -1161,9 +1160,9 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      );
-               dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5);
-                  if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
+               DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5);
+               DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      );
+               if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
                //compute systematic uncertainties on signal
                if(isSignal){

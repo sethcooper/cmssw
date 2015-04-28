@@ -491,7 +491,7 @@ TH3F* loadDeDxTemplate(string path){
    return Prob_ChargePath;
 }
 
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -503,8 +503,6 @@ reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3
         if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
-        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-        double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
         //Remove hits close to the border  //FIXME to be activated in this code
         //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
@@ -516,16 +514,19 @@ reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3
         //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
         //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
 
-
         if(templateHisto){  //save discriminator probability
+           double ChargeOverPathlength = scaleFactor*dedxHits->charge(h)/(dedxHits->pathlength(h)*10.0);
            int    BinX   = templateHisto->GetXaxis()->FindBin(50.0);//trajState.localMomentum().mag()); //our template does not depends on this variable currently
-           int    BinY   = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h));
+           int    BinY   = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h)*10.0); //*10 because of cm-->mm
            int    BinZ   = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
            double Prob   = templateHisto->GetBinContent(BinX,BinY,BinZ);
+           //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
            if(reverseProb)Prob = 1.0 - Prob;
-           vect.push_back(Prob);
-        }else{              //save charge
-           vect.push_back(ChargeOverPathlength);
+           vect.push_back(Prob); //save probability
+        }else{              
+           double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
+           double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
+           vect.push_back(ChargeOverPathlength); //save charge
         }
      }
 
@@ -542,13 +543,12 @@ reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3
            //}
 
            //Ias discriminator
-           double result = 1.0/(12*size);
+           result = 1.0/(12*size);
            std::sort(vect.begin(), vect.end(), std::less<double>() );
            for(int i=1;i<=size;i++){
               result += vect[i-1] * pow(vect[i-1] - ((2.0*i-1.0)/(2.0*size)),2);
            }
            result *= (3.0/size);
-
         }else{  //dEdx estimator
            //harmonic2 estimator
            result=0;
