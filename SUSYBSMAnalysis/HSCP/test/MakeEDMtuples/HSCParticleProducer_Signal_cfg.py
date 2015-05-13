@@ -16,7 +16,12 @@ InputFileList = cms.untracked.vstring(
 #   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPstopM500_AOD-SIM.root', 
 #   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPstopM900_AOD-SIM.root',
 #    'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgmstauM308_AOD-SIM.root',
-   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgmstauM494_AOD-SIM.root',
+#   'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgmstauM494_AOD-SIM.root',
+
+#'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPgluinoM1500_AOD-SIM_740_MCRUN2_74_v7.root',
+
+#'root://cmseos.fnal.gov///eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPmchamp3_M2600_AOD-SIM_740_MCRUN2_74_V7.root',
+'root://cmseos.fnal.gov//eos/uscms/store/user/aackert/HSCP/AODgen/condorjdls/step2_condortest.root',
 )
 
 

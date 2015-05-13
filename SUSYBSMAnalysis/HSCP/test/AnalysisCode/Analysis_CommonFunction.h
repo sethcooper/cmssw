@@ -500,7 +500,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
         if(!usePixel && detid.subdetId()<3)continue; // skip pixels
-        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
+//        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
 
@@ -527,6 +527,8 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
            double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
            double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
            vect.push_back(ChargeOverPathlength); //save charge
+
+//           printf("%i - %f / %f = %f\n", h, scaleFactor*Norm*dedxHits->charge(h), dedxHits->pathlength(h), ChargeOverPathlength);
         }
      }
 
@@ -536,7 +538,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
      if(size>0){
         if(templateHisto){  //dEdx discriminator
            //Prod discriminator
-           //double result = 1;
+           //result = 1;
            //for(int i=0;i<size;i++){
            //   if(vect[i]<=0.0001){result *= pow(0.0001 , 1.0/size);}
            //   else               {result *= pow(vect[i], 1.0/size);}
@@ -557,6 +559,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
               result+=pow(vect[i],expo); 
            }
            result = pow(result/size,1./expo);
+//           printf("Ih = %f\n------------------\n",result);
         }
      }else{
         result = -1;

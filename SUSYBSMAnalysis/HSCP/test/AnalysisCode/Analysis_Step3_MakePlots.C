@@ -1374,14 +1374,17 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
  
     stPlots* SignPlots = new stPlots[samples.size()];  
     for(unsigned int s=0;s<samples.size();s++){
+         if(samples[s].Type!=2)continue;
+
 //       if (samples[s].Name!="Gluino_7TeV_M300_f10" && samples[s].Name!="Gluino_7TeV_M600_f10" && samples[s].Name!="Gluino_7TeV_M800_f10" && samples[s].Name!="Gluino_8TeV_M1200_f100" && samples[s].Name!="Gluino_8TeV_M300_f10" && samples[s].Name!="Gluino_8TeV_M600_f10" && samples[s].Name!="Gluino_8TeV_M800_f10" && samples[s].Name!="GMStau_7TeV_M247" && samples[s].Name!="GMStau_7TeV_M370" && samples[s].Name!="GMStau_7TeV_M494" && samples[s].Name!="GMStau_8TeV_M247" && samples[s].Name!="GMStau_8TeV_M370" && samples[s].Name!="GMStau_8TeV_M494" && samples[s].Name!="DY_7TeV_M100_Q1o3" &&  samples[s].Name!="DY_7TeV_M600_Q1o3" && samples[s].Name!="DY_7TeV_M100_Q2o3" &&  samples[s].Name!="DY_7TeV_M600_Q2o3" && samples[s].Name!="DY_8TeV_M100_Q1o3" &&  samples[s].Name!="DY_8TeV_M600_Q1o3" && samples[s].Name!="DY_8TeV_M100_Q2o3" &&  samples[s].Name!="DY_8TeV_M600_Q2o3" &&  samples[s].Name!="DY_8TeV_M400_Q1" && samples[s].Name!="DY_8TeV_M400_Q3" &&  samples[s].Name!="DY_8TeV_M400_Q5" && samples[s].Name!="DY_7TeV_M400_Q1" && samples[s].Name!="DY_7TeV_M400_Q3" && samples[s].Name!="DY_7TeV_M400_Q5" && samples[s].Name!="Gluino_8TeV_M500_f100" && samples[s].Name!="Stop_8TeV_M500") continue;
        if(!stPlots_InitFromFile(InputFile, SignPlots[s],samples[s].Name)){printf("Missing sample %s\n",samples[s].Name.c_str());continue;}
 //       if(samples[s].Name=="Gluino_8TeV_M600_f10" || samples[s].Name=="DY_8TeV_M600_Q2o3")stPlots_Draw(SignPlots[s], InputPattern + "/Selection_" +  samples[s].Name, LegendTitle, CutIndex);
+       stPlots_Draw(SignPlots[s], InputPattern + "/Selection_" +  samples[s].Name, LegendTitle, CutIndex);       
     }
 
-//    SQRTS=13; stPlots_Draw(Data13TeVPlots, InputPattern + "/Selection_Data13TeV", LegendTitle, CutIndex);
-    SQRTS=13; stPlots_Draw(MCTr13TeVPlots  , InputPattern + "/Selection_MCTr_13TeV"  , LegendTitle, CutIndex);
-    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1500_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M900",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
+    SQRTS=13; stPlots_Draw(Data13TeVPlots, InputPattern + "/Selection_Data13TeV", LegendTitle, CutIndex);
+    SQRTS=13; stPlots_Draw(MCTr13TeVPlots, InputPattern + "/Selection_MCTr_13TeV", LegendTitle, CutIndex);
+    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1500_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M900",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
 
 //    if(TypeMode!=3) {SQRTS=7; stPlots_Draw(Data7TeVPlots, InputPattern + "/Selection_Data7TeV", LegendTitle, CutIndex);}
 //    SQRTS=8; stPlots_Draw(MCTr8TeVPlots  , InputPattern + "/Selection_MCTr_8TeV"  , LegendTitle, CutIndex);
@@ -1415,9 +1418,8 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
 //      SQRTS=8; stPlots_DrawComparison(InputPattern + "/Selection_Comp_8TeV_DY"    , LegendTitle, CutIndex, CutIndexTight, &Data8TeVPlots, &MCTr8TeVPlots,   &SignPlots[JobIdToIndex("DY_8TeV_M100_Q1o3",samples)], &SignPlots[JobIdToIndex("DY_8TeV_M100_Q2o3",samples)], &SignPlots[JobIdToIndex("DY_8TeV_M600_Q2o3",samples)]);
 //    }
 
-//    stPlots_Clear(&Data13TeVPlots);
+    stPlots_Clear(&Data13TeVPlots);
     stPlots_Clear(&MCTr13TeVPlots);
-        
 
 //    stPlots_Clear(&Data8TeVPlots);
 //    if(TypeMode!=3) stPlots_Clear(&Data7TeVPlots);
@@ -1425,6 +1427,7 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
 //    if(TypeMode!=3) stPlots_Clear(&MCTr7TeVPlots);
 
     for(unsigned int s=0;s<samples.size();s++){
+         if(samples[s].Type!=2)continue;
 //       if (samples[s].Name!="Gluino_7TeV_M300_f10" && samples[s].Name!="Gluino_7TeV_M600_f10" && samples[s].Name!="Gluino_7TeV_M800_f10" && "Gluino_8TeV_M300_f10" && samples[s].Name!="Gluino_8TeV_M600_f10" && samples[s].Name!="Gluino_8TeV_M800_f10" && samples[s].Name!="GMStau_7TeV_M247" && samples[s].Name!="GMStau_7TeV_M370" && samples[s].Name!="GMStau_7TeV_M494" && samples[s].Name!="GMStau_8TeV_M247" && samples[s].Name!="GMStau_8TeV_M370" && samples[s].Name!="GMStau_8TeV_M494" && samples[s].Name!="DY_7TeV_M100_Q1o3" &&  samples[s].Name!="DY_7TeV_M600_Q1o3" && samples[s].Name!="DY_7TeV_M100_Q2o3" &&  samples[s].Name!="DY_7TeV_M600_Q2o3" && samples[s].Name!="DY_8TeV_M100_Q1o3" &&  samples[s].Name!="DY_8TeV_M600_Q1o3" && samples[s].Name!="DY_8TeV_M100_Q2o3" &&  samples[s].Name!="DY_8TeV_M600_Q2o3" && samples[s].Name!="DY_8TeV_M400_Q1" && samples[s].Name!="DY_8TeV_M400_Q3" &&  samples[s].Name!="DY_8TeV_M400_Q5") continue;
        if(!stPlots_InitFromFile(InputFile, SignPlots[s],samples[s].Name)) continue;
        stPlots_Clear(&SignPlots[s]);

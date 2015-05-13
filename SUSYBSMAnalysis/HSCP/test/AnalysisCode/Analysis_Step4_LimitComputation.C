@@ -165,8 +165,9 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    if(MODE.find("SHAPE")!=string::npos){SHAPESTRING="SHAPE";}else{SHAPESTRING="";}
 
    if(MODE.find("COMPUTELIMIT")!=string::npos || MODE.find("OPTIMIZE")!=string::npos){
-      if(signal.find("7TeV")!=string::npos){Data = "Data7TeV"; SQRTS=7.0; EXCLUSIONDIR+="7TeV"; }
-      if(signal.find("8TeV")!=string::npos){Data = "Data8TeV"; SQRTS=8.0; EXCLUSIONDIR+="8TeV"; }
+      if(signal.find("7TeV")!=string::npos){ Data = "Data7TeV";  SQRTS= 7.0; EXCLUSIONDIR+= "7TeV"; }
+      if(signal.find("8TeV")!=string::npos){ Data = "Data8TeV";  SQRTS= 8.0; EXCLUSIONDIR+= "8TeV"; }
+      if(signal.find("13TeV")!=string::npos){Data = "Data13TeV"; SQRTS=13.0; EXCLUSIONDIR+="13TeV"; }
       printf("EXCLUSIONDIR = %s\nData = %s\n",EXCLUSIONDIR.c_str(), Data.c_str());  
 
       if(MODE.find("COMPUTELIMIT")!=string::npos){Optimize(InputPattern, Data, signal, SHAPESTRING!="", true);      return;}
@@ -2110,6 +2111,7 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 
    if(Data.find("7TeV")!=string::npos){SQRTS=7.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS); }
    if(Data.find("8TeV")!=string::npos){SQRTS=8.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);  }
+   if(Data.find("13TeV")!=string::npos){SQRTS=13.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);  }
 
    //For muon only don't run on neutral samples as near zero efficiency can make jobs take very long time
    if((signal.find("Gluino")!=string::npos || signal.find("Stop")!=string::npos) && signal.find("N")!=string::npos && TypeMode==3) return;
@@ -2179,8 +2181,11 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
          string signalNameWithoutEnergy = signal;
          char str7TeV[]="_7TeV";
          char str8TeV[]="_8TeV";
+         char str13TeV[]="_13TeV";
          if(signalNameWithoutEnergy.find(str7TeV)!=string::npos)signalNameWithoutEnergy.erase(signalNameWithoutEnergy.find(str7TeV), string(str7TeV).length());
          if(signalNameWithoutEnergy.find(str8TeV)!=string::npos)signalNameWithoutEnergy.erase(signalNameWithoutEnergy.find(str8TeV), string(str8TeV).length()); 
+         if(signalNameWithoutEnergy.find(str13TeV)!=string::npos)signalNameWithoutEnergy.erase(signalNameWithoutEnergy.find(str13TeV), string(str13TeV).length()); 
+
 
          //printf("%s vs %s\n",Name_.c_str(), signalNameWithoutEnergy.c_str());
          if(Name_!=signalNameWithoutEnergy    )continue; //Not reading the cut line for the right signal sample
@@ -2268,28 +2273,15 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       result.WP_I      = HCuts_I  ->GetBinContent(CutIndex+1);
       result.WP_TOF    = HCuts_TOF->GetBinContent(CutIndex+1);
       result.LInt      = LInt;
-      
-      //compute the limit for this point and check it run sucessfully (some point may be skipped because of lack of statistics or other reasons)
-      //best expected limit
-    //if(TypeMode<=2){if(!runCombine(true, true, false, InputPattern, signal, CutIndex, shape, true, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU))continue;
-    //}else          {if(!runCombine(true, true, false, InputPattern, signal, CutIndex, shape, true, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU))continue;
-    //}
 
-      //no need to precompute the reach when not optimizing the cuts
-      //if(OptimCutIndex<0){
-         //best significance --> is actually best reach
-         if(TypeMode<=2){if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
-  	   //}else          {if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, H_D, H_P, H_S, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
-  	   }else          {if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
-	   }
-	 //}else{
-         //result.XSec_5Sigma=0.0001;//Dummy number --> will be recomputed later on... but it must be >0
-	 //}
+      //best significance --> is actually best reach
+      if(TypeMode<=2){if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
+      }else          {if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
+      }
 
       //report the result for this point in the log file
       fprintf(pFile  ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
       fprintf(stdout ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
-//      if(result.XSec_Exp<toReturn.XSec_Exp){
       if(OptimCutIndex>=0 || (result.XSec_5Sigma>0 && result.XSec_5Sigma<toReturn.XSec_5Sigma)){
          toReturn=result;
          fprintf(pFile  ," BestSelection\n");fflush(stdout);
@@ -2303,7 +2295,6 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
  
    //recompute the limit for the final point and save the output in the final directory (also save some plots for the shape based analysis)
    if(TypeMode<=2){runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
-     //}else          {runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, H_D, H_P, H_S, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
    }else          {runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
    }
   
@@ -2643,13 +2634,13 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
      else UncEffTr = -1*sqrt(0.05*0.05 + 0.04*0.04 + 0.01*0.01);
    }
 
-   printf("uncertainties = %f %f %f %f %f %f %f\n", UncEffP, UncEffI, UncEffPU, UncEffT, UncEffRe, UncEffTr, UncEffMB);
+//   printf("uncertainties = %f %f %f %f %f %f %f\n", UncEffP, UncEffI, UncEffPU, UncEffT, UncEffRe, UncEffTr, UncEffMB);
    if(isnan((float)UncEffPU))UncEffPU=0.0;
  
    double SignalUnc = 1 + sqrt(UncEffP*UncEffP + UncEffI*UncEffI + UncEffPU*UncEffPU + UncEffT*UncEffT + UncEffTr*UncEffTr + UncEffRe*UncEffRe + UncEffMB*UncEffMB);
    result.TotalUnc = SignalUnc-1;
 
-   printf("SIGNAL UNCERTAINTY = %f\n",SignalUnc);
+//   printf("SIGNAL UNCERTAINTY = %f\n",SignalUnc);
    //build the combine datacard, the same code is used both for cut&count and shape base
    char TypeStr[255]; sprintf(TypeStr,"Type%i", TypeMode);
    string JobName = TypeStr+signal;
@@ -2670,7 +2661,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       for(l=0;l<10 && pointMayBeOptimal;l++){
          PrevSignifValue = SignifValue;
          SignifValue = computeSignificance(datacardPath, true, (JobName), massStr, Strength);
-         printf("SIGNAL STRENGTH = %E --> SIGNIFICANCE=%E\n",Strength,SignifValue);fflush(stdout);
+         printf("%i SIGNAL STRENGTH = %E --> SIGNIFICANCE=%E (countDecrease=%i)\n",l, Strength,SignifValue,CountDecrease);fflush(stdout);
 
          if(SignifValue<=PrevSignifValue || SignifValue<=0){CountDecrease++;}else{CountDecrease=0;}
          if(CountDecrease>=2){result.XSec_5Sigma  = 1E49; break;}
@@ -2678,7 +2669,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
          //we found the signal strength that lead to a significance close enough to the 5sigma to stop the loop 
          //OR we know that this point is not going to be a good one --> can do a coarse approximation since the begining
 //         if(fabs(SignifValue-5)<0.75 || (fastOptimization && Strength>=previousXSec_5Sigma && SignifValue<5)){
-           if(fabs(SignifValue-5)<1.00 || (fastOptimization && previousXSec_5Sigma>=0 && Strength>=previousXSec_5Sigma/(result.XSec_Th/100.0) && SignifValue<5 && SignifValue>=0)){
+         if(fabs(SignifValue-5)<1.00 || (fastOptimization && previousXSec_5Sigma>=0 && Strength>=previousXSec_5Sigma/(result.XSec_Th/100.0) && SignifValue<5 && SignifValue>=0)){
             if(fabs(SignifValue-5)<1.00){printf("Full Converge\n");
             }else{printf("Fast Converge\n");}
             result.XSec_5Sigma  = Strength * (5/SignifValue) * (result.XSec_Th/100.0);//xsection in pb
