@@ -58,7 +58,7 @@
  using namespace trigger;
 
 #include "Analysis_Samples.h"
-#include "../../ICHEP_Analysis/Analysis_PlotFunction.h"
+#include "../../AnalysisCode/Analysis_PlotFunction.h"
 
 
 #endif

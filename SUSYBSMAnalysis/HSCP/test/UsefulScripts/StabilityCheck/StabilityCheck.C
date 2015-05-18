@@ -54,9 +54,9 @@ using namespace edm;
 using namespace trigger;
 
 
-#include "../../ICHEP_Analysis/Analysis_PlotFunction.h"
-#include "../../ICHEP_Analysis/Analysis_Samples.h"
-#include "../../ICHEP_Analysis/Analysis_Global.h"
+#include "../../AnalysisCode/Analysis_PlotFunction.h"
+#include "../../AnalysisCode/Analysis_Samples.h"
+#include "../../AnalysisCode/Analysis_Global.h"
 
 
 #endif
