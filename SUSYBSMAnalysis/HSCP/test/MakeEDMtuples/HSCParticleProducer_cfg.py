@@ -124,7 +124,7 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "drop TrackingRecHitsOwned_refittedStandAloneMuons_*_*", #don't think this is needed
          "drop TrackingRecHitsOwned_standAloneMuons_*_*",  #don't think this is needed
     ),
-    fileName = cms.untracked.string('HSCP.root'),
+    fileName = cms.untracked.string(OUTPUTFILE),
     SelectEvents = cms.untracked.PSet(
        SelectEvents = cms.vstring('*')
     ),

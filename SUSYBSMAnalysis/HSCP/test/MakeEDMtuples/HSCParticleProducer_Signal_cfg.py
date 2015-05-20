@@ -6,6 +6,8 @@ isBckg = False
 isData = False
 isSkimmedSample = False
 GTAG = 'MCRUN2_74_V7::All'
+OUTPUTFILE = 'HSCP.root'
+
 InputFileList = cms.untracked.vstring()
 
 #debug input files 

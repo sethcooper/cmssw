@@ -6,6 +6,7 @@ isBckg = False
 isData = True
 isSkimmedSample = False
 GTAG = 'GR_R_72_V2::All'
+OUTPUTFILE = 'HSCP.root'
 
 #debug input files 
 #this list is overwritten by CRAB
