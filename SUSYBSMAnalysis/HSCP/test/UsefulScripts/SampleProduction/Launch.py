@@ -9,7 +9,7 @@ import glob
 
 samples = [
 #SampleName, generator config file, NJobs, NEvents/Job
-  ['ZMM' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 200, 500],
+  ['ZMM' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 100, 200],
   ['Gluino400' , 'Configuration/GenProduction/python/ThirteenTeV/HSCPgluino_M_400_TuneCUETP8M1_13TeV_pythia8_cff.py', 100, 50],
   ['Gluino1000', 'Configuration/GenProduction/python/ThirteenTeV/HSCPgluino_M_1000_TuneCUETP8M1_13TeV_pythia8_cff.py', 100, 50],
   ['Gluino1600', 'Configuration/GenProduction/python/ThirteenTeV/HSCPgluino_M_1600_TuneCUETP8M1_13TeV_pythia8_cff.py', 100, 50],
@@ -24,13 +24,13 @@ samples = [
 
 if sys.argv[1]=='1':
    #this is common to all samples, so we need to do it only once
-   os.system('cmsDriver.py --filein file:step1.root --fileout XXX_OUTPUT_XXX_XXX_I_XXX.root --mc --eventcontent AODSIM --datatier GEN-SIM-DIGI-AOD --conditions MCRUN2_74_V7 --step HLT:GRun,RAW2DIGI,L1Reco,RECO --python_filename RECO_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n -1')
+   os.system('cmsDriver.py --filein file:step1.root --fileout XXX_OUTPUT_XXX_XXX_I_XXX.root --mc --eventcontent AODSIM --datatier GEN-SIM-DIGI-AOD --conditions auto:run2_mc --step HLT:GRun,RAW2DIGI,L1Reco,RECO --python_filename RECO_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n -1')
 
    for S in samples:
       if('HSCP' in S[1]):
-         os.system('cmsDriver.py ' + S[1] + ' --fileout file:step1.root --mc --eventcontent RAWSIM --datatier GEN-SIM-RAW --conditions MCRUN2_74_V7 --step GEN,SIM,DIGI,L1,DIGI2RAW --python_filename GEN_SIM_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SimG4Core/CustomPhysics/Exotica_HSCP_SIM_cfi.customise,SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n 10')
+         os.system('cmsDriver.py ' + S[1] + ' --fileout file:step1.root --mc --eventcontent RAWSIM --datatier GEN-SIM-RAW --conditions auto:run2_mc --step GEN,SIM,DIGI,L1,DIGI2RAW --python_filename GEN_SIM_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SimG4Core/CustomPhysics/Exotica_HSCP_SIM_cfi.customise,SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n 10')
       else:
-         os.system('cmsDriver.py ' + S[1] + ' --fileout file:step1.root --mc --eventcontent RAWSIM --datatier GEN-SIM-RAW --conditions MCRUN2_74_V7 --step GEN,SIM,DIGI,L1,DIGI2RAW --python_filename GEN_SIM_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n 10')
+         os.system('cmsDriver.py ' + S[1] + ' --fileout file:step1.root --mc --eventcontent RAWSIM --datatier GEN-SIM-RAW --conditions auto:run2_mc --step GEN,SIM,DIGI,L1,DIGI2RAW --python_filename GEN_SIM_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n 10')
 
       with open("GEN_SIM_Template_cfg.py", "a") as f:
          f.write('process.RandomNumberGeneratorService.generator.initialSeed = cms.untracked.uint32(XXX_SEED_XXX)\n')
@@ -73,12 +73,16 @@ elif sys.argv[1]=='2':
          f.write("isBckg = True\n")
       f.write("isData = False\n")
       f.write("isSkimmedSample = False\n")
-      f.write("GTAG = 'MCRUN2_74_V7::All'\n")
+      f.write("GTAG = 'MCRUN2_74_V8::all'\n")
       f.write("OUTPUTFILE = 'XXX_OUTPUT_XXX.root'\n")
       f.write("InputFileList = cms.untracked.vstring()\n")
       f.write("\n")
       for i in range(0,S[2]):
-         f.write("InputFileList.extend(['file:"+os.getcwd()+"/FARM_"+S[0]+"_SIMAOD/outputs/"+S[0]+"_SIMAOD_%04i.root'])\n" % i)
+         inFile = os.getcwd()+"/FARM_"+S[0]+"_SIMAOD/outputs/"+S[0]+"_SIMAOD_%04i.root" % i
+         if(os.path.isfile(inFile) ):
+            f.write("InputFileList.extend(['file:"+inFile+"'])\n")
+         else:
+            print "missing "+ inFile
       f.write("\n")
       f.write("#main EDM tuple cfg that depends on the above parameters\n")
       f.write("execfile( os.path.expandvars('${CMSSW_BASE}/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/HSCParticleProducer_cfg.py') )\n")

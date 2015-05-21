@@ -113,4 +113,6 @@ HSCParticleSelector = cms.EDFilter("HSCParticleSelector",
 #   HSCP Candidate Sequence
 ####################################################################################
 
-HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * MuonSegmentProducer * HSCParticleProducer)
+#HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * MuonSegmentProducer * HSCParticleProducer)
+HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * HSCParticleProducer) # FIXME MuonSegmentProducer is temporarilly switched off
+
