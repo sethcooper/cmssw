@@ -9,7 +9,7 @@ import glob
 
 
 #the vector below contains the "TypeMode" of the analyses that should be run
-AnalysesToRun = [0]#,2,3,4,5]
+AnalysesToRun = [0,2]#,3,4,5]
 
 
 if len(sys.argv)==1:       
