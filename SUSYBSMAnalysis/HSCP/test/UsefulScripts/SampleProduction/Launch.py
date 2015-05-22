@@ -7,6 +7,17 @@ import sys
 import SUSYBSMAnalysis.HSCP.LaunchOnCondor as LaunchOnCondor  
 import glob
 
+"""
+check that a file exist and is not corrupted
+"""
+def checkInputFile(url):
+    if(url.startswith('/store')==True):
+       url= 'root://eoscms//eos/cms'+url
+    command_out = commands.getstatusoutput("root -l -b -q " + url)
+    if(command_out[1].find("Error")>=0 or command_out[1].find("probably not closed")>=0 or command_out[1].find("Corrupted")>=0):return False
+    return True
+
+
 samples = [
 #SampleName, generator config file, NJobs, NEvents/Job
   ['Gluino_13TeV_M100' , 'Configuration/GenProduction/python/ThirteenTeV/HSCPgluino_M_100_TuneCUETP8M1_13TeV_pythia8_cff.py', 50, 500],
@@ -97,11 +108,11 @@ samples = [
   ['PPStau_13TeV_M1409', 'Configuration/GenProduction/python/ThirteenTeV/HSCPppstau_M_1409_TuneZ2star_13TeV_pythia6_cff.py', 50, 500],
   ['PPStau_13TeV_M1599', 'Configuration/GenProduction/python/ThirteenTeV/HSCPppstau_M_1599_TuneZ2star_13TeV_pythia6_cff.py', 50, 500],
 
-  ['ZMM' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 250, 1000],
+  ['MC_13TeV_DYToMuMu' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 250, 1000],
 ]
 
 
-if sys.argv[1]=='1':
+if sys.argv[1]=='1':  #GEN-SIM-DIGI-RECO-AOD in one shot
    #this is common to all samples, so we need to do it only once
    os.system('cmsDriver.py --filein file:step1.root --fileout XXX_OUTPUT_XXX_XXX_I_XXX.root --mc --eventcontent AODSIM --datatier GEN-SIM-DIGI-AOD --conditions auto:run2_mc --step HLT:GRun,RAW2DIGI,L1Reco,RECO --python_filename RECO_Template_cfg.py --magField 38T_PostLS1 --geometry Extended2015 --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --no_exec -n -1')
 
@@ -134,9 +145,9 @@ if sys.argv[1]=='1':
 
 
 
-elif sys.argv[1]=='2':
+elif sys.argv[1]=='2':  #AOD --> EDM files
    for S in samples:
-      JobName = S[0]+"_EDM"
+      JobName = S[0]
       FarmDirectory = "FARM_EDM"
       LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
@@ -158,7 +169,7 @@ elif sys.argv[1]=='2':
       f.write("\n")
       for i in range(0,S[2]):
          inFile = os.getcwd()+"/FARM_"+S[0]+"_SIMAOD/outputs/"+S[0]+"_SIMAOD_%04i.root" % i
-         if(os.path.isfile(inFile) ):
+         if(checkInputFile(inFile) ):
             f.write("InputFileList.extend(['file:"+inFile+"'])\n")
          else:
             print "missing "+ inFile
@@ -169,3 +180,7 @@ elif sys.argv[1]=='2':
 
       LaunchOnCondor.SendCluster_Push  (["CMSSW", "HSCPEDM_cfg.py" ])
       LaunchOnCondor.SendCluster_Submit()
+
+elif sys.argv[1]=='3':  #Transfert final EDM files from your place to CERN CMST3
+   for S in samples:
+      os.system('lcg-cp --verbose -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN=/storage/data/cms/store/user/quertenmont/15_05_20_HSCP_AODSIM/'+S[0]+'_EDM.root" "srm://srm-eoscms.cern.ch:8443/srm/v2/server?SFN=/eos/cms//store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/'+S[0]+'.root" &> LOG_'+S[0]+'.log &')
