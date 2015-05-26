@@ -69,6 +69,11 @@ void Analysis_Step3_MakePlots()
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 
 
+   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 905; CutIndex_Flip=16;
+   MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
+   CutFlow(InputPattern, CutIndex);
+   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 
 
 
@@ -218,7 +223,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    //README: Comments or uncomment lines below in order to decide what you want to see on your plot
    if(DataName.find("13TeV")!=string::npos){
                     SName="Gluino_13TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV/#font[12]{c}^{2})";
-      if(!IsTkOnly){SName="GMStau_13TeV_M308";         SLeg="Stau (M = 308 GeV/#font[12]{c}^{2})";}
+      if(!IsTkOnly){SName="GMStau_13TeV_M494";         SLeg="Stau (M = 494 GeV/#font[12]{c}^{2})";}
 
       Pred13TeV    = GetProjectionFromPath(InputFile, string("Data13TeV/Pred_") + HistoSuffix, CutIndex, "TmpPredMass");
       Data13TeV    = GetProjectionFromPath(InputFile, string("Data13TeV/"     ) + HistoSuffix, CutIndex, "TmpDataMass");

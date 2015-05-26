@@ -2661,7 +2661,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       for(l=0;l<10 && pointMayBeOptimal;l++){
          PrevSignifValue = SignifValue;
          SignifValue = computeSignificance(datacardPath, true, (JobName), massStr, Strength);
-         printf("%i SIGNAL STRENGTH = %E --> SIGNIFICANCE=%E (countDecrease=%i)\n",l, Strength,SignifValue,CountDecrease);fflush(stdout);
+         printf("%i SIGNAL STRENGTH = %E --> SIGNIFICANCE=%E (countDecrease=%f)\n",l, Strength,SignifValue,CountDecrease);fflush(stdout);
 
          if(SignifValue<=PrevSignifValue || SignifValue<=0){CountDecrease++;}else{CountDecrease=0;}
          if(CountDecrease>=2){result.XSec_5Sigma  = 1E49; break;}
