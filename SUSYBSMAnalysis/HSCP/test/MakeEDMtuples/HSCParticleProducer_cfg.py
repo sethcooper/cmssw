@@ -14,8 +14,26 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load('Configuration.Geometry.GeometryExtended2015_cff')
 process.load('Configuration.Geometry.GeometryExtended2015Reco_cff')
 process.load('Configuration.StandardSequences.MagneticField_38T_PostLS1_cff')
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+#process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load('Configuration.StandardSequences.Services_cff')
+
+
+
+
+#process.load('Configuration.StandardSequences.Services_cff')
+#process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
+#process.load('FWCore.MessageService.MessageLogger_cfi')
+#process.load('Configuration.EventContent.EventContent_cff')
+#process.load('SimGeneral.MixingModule.mixNoPU_cfi')
+#process.load('Configuration.Geometry.GeometryExtended2015Reco_cff')
+#process.load('Configuration.StandardSequences.MagneticField_38T_PostLS1_cff')
+#process.load('HLTrigger.Configuration.HLT_GRun_cff')
+#process.load('Configuration.StandardSequences.RawToDigi_cff')
+#process.load('Configuration.StandardSequences.L1Reco_cff')
+#process.load('Configuration.StandardSequences.Reconstruction_cff')
+#process.load('Configuration.StandardSequences.EndOfProcess_cff')
+
 
 process.options   = cms.untracked.PSet(
       wantSummary = cms.untracked.bool(True),
@@ -34,7 +52,10 @@ if(isSignal): process.source.duplicateCheckMode = cms.untracked.string("noDuplic
 #for i in range(0,25):
 #   process.source.fileNames.extend(["file:/afs/cern.ch/user/q/querten/workspace/public/14_08_12_Run2HSCP/CMSSW_7_2_X_2014-08-18-0200/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/Signals/../../../../../SampleProd/FARM_RECO/outputs/gluino1TeV_RECO_%04i.root" % i])
 
-process.GlobalTag.globaltag = GTAG
+#process.GlobalTag.globaltag = GTAG
+from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
+process.GlobalTag = GlobalTag(process.GlobalTag, GTAG, '')
+
 
 process.HSCPTuplePath = cms.Path()
 
