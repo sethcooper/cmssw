@@ -31,7 +31,7 @@
 #include "TRandom3.h"
 #include "TTree.h"
 
-double IntegratedLuminosity13TeV               = 1000; //pb
+double IntegratedLuminosity13TeV               = 18823; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
@@ -85,9 +85,9 @@ double             GlobalMaxPterr     =   0.25;   // cut on error on track pT me
 double             GlobalMaxTIsol     =  50;      // cut on tracker isolation (SumPt)
 double             GlobalMaxRelTIsol  =  9999999; // cut on relative tracker isolation (SumPt/Pt)
 double             GlobalMaxEIsol     =  0.30;    // cut on calorimeter isolation (E/P)
-double             GlobalMinPt        =  45.00;   // cut on pT    at PRE-SELECTION
+double             GlobalMinPt        =  50.00;   // cut on pT    at PRE-SELECTION
 double             GlobalMinIs        =   0.0;    // cut on dEdxS at PRE-SELECTION (dEdxS is generally a  discriminator)
-double             GlobalMinIm        =   3.0;    // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
+double             GlobalMinIm        =   0.0;    // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
 double             GlobalMinTOF       =   1.0;    // cut on TOF   at PRE-SELECTION
 const int          MaxPredBins        =   6;      // The maximum number of different bins prediction is done in for any of the analyses (defines array size)
 int                PredBins           =   0;      //  How many different bins the prediction is split in for analysis being run, sets how many histograms are actually initialized.

@@ -185,7 +185,7 @@ void keepOnlySamplesOfNamesXtoY(std::vector<stSample>& samples, std::vector<stri
     }
 }
 
-void keepOnlySamplesAt7and8TeVX(std::vector<stSample>& samples, double SQRTS_){
+void keepOnlySamplesAtSQRTS(std::vector<stSample>& samples, double SQRTS_){
    if(SQRTS_==78 || SQRTS_==87){
       std::vector<stSample> samples_tmp;
       for(unsigned int s=0;s<samples.size();s++){

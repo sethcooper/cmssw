@@ -194,16 +194,17 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
       Combine(InputPattern, signal7TeV, signal8TeV);
       return;
    }
-   if(MODE.find("7TeV")!=string::npos){Data = "Data7TeV"; SQRTS=7.0; EXCLUSIONDIR+="7TeV"; }
-   if(MODE.find("8TeV")!=string::npos){Data = "Data8TeV"; SQRTS=8.0; EXCLUSIONDIR+="8TeV"; }
+   if(MODE.find("7TeV" )!=string::npos){Data = "Data7TeV"; SQRTS=7.0 ; EXCLUSIONDIR+="7TeV" ; }
+   if(MODE.find("8TeV" )!=string::npos){Data = "Data8TeV"; SQRTS=8.0 ; EXCLUSIONDIR+="8TeV" ; }
+   if(MODE.find("13TeV")!=string::npos){Data = "Data8TeV"; SQRTS=13.0; EXCLUSIONDIR+="13TeV"; }
    printf("EXCLUSIONDIR = %s\nData = %s\n",EXCLUSIONDIR.c_str(), Data.c_str());  
 
    
    string TkPattern  = "Results/Type0/";
    string MuPattern  = "Results/Type2/";
-   string MOPattern  = "Results/Type3/";
-   string HQPattern  = "Results/Type4/";
-   string LQPattern  = "Results/Type5/";
+//   string MOPattern  = "Results/Type3/";  //Disabling this analyis
+//   string HQPattern  = "Results/Type4/";  //Disabling this analyis
+//   string LQPattern  = "Results/Type5/";  //Disabling this analyis
 
    bool Combine = (MODE.find("COMB")!=string::npos);
    if(Combine){EXCLUSIONDIR+="COMB"; SQRTS=78.0;}
@@ -215,14 +216,15 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    //determine the list of models that are considered
    GetSampleDefinition(samples);
 
-   if(SQRTS!=78.0) keepOnlySamplesAt7and8TeVX(samples, SQRTS);
+   if(SQRTS!=78.0) keepOnlySamplesAtSQRTS(samples, SQRTS);
 
    for(unsigned int s=0;s<samples.size();s++){
     if(samples[s].Type!=2)continue;
     //printf("Name-->Model >>  %30s --> %s\n",samples[s].Name.c_str(), samples[s].ModelName().c_str());
 
-    if(SQRTS== 7.0  && samples[s].Name.find("_7TeV")==string::npos){continue;}
-    if(SQRTS== 8.0  && samples[s].Name.find("_8TeV")==string::npos){continue;}
+    if(SQRTS== 7.0  && samples[s].Name.find( "_7TeV")==string::npos){continue;}
+    if(SQRTS== 8.0  && samples[s].Name.find( "_8TeV")==string::npos){continue;}
+    if(SQRTS==13.0  && samples[s].Name.find("_13TeV")==string::npos){continue;}
 //    if(SQRTS==78.0){if(samples[s].Name.find("_7TeV")==string::npos){continue;}else{samples[s].Name.replace(samples[s].Name.find("_7TeV"),5, ""); } }
     if(SQRTS==78.0){if(samples[s].Name.find("_8TeV")==string::npos){continue;}else{samples[s].Name.replace(samples[s].Name.find("_8TeV"),5, ""); } }
 
@@ -246,20 +248,22 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    //DrawRatioBands(TkPattern); 
    //DrawRatioBands(MuPattern);
    //DrawRatioBands(MOPattern); 
+   //DrawRatioBands(HQPattern);
    //DrawRatioBands(LQPattern);
 
    //draw the cross section limit for all model
    DrawModelLimitWithBand(TkPattern);
    DrawModelLimitWithBand(MuPattern);
-   DrawModelLimitWithBand(MOPattern);
-   DrawModelLimitWithBand(LQPattern);
+  // DrawModelLimitWithBand(MOPattern);
+   //DrawModelLimitWithBand(HQPattern);
+   //DrawModelLimitWithBand(LQPattern);
    //make plots of the observed limit for all signal model (and mass point) and save the result in a latex table
 
    TCanvas* c1;
    TLegend* LEG;
    double LInt = 0;
 
-   FILE* pFile    = fopen((outpath+string("Analysis_Step4_LimitComputation_Result") + ".txt").c_str(),"w");
+   FILE* pFile    = fopen((outpath+string("Summary") + ".txt").c_str(),"w");
    FILE* talkFile = fopen((outpath + "TalkPlots" + ".txt").c_str(),"w");
 
    fprintf(pFile   , "\\documentclass{article}\n");
@@ -271,8 +275,10 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
 
    fprintf(pFile   , "%% %50s\n", "TkOnly");
    fprintf(pFile   , "\\begin{table}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
+   fprintf(pFile   , "%-20s & %-4s & %-6s & %-5s & %-5s & %-4s & %-15s & %-2s & %-4s & %-6s & %-6s & %-6s & %-3s \\\\\n", "Model", "Mass", "pT>", "I>", "TOF>", "Mass>", "Bckg. Pred", "Obs", "Seff", "ThXsec", "ExpXsec", "ObsXsec", "Signif");
    fprintf(talkFile, "\\begin{sidewaystable}\n   \\centering\n      \\begin{tabular}{|l|cccccccc|}\n      \\hline\n");
    fprintf(talkFile,"Sample & Mass(GeV) & Pt(GeV) & $I_{as}$ & TOF & Mass Cut (GeV) & N pred & N observed & Eff & Signif \\\\\n");
+
    fprintf(talkFile, "\\hline\n");
    TGraph** TkGraphs  = new TGraph*[modelVector.size()];
    for(unsigned int k=0; k<modelVector.size(); k++){
@@ -295,6 +301,8 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    fprintf(pFile   ,"      \\end{tabular}\n\\end{table}\n\n");
    fprintf(talkFile,"      \\end{tabular}\n\\end{sidewaystable}\n\n");
 
+   //DISABLED FOR NOW ON the MuonOnly, mCHamps and Frac Charge plots
+   /*
    fprintf(pFile   , "%% %50s\n", "MuOnly");
    fprintf(pFile   , "\\begin{table}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
    fprintf(talkFile, "\\begin{sidewaystable}\n   \\centering\n      \\begin{tabular}{|l|cccccc|}\n      \\hline\n");
@@ -338,11 +346,12 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    }
    fprintf(pFile   ,"      \\end{tabular}\n\\end{table}\n\n");
    fprintf(talkFile,"      \\end{tabular}\n\\end{sidewaystable}\n\n");
-
+   */
    fprintf(pFile   ,"\\end{document}\n\n");
    fprintf(talkFile,"\\end{document}\n\n");
 
-
+   //DISABLED FOR NOW ON, WILL NEED TO BE ADAPTED FOR THE PAPER SUMMARY TABLE
+   /*
    if(SQRTS==8.0){
       fprintf(pFile,"%%TKONLY\n");
       fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
@@ -374,10 +383,6 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
       for(unsigned int k=0; k<modelVector.size(); k++){printSummary(pFile, talkFile, LQPattern , modelVector[k], modelMap[modelVector[k]]); }
       fprintf(pFile,"\\hline\n\n\n");
 
-
-
-
-
       fprintf(pFile,"\n\n\n\n\n\n");
       fprintf(pFile,"%%TKONLY\n");
       fprintf(pFile,"Sample & Mass  & Cut   & \\multicolumn{4}{c|}{$\\sqrt{s}=7TeV$} & \\multicolumn{4}{c|}{$\\sqrt{s}=8TeV$} & \\multicolumn{2}{c|}{$\\sqrt{s}=7+8TeV$} \\\\\\hline\n");
@@ -408,7 +413,7 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
       fprintf(pFile,"       & (GeV) & (GeV) & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & Eff & $\\sigma_{TH}$ & $\\sigma_{obs}$ & $\\sigma_{pred}$ & $\\mu_{obs}$ & $\\mu_{pred}$ \\\\\\hline\n");
       for(unsigned int k=0; k<modelVector.size(); k++){printSummaryPaper(pFile, talkFile, LQPattern , modelVector[k], modelMap[modelVector[k]]); }
       fprintf(pFile,"\\hline\n\n\n");
-   }
+   }*/
 
    //print a table with all uncertainty on signal efficiency
 
@@ -503,6 +508,7 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    delete LEG;
    }
 
+   /*
    fprintf(pFile   ,"\n\n %20s \n\n", LegendFromType(MOPattern).c_str());
    fprintf(pFile,             "%20s   Eff   --> PScale |  DeDxScale | PUScale | TOFScale | TotalUncertainty     \n","Model");
    fprintf(talkFile, "\\hline\n%20s &  Eff    & PScale &  DeDxScale & PUScale & TOFScale & TotalUncertainty \\\\\n","Model");
@@ -637,7 +643,7 @@ void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern=
    delete HQSystGraphs;
    delete LEG;
    }
-
+   */
 std::cout<<"TESTA\n";
 
    //Get Theoretical xsection and error bands
@@ -649,6 +655,9 @@ std::cout<<"TESTA\n";
             ThXSec   [k] = new TGraph(sizeof(THXSEC7TeV_Gluino_Mass)/sizeof(double),THXSEC7TeV_Gluino_Mass,THXSEC7TeV_Gluino_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC7TeV_Gluino_Mass)/sizeof(double),THXSEC7TeV_Gluino_Mass,THXSEC7TeV_Gluino_Low,THXSEC7TeV_Gluino_High, PlotMinScale, PlotMaxScale);
          }else if(SQRTS==8){
+            ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Low,THXSEC8TeV_Gluino_High, PlotMinScale, PlotMaxScale);
+         }else if(SQRTS==13){ //FIXME
             ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Low,THXSEC8TeV_Gluino_High, PlotMinScale, PlotMaxScale);
          }
@@ -665,6 +674,9 @@ std::cout<<"TESTA\n";
          }else if(SQRTS==8){
             ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Low,THXSEC8TeV_Stop_High, PlotMinScale, PlotMaxScale);
+         }else if(SQRTS==13){ //FIXME
+            ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Low,THXSEC8TeV_Stop_High, PlotMinScale, PlotMaxScale);
          }
          else {
            const int NMass=sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double);
@@ -677,6 +689,9 @@ std::cout<<"TESTA\n";
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt); 
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC7TeV_GMStau_Mass)/sizeof(double),THXSEC7TeV_GMStau_Mass,THXSEC7TeV_GMStau_Low,THXSEC7TeV_GMStau_High, PlotMinScale, PlotMaxScale); 
          }else if(SQRTS==8){
+            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double),THXSEC8TeV_GMStau_Mass,THXSEC8TeV_GMStau_Low,THXSEC8TeV_GMStau_High, PlotMinScale, PlotMaxScale);
+         }else if(SQRTS==13){ //FIXME
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double),THXSEC8TeV_GMStau_Mass,THXSEC8TeV_GMStau_Low,THXSEC8TeV_GMStau_High, PlotMinScale, PlotMaxScale);
          }
@@ -693,6 +708,9 @@ std::cout<<"TESTA\n";
          }else if(SQRTS==8){
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double),THXSEC8TeV_PPStau_Mass,THXSEC8TeV_PPStau_Low,THXSEC8TeV_PPStau_High, PlotMinScale, PlotMaxScale);
+         }else if(SQRTS==13){
+            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double),THXSEC8TeV_PPStau_Mass,THXSEC8TeV_PPStau_Low,THXSEC8TeV_PPStau_High, PlotMinScale, PlotMaxScale);
          }
          else {
            const int NMass=sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double);
@@ -701,13 +719,13 @@ std::cout<<"TESTA\n";
            ThXSec   [k] = new TGraph(NMass,THXSEC8TeV_PPStau_Mass,ones);
          }
        }else{
-         if(modelVector[k].find("o3")!=string::npos){
-            ThXSec   [k] = MakePlot(NULL, NULL, LQPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-         }else if(modelVector[k].find("DY_Q")!=string::npos){
-            ThXSec   [k] = MakePlot(NULL, NULL, HQPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-         }else{
+         //if(modelVector[k].find("o3")!=string::npos){
+         //   ThXSec   [k] = MakePlot(NULL, NULL, LQPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+         //}else if(modelVector[k].find("DY_Q")!=string::npos){
+         //   ThXSec   [k] = MakePlot(NULL, NULL, HQPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+         //}else{
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-         }
+         //}
          double* XSecErrLow  = new double[ThXSec[k]->GetN()];
          double* XSecErrHigh = new double[ThXSec[k]->GetN()];
          //assume 10% error on xsection
@@ -739,6 +757,7 @@ std::cout<<"TESTB\n";
       //fprintf(pFile,"%20s --> Excluded mass below %8.3fGeV\n", modelVector[k].c_str(), FindIntersectionBetweenTwoGraphs(MuGraphs[k],  ThXSec[k], MuGraphs[k]->GetX()[0], MuGraphs[k]->GetX()[MuGraphs[k]->GetN()-1], 1, 0.00));
    }  
 
+   /*
    fprintf(pFile,"-----------------------\n0%% MU+Only        \n-------------------------\n");
    for(unsigned int k=0; k<modelVector.size(); k++){
       bool isNeutral = false;if(modelVector[k].find("GluinoN")!=string::npos || modelVector[k].find("StopN")!=string::npos)isNeutral = true;
@@ -770,7 +789,9 @@ std::cout<<"TESTB\n";
       if(LQGraphs[k]->GetX()[LQGraphs[k]->GetN()-1]<0) continue;
       fprintf(pFile,"%20s --> Excluded mass below %8.3fGeV\n", modelVector[k].c_str(), FindIntersectionBetweenTwoGraphs(LQGraphs[k],  ThXSec[k], LQGraphs[k]->GetX()[0], LQGraphs[k]->GetX()[LQGraphs[k]->GetN()-1], 1, 0.00));
    }
+   */
    fclose(pFile);
+  
 
 std::cout<<"TESTC\n";
 
@@ -787,71 +808,62 @@ std::cout<<"TESTC\n";
    for(unsigned int k=0; k<modelVector.size(); k++){
       TkGraphMap[modelVector[k]] = TkGraphs [k];
       MuGraphMap[modelVector[k]] = MuGraphs [k];
-      LQGraphMap[modelVector[k]] = LQGraphs [k];
-      HQGraphMap[modelVector[k]] = HQGraphs [k];
-      MOGraphMap[modelVector[k]] = MOGraphs [k];
+      //LQGraphMap[modelVector[k]] = LQGraphs [k];
+      //HQGraphMap[modelVector[k]] = HQGraphs [k];
+      //MOGraphMap[modelVector[k]] = MOGraphs [k];
       ThGraphMap[modelVector[k]] = ThXSec   [k];
       ThErrorMap[modelVector[k]] = ThXSecErr[k];
    }
 
    ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
    MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-   MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+   //MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
    TkGraphMap["Gluino_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-   TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+   //TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
    TkGraphMap["GluinoN_f10"  ]->SetLineColor(4);  TkGraphMap["GluinoN_f10"  ]->SetMarkerColor(4);   TkGraphMap["GluinoN_f10"  ]->SetLineWidth(2);   TkGraphMap["GluinoN_f10"  ]->SetLineStyle(1);  TkGraphMap["GluinoN_f10"  ]->SetMarkerStyle(26);
-   MOGraphMap["Gluino_f10"   ]->SetLineColor(4);  MOGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-   MOGraphMap["Gluino_f50"   ]->SetLineColor(4);  MOGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
-   MOGraphMap["Gluino_f100"  ]->SetLineColor(4);  MOGraphMap["Gluino_f100"  ]->SetMarkerColor(4);   MOGraphMap["Gluino_f100"  ]->SetLineWidth(2);   MOGraphMap["Gluino_f100"  ]->SetLineStyle(1);  MOGraphMap["Gluino_f100"  ]->SetMarkerStyle(26);
+   //MOGraphMap["Gluino_f10"   ]->SetLineColor(4);  MOGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
+   //MOGraphMap["Gluino_f50"   ]->SetLineColor(4);  MOGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+   //MOGraphMap["Gluino_f100"  ]->SetLineColor(4);  MOGraphMap["Gluino_f100"  ]->SetMarkerColor(4);   MOGraphMap["Gluino_f100"  ]->SetLineWidth(2);   MOGraphMap["Gluino_f100"  ]->SetLineStyle(1);  MOGraphMap["Gluino_f100"  ]->SetMarkerStyle(26);
    ThGraphMap["Stop"         ]->SetLineColor(2);  ThGraphMap["Stop"         ]->SetMarkerColor(2);   ThGraphMap["Stop"         ]->SetLineWidth(1);   ThGraphMap["Stop"         ]->SetLineStyle(2);  ThGraphMap["Stop"         ]->SetMarkerStyle(1);
    MuGraphMap["Stop"         ]->SetLineColor(2);  MuGraphMap["Stop"         ]->SetMarkerColor(2);   MuGraphMap["Stop"         ]->SetLineWidth(2);   MuGraphMap["Stop"         ]->SetLineStyle(1);  MuGraphMap["Stop"         ]->SetMarkerStyle(21);
    TkGraphMap["Stop"         ]->SetLineColor(2);  TkGraphMap["Stop"         ]->SetMarkerColor(2);   TkGraphMap["Stop"         ]->SetLineWidth(2);   TkGraphMap["Stop"         ]->SetLineStyle(1);  TkGraphMap["Stop"         ]->SetMarkerStyle(21);
    TkGraphMap["StopN"        ]->SetLineColor(2);  TkGraphMap["StopN"        ]->SetMarkerColor(2);   TkGraphMap["StopN"        ]->SetLineWidth(2);   TkGraphMap["StopN"        ]->SetLineStyle(1);  TkGraphMap["StopN"        ]->SetMarkerStyle(25);
-   MOGraphMap["Stop"         ]->SetLineColor(2);  MOGraphMap["Stop"         ]->SetMarkerColor(2);   MOGraphMap["Stop"         ]->SetLineWidth(2);   MOGraphMap["Stop"         ]->SetLineStyle(1);  MOGraphMap["Stop"         ]->SetMarkerStyle(21);
+   //MOGraphMap["Stop"         ]->SetLineColor(2);  MOGraphMap["Stop"         ]->SetMarkerColor(2);   MOGraphMap["Stop"         ]->SetLineWidth(2);   MOGraphMap["Stop"         ]->SetLineStyle(1);  MOGraphMap["Stop"         ]->SetMarkerStyle(21);
    ThGraphMap["GMStau"       ]->SetLineColor(1);  ThGraphMap["GMStau"       ]->SetMarkerColor(1);   ThGraphMap["GMStau"       ]->SetLineWidth(1);   ThGraphMap["GMStau"       ]->SetLineStyle(3);  ThGraphMap["GMStau"       ]->SetMarkerStyle(1);
    ThGraphMap["PPStau"       ]->SetLineColor(6);  ThGraphMap["PPStau"       ]->SetMarkerColor(6);   ThGraphMap["PPStau"       ]->SetLineWidth(1);   ThGraphMap["PPStau"       ]->SetLineStyle(4);  ThGraphMap["PPStau"       ]->SetMarkerStyle(1);
-//   ThGraphMap["DCRho08HyperK"]->SetLineColor(4);  ThGraphMap["DCRho08HyperK"]->SetMarkerColor(4);   ThGraphMap["DCRho08HyperK"]->SetLineWidth(1);   ThGraphMap["DCRho08HyperK"]->SetLineStyle(3);  ThGraphMap["DCRho08HyperK"]->SetMarkerStyle(1);
-   //ThGraphMap["DCRho12HyperK"]->SetLineColor(2);  ThGraphMap["DCRho12HyperK"]->SetMarkerColor(2);   ThGraphMap["DCRho12HyperK"]->SetLineWidth(1);   ThGraphMap["DCRho12HyperK"]->SetLineStyle(2);  ThGraphMap["DCRho12HyperK"]->SetMarkerStyle(1);
-   //ThGraphMap["DCRho16HyperK"]->SetLineColor(1);  ThGraphMap["DCRho16HyperK"]->SetMarkerColor(1);   ThGraphMap["DCRho16HyperK"]->SetLineWidth(1);   ThGraphMap["DCRho16HyperK"]->SetLineStyle(1);  ThGraphMap["DCRho16HyperK"]->SetMarkerStyle(1);
    MuGraphMap["GMStau"       ]->SetLineColor(1);  MuGraphMap["GMStau"       ]->SetMarkerColor(1);   MuGraphMap["GMStau"       ]->SetLineWidth(2);   MuGraphMap["GMStau"       ]->SetLineStyle(1);  MuGraphMap["GMStau"       ]->SetMarkerStyle(20);
    MuGraphMap["PPStau"       ]->SetLineColor(6);  MuGraphMap["PPStau"       ]->SetMarkerColor(6);   MuGraphMap["PPStau"       ]->SetLineWidth(2);   MuGraphMap["PPStau"       ]->SetLineStyle(1);  MuGraphMap["PPStau"       ]->SetMarkerStyle(20);
-//   MuGraphMap["DCRho08HyperK"]->SetLineColor(4);  MuGraphMap["DCRho08HyperK"]->SetMarkerColor(4);   MuGraphMap["DCRho08HyperK"]->SetLineWidth(2);   MuGraphMap["DCRho08HyperK"]->SetLineStyle(1);  MuGraphMap["DCRho08HyperK"]->SetMarkerStyle(22);
-   //MuGraphMap["DCRho12HyperK"]->SetLineColor(2);  MuGraphMap["DCRho12HyperK"]->SetMarkerColor(2);   MuGraphMap["DCRho12HyperK"]->SetLineWidth(2);   MuGraphMap["DCRho12HyperK"]->SetLineStyle(1);  MuGraphMap["DCRho12HyperK"]->SetMarkerStyle(23);
-   //MuGraphMap["DCRho16HyperK"]->SetLineColor(1);  MuGraphMap["DCRho16HyperK"]->SetMarkerColor(1);   MuGraphMap["DCRho16HyperK"]->SetLineWidth(2);   MuGraphMap["DCRho16HyperK"]->SetLineStyle(1);  MuGraphMap["DCRho16HyperK"]->SetMarkerStyle(26);
    TkGraphMap["GMStau"       ]->SetLineColor(1);  TkGraphMap["GMStau"       ]->SetMarkerColor(1);   TkGraphMap["GMStau"       ]->SetLineWidth(2);   TkGraphMap["GMStau"       ]->SetLineStyle(1);  TkGraphMap["GMStau"       ]->SetMarkerStyle(20);
    TkGraphMap["PPStau"       ]->SetLineColor(6);  TkGraphMap["PPStau"       ]->SetMarkerColor(6);   TkGraphMap["PPStau"       ]->SetLineWidth(2);   TkGraphMap["PPStau"       ]->SetLineStyle(1);  TkGraphMap["PPStau"       ]->SetMarkerStyle(20);
-//   TkGraphMap["DCRho08HyperK"]->SetLineColor(4);  TkGraphMap["DCRho08HyperK"]->SetMarkerColor(4);   TkGraphMap["DCRho08HyperK"]->SetLineWidth(2);   TkGraphMap["DCRho08HyperK"]->SetLineStyle(1);  TkGraphMap["DCRho08HyperK"]->SetMarkerStyle(22);
-   //TkGraphMap["DCRho12HyperK"]->SetLineColor(2);  TkGraphMap["DCRho12HyperK"]->SetMarkerColor(2);   TkGraphMap["DCRho12HyperK"]->SetLineWidth(2);   TkGraphMap["DCRho12HyperK"]->SetLineStyle(1);  TkGraphMap["DCRho12HyperK"]->SetMarkerStyle(23);
-   //   TkGraphMap["DCRho16HyperK"]->SetLineColor(1);  TkGraphMap["DCRho16HyperK"]->SetMarkerColor(1);   TkGraphMap["DCRho16HyperK"]->SetLineWidth(2);   TkGraphMap["DCRho16HyperK"]->SetLineStyle(1);  TkGraphMap["DCRho16HyperK"]->SetMarkerStyle(26);
 
-   ThGraphMap["DY_Q1o3"      ]->SetLineColor(41); ThGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  ThGraphMap["DY_Q1o3"      ]->SetLineWidth(1);   ThGraphMap["DY_Q1o3"      ]->SetLineStyle(9);  ThGraphMap["DY_Q1o3"      ]->SetMarkerStyle(1);
-   TkGraphMap["DY_Q1o3"      ]->SetLineColor(41); TkGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  TkGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   TkGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  TkGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
-   MOGraphMap["DY_Q1o3"      ]->SetLineColor(41); MOGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  MOGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   MOGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  MOGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
-   LQGraphMap["DY_Q1o3"      ]->SetLineColor(41); LQGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  LQGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
-   ThGraphMap["DY_Q2o3"      ]->SetLineColor(43); ThGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  ThGraphMap["DY_Q2o3"      ]->SetLineWidth(1);   ThGraphMap["DY_Q2o3"      ]->SetLineStyle(10); ThGraphMap["DY_Q2o3"      ]->SetMarkerStyle(1);
-   TkGraphMap["DY_Q2o3"      ]->SetLineColor(43); TkGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  TkGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   TkGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  TkGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
-   MuGraphMap["DY_Q2o3"      ]->SetLineColor(43); MuGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  MuGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   MuGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  MuGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
-   MOGraphMap["DY_Q2o3"      ]->SetLineColor(43); MOGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  MOGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   MOGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  MOGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
-   LQGraphMap["DY_Q2o3"      ]->SetLineColor(43); LQGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  LQGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
-   LQGraphMap["DY_Q1"        ]->SetLineColor(46); LQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  LQGraphMap["DY_Q1"        ]->SetLineWidth(2);   LQGraphMap["DY_Q1"        ]->SetLineStyle(1);  LQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
+   //ThGraphMap["DY_Q1o3"      ]->SetLineColor(41); ThGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  ThGraphMap["DY_Q1o3"      ]->SetLineWidth(1);   ThGraphMap["DY_Q1o3"      ]->SetLineStyle(9);  ThGraphMap["DY_Q1o3"      ]->SetMarkerStyle(1);
+   //TkGraphMap["DY_Q1o3"      ]->SetLineColor(41); TkGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  TkGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   TkGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  TkGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
+   //MOGraphMap["DY_Q1o3"      ]->SetLineColor(41); MOGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  MOGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   MOGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  MOGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
+   //LQGraphMap["DY_Q1o3"      ]->SetLineColor(41); LQGraphMap["DY_Q1o3"      ]->SetMarkerColor(41);  LQGraphMap["DY_Q1o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q1o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q1o3"      ]->SetMarkerStyle(33);
+   //ThGraphMap["DY_Q2o3"      ]->SetLineColor(43); ThGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  ThGraphMap["DY_Q2o3"      ]->SetLineWidth(1);   ThGraphMap["DY_Q2o3"      ]->SetLineStyle(10); ThGraphMap["DY_Q2o3"      ]->SetMarkerStyle(1);
+   //TkGraphMap["DY_Q2o3"      ]->SetLineColor(43); TkGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  TkGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   TkGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  TkGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //MuGraphMap["DY_Q2o3"      ]->SetLineColor(43); MuGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  MuGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   MuGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  MuGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //MOGraphMap["DY_Q2o3"      ]->SetLineColor(43); MOGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  MOGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   MOGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  MOGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //LQGraphMap["DY_Q2o3"      ]->SetLineColor(43); LQGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  LQGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
+   //LQGraphMap["DY_Q1"        ]->SetLineColor(46); LQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  LQGraphMap["DY_Q1"        ]->SetLineWidth(2);   LQGraphMap["DY_Q1"        ]->SetLineStyle(1);  LQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
 
-   ThGraphMap["DY_Q1"        ]->SetLineColor(46); ThGraphMap["DY_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY_Q1"        ]->SetLineStyle(1);  ThGraphMap["DY_Q1"        ]->SetMarkerStyle(1);
-   MuGraphMap["DY_Q1"        ]->SetLineColor(46); MuGraphMap["DY_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
-   HQGraphMap["DY_Q1"        ]->SetLineColor(46); HQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  HQGraphMap["DY_Q1"        ]->SetLineWidth(2);   HQGraphMap["DY_Q1"        ]->SetLineStyle(1);  HQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
-   ThGraphMap["DY_Q2"        ]->SetLineColor(2 ); ThGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(2);  ThGraphMap["DY_Q2"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q2"        ]->SetLineColor(2 ); HQGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  HQGraphMap["DY_Q2"        ]->SetLineWidth(2);   HQGraphMap["DY_Q2"        ]->SetLineStyle(1);  HQGraphMap["DY_Q2"        ]->SetMarkerStyle(21);
-   ThGraphMap["DY_Q3"        ]->SetLineColor(1 ); ThGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  ThGraphMap["DY_Q3"        ]->SetLineWidth(1);   ThGraphMap["DY_Q3"        ]->SetLineStyle(9);  ThGraphMap["DY_Q3"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q3"        ]->SetLineColor(1 ); HQGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  HQGraphMap["DY_Q3"        ]->SetLineWidth(2);   HQGraphMap["DY_Q3"        ]->SetLineStyle(1);  HQGraphMap["DY_Q3"        ]->SetMarkerStyle(22);
-   ThGraphMap["DY_Q4"        ]->SetLineColor(6 ); ThGraphMap["DY_Q4"        ]->SetMarkerColor(6 );  ThGraphMap["DY_Q4"        ]->SetLineWidth(1);   ThGraphMap["DY_Q4"        ]->SetLineStyle(3);  ThGraphMap["DY_Q4"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q4"        ]->SetLineColor(6 ); HQGraphMap["DY_Q4"        ]->SetMarkerColor(6 );  HQGraphMap["DY_Q4"        ]->SetLineWidth(2);   HQGraphMap["DY_Q4"        ]->SetLineStyle(1);  HQGraphMap["DY_Q4"        ]->SetMarkerStyle(23);
-   ThGraphMap["DY_Q5"        ]->SetLineColor(4 ); ThGraphMap["DY_Q5"        ]->SetMarkerColor(4 );  ThGraphMap["DY_Q5"        ]->SetLineWidth(1);   ThGraphMap["DY_Q5"        ]->SetLineStyle(8);  ThGraphMap["DY_Q5"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q5"        ]->SetLineColor(4 ); HQGraphMap["DY_Q5"        ]->SetMarkerColor(4 );  HQGraphMap["DY_Q5"        ]->SetLineWidth(2);   HQGraphMap["DY_Q5"        ]->SetLineStyle(1);  HQGraphMap["DY_Q5"        ]->SetMarkerStyle(29);
-   ThGraphMap["DY_Q6"        ]->SetLineColor(9 ); ThGraphMap["DY_Q6"        ]->SetMarkerColor(9 );  ThGraphMap["DY_Q6"        ]->SetLineWidth(1);   ThGraphMap["DY_Q6"        ]->SetLineStyle(6);  ThGraphMap["DY_Q6"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q6"        ]->SetLineColor(9 ); HQGraphMap["DY_Q6"        ]->SetMarkerColor(9 );  HQGraphMap["DY_Q6"        ]->SetLineWidth(2);   HQGraphMap["DY_Q6"        ]->SetLineStyle(1);  HQGraphMap["DY_Q6"        ]->SetMarkerStyle(33);
-   ThGraphMap["DY_Q7"        ]->SetLineColor(12); ThGraphMap["DY_Q7"        ]->SetMarkerColor(12);  ThGraphMap["DY_Q7"        ]->SetLineWidth(1);   ThGraphMap["DY_Q7"        ]->SetLineStyle(7);  ThGraphMap["DY_Q7"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q7"        ]->SetLineColor(12); HQGraphMap["DY_Q7"        ]->SetMarkerColor(12);  HQGraphMap["DY_Q7"        ]->SetLineWidth(2);   HQGraphMap["DY_Q7"        ]->SetLineStyle(1);  HQGraphMap["DY_Q7"        ]->SetMarkerStyle(34);
-   ThGraphMap["DY_Q8"        ]->SetLineColor(14); ThGraphMap["DY_Q8"        ]->SetMarkerColor(14);  ThGraphMap["DY_Q8"        ]->SetLineWidth(1);   ThGraphMap["DY_Q8"        ]->SetLineStyle(10); ThGraphMap["DY_Q8"        ]->SetMarkerStyle(1);
-   HQGraphMap["DY_Q8"        ]->SetLineColor(14); HQGraphMap["DY_Q8"        ]->SetMarkerColor(14);  HQGraphMap["DY_Q8"        ]->SetLineWidth(2);   HQGraphMap["DY_Q8"        ]->SetLineStyle(1);  HQGraphMap["DY_Q8"        ]->SetMarkerStyle(24);
+   //ThGraphMap["DY_Q1"        ]->SetLineColor(46); ThGraphMap["DY_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY_Q1"        ]->SetLineStyle(1);  ThGraphMap["DY_Q1"        ]->SetMarkerStyle(1);
+   //MuGraphMap["DY_Q1"        ]->SetLineColor(46); MuGraphMap["DY_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
+   //HQGraphMap["DY_Q1"        ]->SetLineColor(46); HQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  HQGraphMap["DY_Q1"        ]->SetLineWidth(2);   HQGraphMap["DY_Q1"        ]->SetLineStyle(1);  HQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
+   //ThGraphMap["DY_Q2"        ]->SetLineColor(2 ); ThGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(2);  ThGraphMap["DY_Q2"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q2"        ]->SetLineColor(2 ); HQGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  HQGraphMap["DY_Q2"        ]->SetLineWidth(2);   HQGraphMap["DY_Q2"        ]->SetLineStyle(1);  HQGraphMap["DY_Q2"        ]->SetMarkerStyle(21);
+   //ThGraphMap["DY_Q3"        ]->SetLineColor(1 ); ThGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  ThGraphMap["DY_Q3"        ]->SetLineWidth(1);   ThGraphMap["DY_Q3"        ]->SetLineStyle(9);  ThGraphMap["DY_Q3"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q3"        ]->SetLineColor(1 ); HQGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  HQGraphMap["DY_Q3"        ]->SetLineWidth(2);   HQGraphMap["DY_Q3"        ]->SetLineStyle(1);  HQGraphMap["DY_Q3"        ]->SetMarkerStyle(22);
+   //ThGraphMap["DY_Q4"        ]->SetLineColor(6 ); ThGraphMap["DY_Q4"        ]->SetMarkerColor(6 );  ThGraphMap["DY_Q4"        ]->SetLineWidth(1);   ThGraphMap["DY_Q4"        ]->SetLineStyle(3);  ThGraphMap["DY_Q4"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q4"        ]->SetLineColor(6 ); HQGraphMap["DY_Q4"        ]->SetMarkerColor(6 );  HQGraphMap["DY_Q4"        ]->SetLineWidth(2);   HQGraphMap["DY_Q4"        ]->SetLineStyle(1);  HQGraphMap["DY_Q4"        ]->SetMarkerStyle(23);
+   //ThGraphMap["DY_Q5"        ]->SetLineColor(4 ); ThGraphMap["DY_Q5"        ]->SetMarkerColor(4 );  ThGraphMap["DY_Q5"        ]->SetLineWidth(1);   ThGraphMap["DY_Q5"        ]->SetLineStyle(8);  ThGraphMap["DY_Q5"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q5"        ]->SetLineColor(4 ); HQGraphMap["DY_Q5"        ]->SetMarkerColor(4 );  HQGraphMap["DY_Q5"        ]->SetLineWidth(2);   HQGraphMap["DY_Q5"        ]->SetLineStyle(1);  HQGraphMap["DY_Q5"        ]->SetMarkerStyle(29);
+   //ThGraphMap["DY_Q6"        ]->SetLineColor(9 ); ThGraphMap["DY_Q6"        ]->SetMarkerColor(9 );  ThGraphMap["DY_Q6"        ]->SetLineWidth(1);   ThGraphMap["DY_Q6"        ]->SetLineStyle(6);  ThGraphMap["DY_Q6"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q6"        ]->SetLineColor(9 ); HQGraphMap["DY_Q6"        ]->SetMarkerColor(9 );  HQGraphMap["DY_Q6"        ]->SetLineWidth(2);   HQGraphMap["DY_Q6"        ]->SetLineStyle(1);  HQGraphMap["DY_Q6"        ]->SetMarkerStyle(33);
+   //ThGraphMap["DY_Q7"        ]->SetLineColor(12); ThGraphMap["DY_Q7"        ]->SetMarkerColor(12);  ThGraphMap["DY_Q7"        ]->SetLineWidth(1);   ThGraphMap["DY_Q7"        ]->SetLineStyle(7);  ThGraphMap["DY_Q7"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q7"        ]->SetLineColor(12); HQGraphMap["DY_Q7"        ]->SetMarkerColor(12);  HQGraphMap["DY_Q7"        ]->SetLineWidth(2);   HQGraphMap["DY_Q7"        ]->SetLineStyle(1);  HQGraphMap["DY_Q7"        ]->SetMarkerStyle(34);
+   //ThGraphMap["DY_Q8"        ]->SetLineColor(14); ThGraphMap["DY_Q8"        ]->SetMarkerColor(14);  ThGraphMap["DY_Q8"        ]->SetLineWidth(1);   ThGraphMap["DY_Q8"        ]->SetLineStyle(10); ThGraphMap["DY_Q8"        ]->SetMarkerStyle(1);
+   //HQGraphMap["DY_Q8"        ]->SetLineColor(14); HQGraphMap["DY_Q8"        ]->SetMarkerColor(14);  HQGraphMap["DY_Q8"        ]->SetLineWidth(2);   HQGraphMap["DY_Q8"        ]->SetLineStyle(1);  HQGraphMap["DY_Q8"        ]->SetMarkerStyle(24);
 
 std::cout<<"TESTD\n";
    ThGraphMap["GMStau"     ]->SetMinimum(PlotMinScale);
@@ -863,16 +875,16 @@ std::cout<<"TESTD\n";
    MGMu->Add(ThGraphMap["Stop"       ]      ,"L");
    MGMu->Add(ThGraphMap["GMStau"     ]      ,"L");
    MGMu->Add(ThGraphMap["PPStau"     ]      ,"L");
-   MGMu->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
-   MGMu->Add(ThGraphMap["DY_Q1"    ]     ,"L");
+   //MGMu->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
+   //MGMu->Add(ThGraphMap["DY_Q1"    ]     ,"L");
    }   
    MGMu->Add(MuGraphMap["Gluino_f10" ]      ,"LP");
-   MGMu->Add(MuGraphMap["Gluino_f50" ]      ,"LP");
+   //MGMu->Add(MuGraphMap["Gluino_f50" ]      ,"LP");
    MGMu->Add(MuGraphMap["Stop"       ]      ,"LP");
    MGMu->Add(MuGraphMap["GMStau"     ]      ,"LP");
    MGMu->Add(MuGraphMap["PPStau"     ]      ,"LP");
-   MGMu->Add(MuGraphMap["DY_Q2o3"    ]     ,"LP");
-   MGMu->Add(MuGraphMap["DY_Q1"    ]     ,"LP");
+   //MGMu->Add(MuGraphMap["DY_Q2o3"    ]     ,"LP");
+   //MGMu->Add(MuGraphMap["DY_Q1"    ]     ,"LP");
    MGMu->Draw("A");
 
    if(!Combine) {
@@ -880,8 +892,8 @@ std::cout<<"TESTD\n";
    ThErrorMap["Stop"      ]->Draw("f");
    ThErrorMap["GMStau"    ]->Draw("f");
    ThErrorMap["PPStau"    ]->Draw("f");
-   ThErrorMap["DY_Q2o3"   ]->Draw("f");
-   ThErrorMap["DY_Q1"   ]->Draw("f");
+   //ThErrorMap["DY_Q2o3"   ]->Draw("f");
+   //ThErrorMap["DY_Q1"   ]->Draw("f");
    }else{
       TLine* LineAtOne = new TLine(50,1,1550,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
    }
@@ -892,7 +904,7 @@ std::cout<<"TESTD\n";
    MGMu->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGMu->GetYaxis()->SetTitleOffset(1.40);
    MGMu->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-   MGMu->GetXaxis()->SetRangeUser(50,1550);
+   MGMu->GetXaxis()->SetRangeUser(50,2650);
 
    DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
    TLegend* LEGMu = !Combine ? new TLegend(0.50,0.92-7*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+7*0.043);
@@ -901,13 +913,13 @@ std::cout<<"TESTD\n";
    LEGMu->SetFillColor(0); 
    LEGMu->SetFillStyle(0);
    LEGMu->SetBorderSize(0);
-   LEGMu->AddEntry(MuGraphMap["Gluino_f50"] , "gluino; 50% #tilde{g}g"    ,"LP");
+   //LEGMu->AddEntry(MuGraphMap["Gluino_f50"] , "gluino; 50% #tilde{g}g"    ,"LP");
    LEGMu->AddEntry(MuGraphMap["Gluino_f10"] , "gluino; 10% #tilde{g}g"    ,"LP");
    LEGMu->AddEntry(MuGraphMap["Stop"      ] , "stop"                      ,"LP");
    LEGMu->AddEntry(MuGraphMap["PPStau"    ] , "stau; dir. prod."           ,"LP");
    LEGMu->AddEntry(MuGraphMap["GMStau"    ] , "stau"                 ,"LP");
-   LEGMu->AddEntry(MuGraphMap["DY_Q2o3"   ], "|Q| = 2e/3"                ,"LP");
-   LEGMu->AddEntry(MuGraphMap["DY_Q1"   ], "|Q| = 1e"                ,"LP");
+   //LEGMu->AddEntry(MuGraphMap["DY_Q2o3"   ], "|Q| = 2e/3"                ,"LP");
+   //LEGMu->AddEntry(MuGraphMap["DY_Q1"   ], "|Q| = 1e"                ,"LP");
 
    TLegend* LEGTh = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
    LEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -917,6 +929,7 @@ std::cout<<"TESTD\n";
    LEGTh->SetFillColor(0);
    //LEGTh->SetFillStyle(0);
    LEGTh->SetBorderSize(0);
+
    TGraph* GlThLeg = (TGraph*) ThGraphMap["Gluino_f10"]->Clone("GluinoThLeg");
    GlThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
    LEGTh->AddEntry(GlThLeg, "gluino (NLO+NLL)" ,"LF");
@@ -929,12 +942,12 @@ std::cout<<"TESTD\n";
    TGraph* StauThLeg = (TGraph*) ThGraphMap["GMStau"        ]->Clone("StauThLeg");
    StauThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
    LEGTh->AddEntry(StauThLeg   ,"stau (NLO)" ,"LF");
-   TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
-   DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
-   LEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
-   TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
-   DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
-   LEGTh->AddEntry(DYQ1ThLeg   ,"|Q| = 1e (LO)" ,"LF");
+   //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
+   //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
+   //LEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
+   //TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
+   //DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
+   //LEGTh->AddEntry(DYQ1ThLeg   ,"|Q| = 1e (LO)" ,"LF");
    LEGTh->Draw();
    }
    LEGMu->Draw();
@@ -949,25 +962,25 @@ std::cout<<"TESTD\n";
    MGTk->Add(ThGraphMap["Stop"       ]     ,"L");
    MGTk->Add(ThGraphMap["GMStau"     ]     ,"L");  
    MGTk->Add(ThGraphMap["PPStau"     ]     ,"L");
-   MGTk->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
+   //MGTk->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
    }
 
    MGTk->Add(TkGraphMap["Gluino_f10" ]     ,"LP");
-   MGTk->Add(TkGraphMap["Gluino_f50" ]     ,"LP");
+   //MGTk->Add(TkGraphMap["Gluino_f50" ]     ,"LP");
    MGTk->Add(TkGraphMap["GluinoN_f10"]     ,"LP");
    MGTk->Add(TkGraphMap["Stop"       ]     ,"LP");
    MGTk->Add(TkGraphMap["StopN"      ]     ,"LP");
    MGTk->Add(TkGraphMap["GMStau"     ]     ,"LP");
    MGTk->Add(TkGraphMap["PPStau"     ]     ,"LP");
-   MGTk->Add(TkGraphMap["DY_Q2o3"    ]     ,"LP");
-
+   //MGTk->Add(TkGraphMap["DY_Q2o3"    ]     ,"LP");
    MGTk->Draw("A");
+
    if(!Combine) {
    ThErrorMap["Gluino_f10"]->Draw("f");
    ThErrorMap["Stop"      ]->Draw("f");
    ThErrorMap["GMStau"    ]->Draw("f");
    ThErrorMap["PPStau"    ]->Draw("f");
-   ThErrorMap["DY_Q2o3"   ]->Draw("f");
+   //ThErrorMap["DY_Q2o3"   ]->Draw("f");
    }else{
       TLine* LineAtOne = new TLine(50,1,1550,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
    }
@@ -980,8 +993,8 @@ std::cout<<"TESTD\n";
    MGTk->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
    //if(Combine) MGTk->GetYaxis()->SetRangeUser(PlotMinScale,50);
    //else MGTk->GetYaxis()->SetRangeUser(PlotMinScale,700);
-   MGTk->GetXaxis()->SetRangeUser(50,1550);
-   
+   MGTk->GetXaxis()->SetRangeUser(50,2650);
+
    DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
 
    TLegend* LEGTk = !Combine ? new TLegend(0.50,0.92-8*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+8*0.043);
@@ -990,14 +1003,14 @@ std::cout<<"TESTD\n";
    LEGTk->SetFillColor(0); 
    LEGTk->SetFillStyle(0);
    LEGTk->SetBorderSize(0);
-   LEGTk->AddEntry(TkGraphMap["Gluino_f50" ], "gluino; 50% #tilde{g}g"            ,"LP");
+   //LEGTk->AddEntry(TkGraphMap["Gluino_f50" ], "gluino; 50% #tilde{g}g"            ,"LP");
    LEGTk->AddEntry(TkGraphMap["Gluino_f10" ], "gluino; 10% #tilde{g}g"            ,"LP");
    LEGTk->AddEntry(TkGraphMap["GluinoN_f10"], "gluino; 10% #tilde{g}g; CS"        ,"LP");
    LEGTk->AddEntry(TkGraphMap["Stop"       ], "stop"                              ,"LP");
    LEGTk->AddEntry(TkGraphMap["StopN"      ], "stop; CS"                          ,"LP");
    LEGTk->AddEntry(TkGraphMap["PPStau"     ], "stau; dir. prod."                ,"LP");
    LEGTk->AddEntry(TkGraphMap["GMStau"     ], "stau"                              ,"LP");
-   LEGTk->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e/3"                            ,"LP");
+   //LEGTk->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e/3"                            ,"LP");
 
    TLegend* LEGThTk = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
    LEGThTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1019,16 +1032,14 @@ std::cout<<"TESTD\n";
    TGraph* StauThLeg = (TGraph*) ThGraphMap["GMStau"        ]->Clone("StauThLeg");
    StauThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
    LEGThTk->AddEntry(StauThLeg   ,"stau (NLO)" ,"LF");
-   TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
-   DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
-   LEGThTk->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
-   //TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
-   //DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
-   //LEGThTk->AddEntry(DYQ2o3ThLeg   ,"|Q| = 1e (LO)" ,"LF");
+   //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
+   //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
+   //LEGThTk->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
+   ////TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
+   ////DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
+   ////LEGThTk->AddEntry(DYQ2o3ThLeg   ,"|Q| = 1e (LO)" ,"LF");
    LEGThTk->Draw();
    }
-
-
 
    if(!Combine) LEGThTk->Draw();
    LEGTk->Draw();
@@ -1036,6 +1047,7 @@ std::cout<<"TESTD\n";
    SaveCanvas(c1, outpath, string("TkExclusionLog"));
    delete c1;
 
+std::cout<<"F\n";
 
 ////////////////////////////////////// plot requested by G. Landsberg
 if(Combine){
@@ -1103,112 +1115,7 @@ if(Combine){
 //////////////////////////////////////
 
 
-
-
-
-
-
-
-
    /*
-    c1 = new TCanvas("c1", "c1",600,600);
-   TMultiGraph* MGDCMu = new TMultiGraph();
-   if(!Combine) {
-//   MGDCMu->Add(ThGraphMap["DCRho08HyperK"]      ,"L");
-     //MGDCMu->Add(ThGraphMap["DCRho12HyperK"]      ,"L");
-     //MGDCMu->Add(ThGraphMap["DCRho16HyperK"]      ,"L");
-   }
-//   MGDCMu->Add(MuGraphMap["DCRho08HyperK"]      ,"LP");
-   //MGDCMu->Add(MuGraphMap["DCRho12HyperK"]      ,"LP");
-   //MGDCMu->Add(MuGraphMap["DCRho16HyperK"]      ,"LP");
-   MGDCMu->Draw("A");
-   MGDCMu->Draw("same");
-   MGDCMu->SetTitle("");
-   MGDCMu->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
-   MGDCMu->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
-   MGDCMu->GetYaxis()->SetTitleOffset(1.70);
-   MGDCMu->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-   MGDCMu->GetXaxis()->SetRangeUser(50,1550);
-   DrawPreliminary("Tracker + TOF", SQRTS, LInt);
-   
-   TLegend* LEGDCMu = new TLegend(0.50,0.65,0.80,0.9);
-   LEGDCMu->SetTextFont(43); //give the font size in pixel (instead of fraction)
-   LEGDCMu->SetTextSize(18); //font size
-//   LEGDCMu->SetHeader("Tracker + TOF");
-   LEGDCMu->SetFillColor(0); 
-   LEGDCMu->SetFillStyle(0);
-   LEGDCMu->SetBorderSize(0);
-//   LEGDCMu->AddEntry(MuGraphMap["DCRho08HyperK"]   , "Hyper-K, #tilde{#rho} = 0.8 TeV"       ,"LP");
-   LEGDCMu->AddEntry(MuGraphMap["DCRho12HyperK"]   , "Hyper-K, #tilde{#rho} = 1.2 TeV"       ,"LP");
-   LEGDCMu->AddEntry(MuGraphMap["DCRho16HyperK"]   , "Hyper-K, #tilde{#rho} = 1.6 TeV"       ,"LP");
-
-   TLegend* LEGDCTh = new TLegend(0.15,0.7,0.49,0.9);
-   LEGDCTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
-   LEGDCTh->SetTextSize(18); //font size
-   if(!Combine) {
-   LEGDCTh->SetHeader("Theoretical Prediction");
-   LEGDCTh->SetFillColor(0);
-   LEGDCTh->SetFillStyle(0);
-   LEGDCTh->SetBorderSize(0);
-
-//   TGraph* DCRho08HyperKThLeg = (TGraph*) ThGraphMap["DCRho08HyperK"]->Clone("DCRho08HyperKThLeg");
-//   DCRho08HyperKThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
-//   LEGDCTh->AddEntry(DCRho08HyperKThLeg   ,"Hyper-K, #tilde{#rho} = 0.8 TeV   (LO)" ,"L");
-   TGraph* DCRho12HyperKThLeg = (TGraph*) ThGraphMap["DCRho12HyperK"]->Clone("DCRho12HyperKThLeg");
-   DCRho12HyperKThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
-   LEGDCTh->AddEntry(DCRho12HyperKThLeg   ,"Hyper-K, #tilde{#rho} = 1.2 TeV   (LO)" ,"L");
-   TGraph* DCRho16HyperKThLeg = (TGraph*) ThGraphMap["DCRho16HyperK"]->Clone("DCRho16HyperKThLeg");
-   DCRho16HyperKThLeg->SetFillColor(ThErrorMap["Gluino_f10"]->GetFillColor());
-   LEGDCTh->AddEntry(DCRho16HyperKThLeg   ,"Hyper-K, #tilde{#rho} = 1.6 TeV   (LO)" ,"L");
-   LEGDCTh->Draw();
-   }
-
-   LEGDCMu->Draw();
-   c1->SetLogy(true);
-   SaveCanvas(c1, outpath, string("MuDCExclusionLog"));
-   delete c1;
-
-   c1 = new TCanvas("c1", "c1",600,600);
-   TMultiGraph* MGDCTk = new TMultiGraph();
-   if(!Combine) {
-//   MGDCTk->Add(ThGraphMap["DCRho08HyperK"]      ,"L");
-   MGDCTk->Add(ThGraphMap["DCRho12HyperK"]      ,"L");
-   MGDCTk->Add(ThGraphMap["DCRho16HyperK"]      ,"L");
-   }
-//   MGDCTk->Add(TkGraphMap["DCRho08HyperK"]      ,"LP");
-   MGDCTk->Add(TkGraphMap["DCRho12HyperK"]      ,"LP");
-   MGDCTk->Add(TkGraphMap["DCRho16HyperK"]      ,"LP");
-
-   MGDCTk->Draw("A");
-   MGDCTk->Draw("same");
-   MGDCTk->SetTitle("");
-   MGDCTk->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
-   MGDCTk->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
-   MGDCTk->GetYaxis()->SetTitleOffset(1.70);
-   MGDCTk->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-   MGDCTk->GetXaxis()->SetRangeUser(50,1550);
-   DrawPreliminary("Tracker - Only", SQRTS, LInt);
-
-   TLegend* LEGDCTk = new TLegend(0.50,0.65,0.80,0.90);
-   LEGDCTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
-   LEGDCTk->SetTextSize(18); //font size
-//   LEGDCTk->SetHeader("Tracker - Only");
-   LEGDCTk->SetFillColor(0); 
-   LEGDCTk->SetFillStyle(0);
-   LEGDCTk->SetBorderSize(0);
-   LEGDCTk->AddEntry(TkGraphMap["DCRho08HyperK"]   , "Hyper-K, #tilde{#rho} = 0.8 TeV"       ,"LP");
-//   LEGDCTk->AddEntry(TkGraphMap["DCRho12HyperK"]   , "Hyper-K, #tilde{#rho} = 1.2 TeV"       ,"LP");
-   LEGDCTk->AddEntry(TkGraphMap["DCRho16HyperK"]   , "Hyper-K, #tilde{#rho} = 1.6 TeV"       ,"LP");
-   LEGDCTk->Draw();
-   LEGDCTh->Draw();
-
-   c1->SetLogy(true);
-   SaveCanvas(c1, outpath, string("TkDCExclusionLog"));
-   delete c1;
-   */
-
-
-
    c1 = new TCanvas("c1", "c1",600,600);
 
    TMultiGraph* MGMO = new TMultiGraph();
@@ -1481,6 +1388,8 @@ if(Combine){
    c1->SetLogy(true);
    SaveCanvas(c1, outpath, string("HQExclusionLog"));
    delete c1;
+   */
+
 
    return;
 }

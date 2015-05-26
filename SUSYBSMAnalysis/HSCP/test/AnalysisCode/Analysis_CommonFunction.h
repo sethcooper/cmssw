@@ -371,9 +371,14 @@ void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& bet
 }
 
 double FastestHSCP(const fwlite::ChainEvent& ev){
+   //get the collection of generated Particles
    fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
-   genCollHandle.getByLabel(ev, "genParticles");
-   if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");return -1;}
+   genCollHandle.getByLabel(ev, "genParticlesSkimmed");
+   if(!genCollHandle.isValid()){
+      genCollHandle.getByLabel(ev, "genParticles");
+      if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");return -1;}
+   }
+
    std::vector<reco::GenParticle> genColl = *genCollHandle;
 
    double MaxBeta=-1;
@@ -389,8 +394,18 @@ double FastestHSCP(const fwlite::ChainEvent& ev){
    return MaxBeta;
 }
 
-
-
+#include "FWCore/Utilities/interface/RegexMatch.h"
+bool passTriggerPatterns(edm::TriggerResultsByName& tr, std::string pattern){
+  if(edm::is_glob(pattern)){
+     std::vector< std::vector<std::string>::const_iterator > matches = edm::regexMatch(tr.triggerNames(), pattern);
+     for(size_t t=0;t<matches.size();t++){
+        if(tr.accept( matches[t]->c_str() ) )return true;
+     }
+  }else{
+     if(tr.accept( pattern.c_str() ) ) return true;
+  }
+  return false;
+}
 
 
 #include "TVector3.h"

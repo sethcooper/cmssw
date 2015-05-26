@@ -142,7 +142,8 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
      useClusterCleaning = false; //switch off cluster cleaning for mCHAMPs
    } else if(TypeMode==5){
      IPbound            = 4.5;
-     GlobalMinIm        = 2.8; //is actually dEdx max at skim level (reverse logic for type5)
+     //GlobalMinIm        = 2.8; //is actually dEdx max at skim level (reverse logic for type5)
+     GlobalMinIm        = 999999;
      GlobalMinNDOF      = 0; //tkOnly analysis --> comment these 2 lines to use only global muon tracks
      GlobalMinTOF       = 0;
    }
@@ -246,11 +247,17 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
 {
+   edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
+   if(!tr.isValid())         tr = ev.triggerResultsByName("HLT");
+   if(!tr.isValid())return false;
+
+
+
+   if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*"))return true;
+   if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*"))return true;
+   if(passTriggerPatterns(tr, "HLT_Mu50_v*"))return true;
 
    return true; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
-
-   edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
-   if(!tr.isValid())return false;
 
    //for(unsigned int i=0;i<tr.size();i++){
    //printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
