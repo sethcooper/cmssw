@@ -12,9 +12,10 @@ TrackAssociatorParametersForHSCPIsol = TrackAssociatorParameterBlock.TrackAssoci
 TrackAssociatorParametersForHSCPIsol.useHO = cms.bool(False)
 TrackAssociatorParametersForHSCPIsol.CSCSegmentCollectionLabel     = cms.InputTag("cscSegments")
 TrackAssociatorParametersForHSCPIsol.DTRecSegment4DCollectionLabel = cms.InputTag("dt4DSegments")
-TrackAssociatorParametersForHSCPIsol.EERecHitCollectionLabel       = cms.InputTag("ecalRecHit","EcalRecHitsEE")
-TrackAssociatorParametersForHSCPIsol.EBRecHitCollectionLabel       = cms.InputTag("ecalRecHit","EcalRecHitsEB")
-TrackAssociatorParametersForHSCPIsol.HBHERecHitCollectionLabel     = cms.InputTag("hbhereco")
+TrackAssociatorParametersForHSCPIsol.EERecHitCollectionLabel       = cms.InputTag("reducedEcalRecHitsEE")
+TrackAssociatorParametersForHSCPIsol.EBRecHitCollectionLabel       = cms.InputTag("reducedEcalRecHitsEB")
+TrackAssociatorParametersForHSCPIsol.HBHERecHitCollectionLabel     = cms.InputTag("reducedHcalRecHits", "hbhereco")
+TrackAssociatorParametersForHSCPIsol.HORecHitCollectionLabel       = cms.InputTag("reducedHcalRecHits", "horeco")
 
 HSCPIsolation01 = cms.EDProducer("ProduceIsolationMap",
       inputCollection  = cms.InputTag("generalTracks"),
@@ -113,6 +114,5 @@ HSCParticleSelector = cms.EDFilter("HSCParticleSelector",
 #   HSCP Candidate Sequence
 ####################################################################################
 
-#HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * MuonSegmentProducer * HSCParticleProducer)
-HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * HSCParticleProducer) # FIXME MuonSegmentProducer is temporarilly switched off
+HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * MuonSegmentProducer * HSCParticleProducer)
 
