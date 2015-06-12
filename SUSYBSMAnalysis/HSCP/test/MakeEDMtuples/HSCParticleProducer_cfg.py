@@ -72,15 +72,13 @@ if(not isSkimmedSample):
    process.HSCPTrigger.throw = cms.bool( False )
    if(isData):
       process.HSCPTrigger.HLTPaths = [
-         "HLT_*_dEdx*",
-         "HLT_Mu40_eta2p1*",
-         "HLT_Mu50_eta2p1*",
-         "HLT_HT650_*",
-         "HLT_MET80_*",
-         "HLT_L2Mu*MET*",
-         "HLT_L2Mu*NoBPTX*",
-         "HLT_PFMET150_*",
+#         "HLT_Mu45_eta2p1*",
+#         "HLT_Mu50_v*",
+#         "HLT_Mu27_TkMu8_*",
+#         "HLT_PFMET170_*",
+          "*" #FIXME COMMENT THAT LINE AND UNCOMMENT THE PREVIOUS ONE, Updating with the lastest path information
       ]
+
    elif(isBckg):
       #to be updated to Run2 Triggers, in the meanwhile keep all of them to study trigger efficiency
       process.HSCPTrigger.HLTPaths = ["*"]

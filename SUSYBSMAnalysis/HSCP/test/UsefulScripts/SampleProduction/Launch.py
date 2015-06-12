@@ -183,4 +183,4 @@ elif sys.argv[1]=='2':  #AOD --> EDM files
 
 elif sys.argv[1]=='3':  #Transfert final EDM files from your place to CERN CMST3
    for S in samples:
-      os.system('lcg-cp --verbose -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN=/storage/data/cms/store/user/quertenmont/15_05_20_HSCP_AODSIM/'+S[0]+'_EDM.root" "srm://srm-eoscms.cern.ch:8443/srm/v2/server?SFN=/eos/cms//store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/'+S[0]+'.root" &> LOG_'+S[0]+'.log &')
+      os.system('lcg-cp --verbose -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN=/storage/data/cms/store/user/quertenmont/15_05_20_HSCP_AODSIM/'+S[0]+'.root" "srm://srm-eoscms.cern.ch:8443/srm/v2/server?SFN=/eos/cms//store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/'+S[0]+'.root" &> LOG_'+S[0]+'.log &')
