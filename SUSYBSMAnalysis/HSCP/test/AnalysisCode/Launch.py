@@ -9,7 +9,7 @@ import glob
 
 
 #the vector below contains the "TypeMode" of the analyses that should be run
-AnalysesToRun = [0,2]#,3,4,5]
+AnalysesToRun = [0,2,4]#,3,5]
 
 
 if len(sys.argv)==1:       
@@ -33,7 +33,8 @@ def skipSamples(type, name):
    if(type==3):
       if(name.find("Gluino")==-1 and name.find("Stop")==-1 and name.find("Stau")==-1 and name.find("o3")==-1):return True;
    elif(type==4):
-      if(name.find("DY")==-1 or name.find("o3")>=0):return True;
+       return False;
+#      if(name.find("DY")==-1 or name.find("o3")>=0):return True;
    elif(type==5):
       if(name.find("DY")==-1 or (name.find("1o3")==-1 and name.find("2o3")==-1 and name.find("Q1")==-1)):return True;
    
@@ -124,7 +125,7 @@ elif sys.argv[1]=='4':
 #              #print vals[2] + "   " + str(skip)
 
               Path = "Results/Type"+str(Type)+"/"
-              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMBINE"', '"'+Path+'"', vals[2] ]) #compute 2011, 2012 and 2011+2012 in the same job
+              LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step4_LimitComputation.C", '"COMPUTELIMIT13TeV"', '"'+Path+'"', vals[2] ]) #compute 2011, 2012 and 2011+2012 in the same job
         f.close()
         LaunchOnCondor.SendCluster_Submit()
 

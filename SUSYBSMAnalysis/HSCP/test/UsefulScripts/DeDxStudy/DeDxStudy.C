@@ -82,8 +82,9 @@ void DeDxStudy(string MODE="COMPILE")
 
    std::vector<string> FileName;
 //   GetInputFiles(sample, BaseDirectory, FileName, 0);
-   FileName.push_back("../../MakeEDMtuples/HSCP.root");    
+//   FileName.push_back("../../MakeEDMtuples/HSCP.root");    
 //   FileName.push_back("root://cmseos.fnal.gov///eos/uscms/store/user/aackert/HSCP/AODFiles/HSCPmchamp3_M2600_AOD-SIM_740_MCRUN2_74_V7.root");
+   FileName.push_back("dEdxSkim.root");    
    fwlite::ChainEvent ev(FileName);
 
 
@@ -134,7 +135,8 @@ void DeDxStudy(string MODE="COMPILE")
       if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
 
       fwlite::Handle< std::vector<reco::Track> > trackCollHandle;
-      trackCollHandle.getByLabel(ev,"generalTracks");
+//      trackCollHandle.getByLabel(ev,"generalTracks");
+      trackCollHandle.getByLabel(ev,"RefitterForDeDx");
       if(!trackCollHandle.isValid()){printf("Invalid trackCollHandle\n");continue;}
 
 
