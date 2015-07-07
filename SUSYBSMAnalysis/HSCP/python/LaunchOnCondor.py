@@ -31,6 +31,7 @@ Jobs_Skip         = 0
 Jobs_Queue        = '2nd'
 Jobs_LSFRequirement = '"type==SLC6_64&&pool>30000"'
 Jobs_Inputs	  = []
+Jobs_InitCmds     = []
 Jobs_FinalCmds    = []
 Jobs_RunHere      = 0
 Jobs_EmailReport  = False
@@ -65,6 +66,7 @@ def CreateTheConfigFile(argv):
 	global Jobs_Skip
 	global Jobs_NEvent
 	global Jobs_Inputs
+        global Jobs_InitCmds
         global Jobs_FinalCmds
 	global Path_Cfg
 	global CopyRights
@@ -109,6 +111,7 @@ def CreateTheShellFile(argv):
 	global Path_Cfg
 	global CopyRights	
 	global Jobs_RunHere
+	global Jobs_InitCmds
 	global Jobs_FinalCmds
         global absoluteShellPath
         if(subTool=='crab'):return
@@ -142,6 +145,9 @@ def CreateTheShellFile(argv):
 
 	shell_file.write('cd ' + os.getcwd() + '\n')
 	shell_file.write('eval `scramv1 runtime -sh`\n')
+
+        for i in range(len(Jobs_InitCmds)):
+		shell_file.write(Jobs_InitCmds[i]+'\n')
 
 	if   argv[0]=='BASH':                 
 		if Jobs_RunHere==0:
