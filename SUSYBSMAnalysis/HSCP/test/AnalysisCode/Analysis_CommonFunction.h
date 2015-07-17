@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -506,10 +506,9 @@ TH3F* loadDeDxTemplate(string path){
    return Prob_ChargePath;
 }
 
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
-
 
      std::vector<double> vect;
      for(unsigned int h=0;h<dedxHits->size();h++){
@@ -567,13 +566,23 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
            }
            result *= (3.0/size);
         }else{  //dEdx estimator
-           //harmonic2 estimator
-           result=0;
-           double expo = -2;
-           for(int i = 0; i< size; i ++){
-              result+=pow(vect[i],expo); 
+           if(useTruncated){
+              //truncated40 estimator
+              result=0;
+              int nTrunc = size*0.40;
+              for(int i = 0; i+nTrunc<size; i ++){
+                 result+=vect[i];
+              }
+              result /= (size-nTrunc);
+           }else{
+              //harmonic2 estimator           
+              result=0;
+              double expo = -2;
+              for(int i = 0; i< size; i ++){
+                 result+=pow(vect[i],expo);
+              }
+              result = pow(result/size,1./expo);
            }
-           result = pow(result/size,1./expo);
 //           printf("Ih = %f\n------------------\n",result);
         }
      }else{
