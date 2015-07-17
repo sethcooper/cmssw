@@ -1390,7 +1390,7 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
 
     SQRTS=13; stPlots_Draw(Data13TeVPlots, InputPattern + "/Selection_Data13TeV", LegendTitle, CutIndex);
     SQRTS=13; stPlots_Draw(MCTr13TeVPlots, InputPattern + "/Selection_MCTr_13TeV", LegendTitle, CutIndex);
-    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1600_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M1000",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
+    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1400_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M1000",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
 
 //    if(TypeMode!=3) {SQRTS=7; stPlots_Draw(Data7TeVPlots, InputPattern + "/Selection_Data7TeV", LegendTitle, CutIndex);}
 //    SQRTS=8; stPlots_Draw(MCTr8TeVPlots  , InputPattern + "/Selection_MCTr_8TeV"  , LegendTitle, CutIndex);
