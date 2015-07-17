@@ -1,6 +1,5 @@
 import FWCore.ParameterSet.Config as cms
-#process = cms.Process("MergeHLT")
-process = cms.Process("MergeHSCP")
+process = cms.Process("MergeHLT")
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -9,38 +8,7 @@ from SUSYBSMAnalysis.HSCP.HSCPVersion_cff import *
 process.MessageLogger.cerr.FwkReport.reportEvery = 5000
 process.source = cms.Source("PoolSource",
    fileNames = cms.untracked.vstring(
-	   ['file:HSCP_1.root',
-	    'file:HSCP_2.root',
-	    'file:HSCP_3.root',
-	    'file:HSCP_4.root',
-	    'file:HSCP_5.root',
-	    'file:HSCP_6.root',
-	    'file:HSCP_7.root',
-	    'file:HSCP_8.root',
-	    'file:HSCP_9.root',
-	    'file:HSCP_10.root',
-	    'file:HSCP_11.root',
-	    'file:HSCP_12.root',
-	    'file:HSCP_13.root',
-	    'file:HSCP_14.root',
-	    'file:HSCP_15.root',
-	    'file:HSCP_16.root',
-	    'file:HSCP_17.root',
-	    'file:HSCP_18.root',
-	    'file:HSCP_19.root',
-	    'file:HSCP_20.root',
-	    'file:HSCP_21.root',
-	    'file:HSCP_22.root',
-	    'file:HSCP_23.root',
-	    'file:HSCP_24.root',
-	    'file:HSCP_25.root',
-	    'file:HSCP_26.root',
-	    'file:HSCP_27.root',
-	    'file:HSCP_28.root',
-	    'file:HSCP_29.root',
-	    'file:HSCP_30.root',
-	    'file:HSCP_31.root',
-	    'file:HSCP_32.root']
+XXX_INPUT_XXX
    )
 )
 
@@ -124,9 +92,45 @@ process.HSCPHLTTriggerCosmic.HLTPaths = ["HLT_L2Mu*NoBPTX*"]
 process.HSCPHLTTriggerCosmicFilter = cms.Path(process.HSCPHLTTriggerCosmic   )
 
 process.Out = cms.OutputModule("PoolOutputModule",
-     outputCommands = cms.untracked.vstring("keep *"),
+     outputCommands = cms.untracked.vstring(
+	 "keep *"
+#         "drop *",
+#         "keep EventAux_*_*_*",
+#         "keep LumiSummary_*_*_*",
+#         "keep edmMergeableCounter_*_*_*",
+#         "keep *_genParticles_*_*",
+#         "keep GenEventInfoProduct_generator_*_*",
+#         "keep *_offlinePrimaryVertices_*_*",
+#         "keep SiStripClusteredmNewDetSetVector_generalTracksSkim_*_*",
+#         "keep SiPixelClusteredmNewDetSetVector_generalTracksSkim_*_*",
+#         "keep *_TrackRefitter_*_*",
+#         "keep *_standAloneMuons_*_*",
+#         "keep *_globalMuons_*_*",
+#         "keep *_muonsSkim_*_*",
+#         "keep edmTriggerResults_TriggerResults_*_*",
+#         "keep *_ak5PFJetsPt15__*", 
+#         "keep recoPFMETs_pfMet__*",     
+#         "keep *_HSCParticleProducer_*_*",
+#         "keep *_HSCPIsolation01__*",
+#         "keep *_HSCPIsolation03__*",
+#         "keep *_HSCPIsolation05__*",
+#         "keep *_dedx*_*_HSCPAnalysis",
+#         "keep *_muontiming_*_HSCPAnalysis",
+#         "keep triggerTriggerEvent_hltTriggerSummaryAOD_*_*",
+#         "keep *_RefitMTSAMuons_*_*",
+#         "keep *_MTMuons_*_*",
+#         "keep *_MTSAMuons_*_*",
+#         "keep *_MTmuontiming_*_*",
+#         "keep *_refittedStandAloneMuons_*_*",
+#         "keep *_offlineBeamSpot_*_*",
+#         "keep *_MuonSegmentProducer_*_*",
+#         "drop TrajectorysToOnerecoTracksAssociation_TrackRefitter__",
+#         "drop recoTrackExtras_*_*_*",
+#         "keep recoTrackExtras_TrackRefitter_*_*",
+#         "drop TrackingRecHitsOwned_*Muon*_*_*",
+    ),
     #fileName = cms.untracked.string('/uscmst1b_scratch/lpc1/3DayLifetime/farrell/HSCPEDMUpdateData2012_30Nov2012/XXX_OUTPUT_XXX.root'),
-    fileName = cms.untracked.string('output.root'),
+    fileName = cms.untracked.string('XXX_SAVEPATH_XXX/XXX_OUTPUT_XXX.root'),
     SelectEvents = cms.untracked.PSet(
        SelectEvents = cms.vstring('DuplicateFilter')
     ),
