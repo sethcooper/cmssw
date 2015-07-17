@@ -472,8 +472,11 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
 
    if(TypeMode!=3) {
      fwlite::Handle<HSCPIsolationValueMap> IsolationH;
-     IsolationH.getByLabel(ev, "HSCPIsolation03");
-     if(!IsolationH.isValid()){printf("Invalid IsolationH\n");return false;}
+     IsolationH.getByLabel(ev, "HSCPIsolation", "R03"); //New format used for data since 17-07-2015
+     if(!IsolationH.isValid()){
+        IsolationH.getByLabel(ev, "HSCPIsolation03");//Old format used for first 2015B data, Signal and MC Backgrounds
+        if(!IsolationH.isValid()){printf("Invalid IsolationH\n");return false;}
+     }
      const ValueMap<HSCPIsolation>& IsolationMap = *IsolationH.product();
 
      HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());

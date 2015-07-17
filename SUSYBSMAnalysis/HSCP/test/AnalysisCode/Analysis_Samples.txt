@@ -2,7 +2,7 @@
 #
 ### DATA SAMPLES
 #
-"CMSSW_7_4", 0, "Data13TeV"                         , "MC_13TeV_DYToMuMu"                      , "Data "                                   , "S10"   ,      0,  0.0000000000E+00, 0, 0.000, 0.000, 0.000 #FIXME fake data
+"CMSSW_7_4", 0, "Data13TeV"                         , "Data_2015B_SingleMuPD"                  , "Data "                                   , "S10"   ,      0,  0.0000000000E+00, 0, 0.000, 0.000, 0.000 
 #
 ### BACKGROUND SAMPLES:
 #

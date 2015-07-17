@@ -146,12 +146,12 @@ void TriggerStudy()
    keepOnlyValidSamples(samples);
 
    ///////////////////////////////////////////////////////
-   JetMetSD_triggers.push_back("HLT_PFMET170_NoiseCleaned_v1");
+   JetMetSD_triggers.push_back("HLT_PFMET170_NoiseCleaned_v*");
 
-   MuSD_triggers.push_back("HLT_Mu45_eta2p1_v1");
-   MuSD_triggers.push_back("HLT_Mu50_v1");
-   MuSD_triggers.push_back("HLT_Mu17_Mu8_DZ_v1");
-   MuSD_triggers.push_back("HLT_Mu17_TkMu8_DZ_v1");
+   MuSD_triggers.push_back("HLT_Mu45_eta2p1_v*");
+   MuSD_triggers.push_back("HLT_Mu50_v*");
+   MuSD_triggers.push_back("HLT_Mu17_Mu8_DZ_v*");
+   MuSD_triggers.push_back("HLT_Mu17_TkMu8_DZ_v*");
 
    All_triggers.clear();
    for(unsigned int i=0;i<MuSD_triggers.size();i++)All_triggers.push_back(MuSD_triggers[i]);
@@ -163,10 +163,10 @@ void TriggerStudy()
    stPlot** plots = new stPlot*[samples.size()];  
    for(unsigned int i=0;i<samples.size();i++){
       plots[i] = new stPlot(samples[i].Name);
-      if(! (samples[i].Name=="Gluino_13TeV_M200_f10" || samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M2000_f10"  
-      || samples[i].Name=="GMStau_13TeV_M200" || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" 
-      || samples[i].Name=="PPStau_13TeV_M200" || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871"  
-      ))continue;
+//      if(! (samples[i].Name=="Gluino_13TeV_M200_f10" || samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M2000_f10"  
+//      || samples[i].Name=="GMStau_13TeV_M200" || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" 
+//      || samples[i].Name=="PPStau_13TeV_M200" || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871"  
+//      ))continue;
       printf("Process %20s sample\n", samples[i].Name.c_str());
       TriggerStudy_Core(samples[i], pFile, plots[i]);
    }
@@ -240,9 +240,9 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
       if(!tr.isValid()){printf("Trigger is invalid\n"); continue;}
 
       ////USE THIS TO DUMP AVAILABLE TRIGGER PATHS
-      //for(unsigned int i=0;i<tr.size();i++){
-      //   printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
-      //}fflush(stdout);exit(0);
+//      for(unsigned int i=0;i<tr.size();i++){
+//         printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
+//      }fflush(stdout);exit(0);
 
       //fwlite::Handle< trigger::TriggerEvent > trEvHandle;
       //trEvHandle.getByLabel(ev,"hltTriggerSummaryAOD");
@@ -274,28 +274,9 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
          bool Accept = false;
          bool Accept2 = false;
 
-           if(All_triggers[i]=="HLT_PFMHT150_v2"){
-               if(TrIndex_Unknown != tr.triggerIndex("HLT_PFMHT150_v2")){
-                   if(e<MaxPrint)printf("HLT_PFMHT150_v2\n");
-                   Accept = tr.accept(tr.triggerIndex("HLT_PFMHT150_v2"));
-                }else{
-                   if(e<MaxPrint)printf("HLT_PFMHT150_v1\n");
-                   Accept = tr.accept(tr.triggerIndex("HLT_PFMHT150_v1"));
-                }
-               Accept2 = Accept;
-               //Accept2 = IncreasedTreshold(trEv, InputTag("hltPFMHT150Filter","","HLT"),160 , 2.4, 1, false);
-
-            }
-           else if(All_triggers[i]=="HLT_Mu40_eta2p1_v1"){
-
-//              if(simhitshifted) Accept = IncreasedTreshold(trEv, InputTag("hltSingleMu30L3Filtered30","","HLTSIMHITSHIFTER"),40 , 2.1, 1, false);
-//              else  Accept = IncreasedTreshold(trEv, InputTag("hltSingleMu30L3Filtered30","","HLT"),40 , 2.1, 1, false);              
-              Accept2 = Accept;
-           }
-           else{
-               Accept = tr.accept(All_triggers[i].c_str());
-               Accept2 = Accept;
-            }
+         Accept = passTriggerPatterns(tr,"HLT_PFMHT150_v*");
+         Accept2 = Accept;
+        //Accept2 = IncreasedTreshold(trEv, InputTag("hltPFMHT150Filter","","HLT"),160 , 2.4, 1, false);
 
          if(Accept                    ){plot->Histo   ->Fill(All_triggers[i].c_str(),Event_Weight);}       
          if(Accept && !AlreadyAccepted){plot->HistoInc->Fill(All_triggers[i].c_str(),Event_Weight);}
