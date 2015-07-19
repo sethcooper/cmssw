@@ -31,7 +31,7 @@
 #include "TRandom3.h"
 #include "TTree.h"
 
-double IntegratedLuminosity13TeV               = 18823; //pb
+double IntegratedLuminosity13TeV               = 72.63; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
