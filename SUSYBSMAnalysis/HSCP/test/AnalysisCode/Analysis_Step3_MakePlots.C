@@ -66,14 +66,18 @@ void Analysis_Step3_MakePlots()
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 905; CutIndex_Flip=16;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
 
 
@@ -662,7 +666,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
 // make some control plots to show that ABCD method can be used
 void PredictionAndControlPlot(string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip){
-   if(Data.find("7TeV")!=string::npos){SQRTS=7.0;}else{SQRTS=8.0;}
+   if(Data.find("7TeV")!=string::npos){SQRTS=7.0;}
+   else if (Data.find("8TeV")!=string::npos){SQRTS=8.0;}
+   else if (Data.find("13TeV")!=string::npos){SQRTS=13.0;}
 
    TCanvas* c1;
    TObject** Histos = new TObject*[10];
