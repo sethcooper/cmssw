@@ -123,7 +123,7 @@ def CreateTheShellFile(argv):
         for i in range(2,len(argv)):
                 function_argument+="%s" % argv[i]
                 if i != len(argv)-1:
-                        function_argument+=', '
+                        function_argument+=', ' if argv[0] != 'BASH' else ' '
 
 	shell_file=open(Path_Shell,'w')
 	shell_file.write('#! /bin/sh\n')
