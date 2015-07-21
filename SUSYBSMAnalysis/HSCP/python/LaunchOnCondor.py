@@ -430,7 +430,7 @@ def SendCMSJobs(FarmDirectory, JobName, ConfigFile, InputFiles, NJobs, Argv):
 	SendCluster_Create(FarmDirectory, JobName)
 	NJobs = SendCluster_LoadInputFiles(InputFiles, NJobs)
 	for i in range(NJobs):
-        	SendCluster_Push  (["CMSSW", ConfigFile])
+        	SendCluster_Push  (["CMSSW", ConfigFile] + Argv)
 	SendCluster_Submit()
 
 
