@@ -31,6 +31,7 @@
 #include "TRandom3.h"
 #include "TTree.h"
 
+//double IntegratedLuminosity13TeV               = 72.63; //pb
 double IntegratedLuminosity13TeV               = 5.59; //pb
 
 double               SQRTS                     = 13;
@@ -62,8 +63,8 @@ std::string BaseDirectory = "undefined... Did you call InitBaseDirectory() ? -->
 
 // binning for the pT, mass, and IP distributions
 double             PtHistoUpperBound   = 1200;
-double             MassHistoUpperBound = 2000;
-int		   MassNBins           = 200;
+double             MassHistoUpperBound = 3000;
+int                MassNBins           = 300;
 double             IPbound             = 1.0;
 
 // Thresholds for candidate preselection --> note that some of the followings can be replaced at the beginning of Analysis_Step1_EventLoop function
