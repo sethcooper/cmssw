@@ -17,19 +17,15 @@ TrackAssociatorParametersForHSCPIsol.EBRecHitCollectionLabel       = cms.InputTa
 TrackAssociatorParametersForHSCPIsol.HBHERecHitCollectionLabel     = cms.InputTag("reducedHcalRecHits", "hbhereco")
 TrackAssociatorParametersForHSCPIsol.HORecHitCollectionLabel       = cms.InputTag("reducedHcalRecHits", "horeco")
 
-HSCPIsolation01 = cms.EDProducer("ProduceIsolationMap",
+HSCPIsolation = cms.EDProducer("ProduceIsolationMap",
       inputCollection  = cms.InputTag("generalTracks"),
-      IsolationConeDR  = cms.double(0.1),
-      TkIsolationPtCut = cms.double(10),
+      IsolationConeDR  = cms.vdouble(0.1, 0.3, 0.5),
+      TkIsolationPtCut = cms.vdouble(10, 10, 10),
+      Label            = cms.vstring('R01', 'R03', 'R05'),
       TKLabel          = cms.InputTag("generalTracks"),
       TrackAssociatorParameters=TrackAssociatorParametersForHSCPIsol,
+      CandidateMinPt   = cms.double(10),
 )
-
-HSCPIsolation03 = HSCPIsolation01.clone()
-HSCPIsolation03.IsolationConeDR  = cms.double(0.3)
-
-HSCPIsolation05 = HSCPIsolation01.clone()
-HSCPIsolation05.IsolationConeDR  = cms.double(0.5)
 
 
 ####################################################################################
@@ -114,5 +110,5 @@ HSCParticleSelector = cms.EDFilter("HSCParticleSelector",
 #   HSCP Candidate Sequence
 ####################################################################################
 
-HSCParticleProducerSeq = cms.Sequence(HSCPIsolation01 * HSCPIsolation03 * HSCPIsolation05 * MuonSegmentProducer * HSCParticleProducer)
+HSCParticleProducerSeq = cms.Sequence(HSCPIsolation * MuonSegmentProducer * HSCParticleProducer)
 

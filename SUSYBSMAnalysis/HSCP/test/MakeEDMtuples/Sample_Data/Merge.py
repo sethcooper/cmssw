@@ -4,7 +4,8 @@ import urllib
 import string
 import os
 import sys
-import LaunchOnCondor
+import SUSYBSMAnalysis.HSCP.LaunchOnCondor as LaunchOnCondor 
+import glob
 
 Jobs = [
 #["RunA_*_190645_190999","RunA_190645_190999"],

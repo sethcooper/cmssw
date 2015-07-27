@@ -330,18 +330,22 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
    }
    if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
 
-   double dz  = track->dz (vertexColl[0].position());
-   double dxy = track->dxy(vertexColl[0].position());
+   int highestPtGoodVertex = -1;
    int goodVerts=0;
    for(unsigned int i=0;i<vertexColl.size();i++){
      if(st) st->BS_dzAll->Fill( track->dz (vertexColl[i].position()),Event_Weight);
      if(st) st->BS_dxyAll->Fill(track->dxy(vertexColl[i].position()),Event_Weight);
      if(fabs(vertexColl[i].z())<15 && sqrt(vertexColl[i].x()*vertexColl[i].x()+vertexColl[i].y()*vertexColl[i].y())<2 && vertexColl[i].ndof()>3){ goodVerts++;}else{continue;} //only consider good vertex
-     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
-       dz  = track->dz (vertexColl[i].position());
-       dxy = track->dxy(vertexColl[i].position());
-     }
-   }
+       if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+//     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
+//       dz  = track->dz (vertexColl[i].position());
+//       dxy = track->dxy(vertexColl[i].position());
+//     }
+   }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
+   double dz  = track->dz (vertexColl[0].position());
+   double dxy = track->dxy(vertexColl[0].position());
+
+   
 
    bool PUA = (vertexColl.size()<15);
    bool PUB = (vertexColl.size()>=15);
@@ -472,8 +476,11 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
 
    if(TypeMode!=3) {
      fwlite::Handle<HSCPIsolationValueMap> IsolationH;
-     IsolationH.getByLabel(ev, "HSCPIsolation03");
-     if(!IsolationH.isValid()){printf("Invalid IsolationH\n");return false;}
+     IsolationH.getByLabel(ev, "HSCPIsolation", "R03"); //New format used for data since 17-07-2015
+     if(!IsolationH.isValid()){
+        IsolationH.getByLabel(ev, "HSCPIsolation03");//Old format used for first 2015B data, Signal and MC Backgrounds
+        if(!IsolationH.isValid()){printf("Invalid IsolationH\n");return false;}
+     }
      const ValueMap<HSCPIsolation>& IsolationMap = *IsolationH.product();
 
      HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());

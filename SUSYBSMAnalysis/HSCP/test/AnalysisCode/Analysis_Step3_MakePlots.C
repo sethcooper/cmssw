@@ -62,18 +62,22 @@ void Analysis_Step3_MakePlots()
 
 
 
-   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 84;
+   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 67;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
 
-   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 905; CutIndex_Flip=16;
+   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 695; CutIndex_Flip=16;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
 
 
@@ -592,7 +596,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    t2->SetTopMargin(0);
    t2->SetBottomMargin(0.5);
 
-   TH1D* frameR = new TH1D("frameR", "frameR", 1,0, 1400);
+   TH1D* frameR = new TH1D("frameR", "frameR", 1,0, 2800);
    frameR->GetXaxis()->SetNdivisions(505);
    frameR->SetTitle("");
    frameR->SetStats(kFALSE);
@@ -650,7 +654,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    }
 
 
-   TLine* LineAtOne = new TLine(0,1,1400,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
+   TLine* LineAtOne = new TLine(0,1,2800,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
 
    c1->cd();
    SaveCanvas(c1, InputPattern, string("Rescale_") + HistoSuffix + "_" + DataName);
@@ -662,7 +666,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
 // make some control plots to show that ABCD method can be used
 void PredictionAndControlPlot(string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip){
-   if(Data.find("7TeV")!=string::npos){SQRTS=7.0;}else{SQRTS=8.0;}
+   if(Data.find("7TeV")!=string::npos){SQRTS=7.0;}
+   else if (Data.find("8TeV")!=string::npos){SQRTS=8.0;}
+   else if (Data.find("13TeV")!=string::npos){SQRTS=13.0;}
 
    TCanvas* c1;
    TObject** Histos = new TObject*[10];
@@ -1390,7 +1396,7 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
 
     SQRTS=13; stPlots_Draw(Data13TeVPlots, InputPattern + "/Selection_Data13TeV", LegendTitle, CutIndex);
     SQRTS=13; stPlots_Draw(MCTr13TeVPlots, InputPattern + "/Selection_MCTr_13TeV", LegendTitle, CutIndex);
-    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1600_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M1000",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
+    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1400_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M1000",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
 
 //    if(TypeMode!=3) {SQRTS=7; stPlots_Draw(Data7TeVPlots, InputPattern + "/Selection_Data7TeV", LegendTitle, CutIndex);}
 //    SQRTS=8; stPlots_Draw(MCTr8TeVPlots  , InputPattern + "/Selection_MCTr_8TeV"  , LegendTitle, CutIndex);
