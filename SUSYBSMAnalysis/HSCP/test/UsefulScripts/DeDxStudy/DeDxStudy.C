@@ -50,6 +50,94 @@ using namespace trigger;
 
 #endif
 
+const double P_Min               = 1;
+const double P_Max               = 15;
+const int    P_NBins             = 14  ;
+const double Path_Min            = 0.2 ;
+const double Path_Max            = 1.6 ;
+const int    Path_NBins          = 42  ;
+const double Charge_Min          = 0   ;
+const double Charge_Max          = 5000;
+const int    Charge_NBins        = 500 ;
+
+struct dEdxStudyObj
+{
+   string Name;
+   TH3D* Charge_Vs_Path;
+   TH1D* HdedxMIP;
+   TH2D* HdedxVsPHSCP;
+   TH2D* HdedxVsP;
+   TH2D* HdedxVsPM;
+   TH2D* HdedxVsQP;
+   TProfile* HdedxVsPProfile;
+   TProfile* HdedxVsEtaProfile;
+   TH2D* HdedxVsEta;
+   TProfile* HNOSVsEtaProfile;
+   TProfile* HNOMVsEtaProfile;
+   TProfile* HNOMSVsEtaProfile;
+   TH1D* HMass;
+   TH1D* HP;
+   TH1D* HHit; 
+   TH2D* HIasVsP;
+   TH2D* HIasVsPM;
+   TH1D* HIasMIP;
+   TH2D* IasVsEta_Split;
+   TH2D* IasVsEta_Unsplit;
+   TProfile* IasVsEta_ProfileS;
+   TProfile* IasVsEta_ProfileU;
+
+   dEdxStudyObj(string saveName){
+      Name = saveName;
+
+      bool isDiscrim = false;  if(saveName.find("Ias")!=std::string::npos)isDiscrim = true;
+
+
+      string HistoName;
+      HistoName = saveName + "_ChargeVsPath";      Charge_Vs_Path        = new TH3D(    HistoName.c_str(), HistoName.c_str(), P_NBins, P_Min, P_Max, Path_NBins, Path_Min, Path_Max, Charge_NBins, Charge_Min, Charge_Max);
+      HistoName = saveName + "_MIP";               HdedxMIP              = new TH1D(    HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
+      HistoName = saveName + "_dedxVsPHSCP";       HdedxVsPHSCP          = new TH2D(    HistoName.c_str(), HistoName.c_str(), 3000, 0, 2000,1500,0, isDiscrim?1.0:15);
+      HistoName = saveName + "_dedxVsP";           HdedxVsP              = new TH2D(    HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
+      HistoName = saveName + "_dedxVsPM";          HdedxVsPM             = new TH2D(    HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
+      HistoName = saveName + "_dedxVsQP";          HdedxVsQP             = new TH2D(    HistoName.c_str(), HistoName.c_str(), 6000, -30, 30,1500,0, isDiscrim?1.0:25);
+      HistoName = saveName + "_Profile";           HdedxVsPProfile       = new TProfile(HistoName.c_str(), HistoName.c_str(),  100, 0,100);
+      HistoName = saveName + "_Eta";               HdedxVsEtaProfile     = new TProfile(HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+      HistoName = saveName + "_Eta2D";             HdedxVsEta            = new TH2D    (HistoName.c_str(), HistoName.c_str(),  100,-3,  3, 1000,0, isDiscrim?1.0:5);
+      HistoName = saveName + "_NOS";               HNOSVsEtaProfile      = new TProfile(HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+      HistoName = saveName + "_NOM";               HNOMVsEtaProfile      = new TProfile(HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+      HistoName = saveName + "_NOMS";              HNOMSVsEtaProfile     = new TProfile(HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+      HistoName = saveName + "_Mass";              HMass                 = new TH1D(    HistoName.c_str(), HistoName.c_str(),  500, 0, 10);
+      HistoName = saveName + "_P";                 HP                    = new TH1D(    HistoName.c_str(), HistoName.c_str(),  500, 0, 100);
+      HistoName = saveName + "_Hit";               HHit                  = new TH1D(    HistoName.c_str(), HistoName.c_str(),  200, 0, 20); 
+      HistoName = saveName + "_IasVsEta_Split";    IasVsEta_Split        = new TH2D(    HistoName.c_str(), HistoName.c_str(),  100,-3,  3, 50, 0, 1.0);
+      HistoName = saveName + "_IasVsEta_Unsplit";  IasVsEta_Unsplit      = new TH2D(    HistoName.c_str(), HistoName.c_str(),  100,-3,  3, 50, 0, 1.0);
+      HistoName = saveName + "_IasVsEta_ProfileS"; IasVsEta_ProfileS     = new TProfile(HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+      HistoName = saveName + "_IasVsEta_ProfileU"; IasVsEta_ProfileU     = new TProfile(HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+   }
+};
+
+void Write_dEdxStudyObj (dEdxStudyObj* Obj){
+	Obj->Charge_Vs_Path    ->Write();
+	Obj->HdedxMIP          ->Write();
+	Obj->HdedxVsPHSCP      ->Write();
+	Obj->HdedxVsP          ->Write();
+	Obj->HdedxVsPM         ->Write();
+	Obj->HdedxVsQP         ->Write();
+	Obj->HdedxVsPProfile   ->Write();
+	Obj->HdedxVsEtaProfile ->Write();
+	Obj->HdedxVsEta        ->Write();
+	Obj->HNOSVsEtaProfile  ->Write();
+	Obj->HNOMVsEtaProfile  ->Write();
+	Obj->HNOMSVsEtaProfile ->Write();
+	Obj->HMass             ->Write();
+	Obj->HP                ->Write();
+	Obj->HHit              ->Write();
+	Obj->IasVsEta_Split    ->Write();
+	Obj->IasVsEta_Unsplit  ->Write();
+	Obj->IasVsEta_ProfileS ->Write();
+	Obj->IasVsEta_ProfileU ->Write();
+}
+
+
 
 
 void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT="out.root")
@@ -73,7 +161,12 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    std::vector<string> FileName;
    bool isData = true;
    if(INPUT.find(".root")<std::string::npos){
-      FileName.push_back(INPUT);    
+      char* pch=strtok(&INPUT[0],",");
+      while (pch!=NULL){
+         FileName.push_back(pch);    
+         pch=strtok(NULL,",");
+      }
+
    }else{
       string SampleId = INPUT;
       InitBaseDirectory();
@@ -88,147 +181,135 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    if(isData){    dEdxTemplates = loadDeDxTemplate(DIRNAME + "/../../../data/Data7TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
    }else{         dEdxTemplates = loadDeDxTemplate(DIRNAME + "/../../../data/MC7TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
    }
+   TH3F* dEdxNewTemplatesSplit   = NULL;
+   TH3F* dEdxNewTemplatesUnsplit = NULL;
+   if(isData){
+	   dEdxNewTemplatesSplit   = loadDeDxTemplate(DIRNAME + "/dEdxVsPath_Data.root", true);
+	   dEdxNewTemplatesUnsplit = loadDeDxTemplate(DIRNAME + "/dEdxVsPath_Data.root", false);
+   }else{
+	   dEdxNewTemplatesSplit   = loadDeDxTemplate(DIRNAME + "/dEdxVsPath_MC.root", true);
+	   dEdxNewTemplatesUnsplit = loadDeDxTemplate(DIRNAME + "/dEdxVsPath_MC.root", false);
+   }
 
-   //system("mkdir -p pictures/");
-   double P_Min               = 1;
-   double P_Max               = 15;
-   int    P_NBins             = 14  ;
-   double Path_Min            = 0.2 ;
-   double Path_Max            = 1.6 ;
-   int    Path_NBins          = 42  ;
-   double Charge_Min          = 0   ;
-   double Charge_Max          = 5000;
-   int    Charge_NBins        = 500 ;
 
-   TH3D* Charge_Vs_Path = new TH3D ("Charge_Vs_Path"     , "Charge_Vs_Path" , P_NBins, P_Min, P_Max, Path_NBins, Path_Min, Path_Max, Charge_NBins, Charge_Min, Charge_Max);
+   string studies[] = {"harm2", "trunc40", "harm2_raw", "trunc40_raw", "Ias"};
+   unsigned int Nstudies = sizeof(studies)/sizeof(string);
+   dEdxStudyObj** results = new dEdxStudyObj*[Nstudies];
+   for(unsigned int R=0;R<Nstudies;R++){ results[R] = new dEdxStudyObj(studies[R]); }
 
    TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");
 
-   for(int LOOP=0;LOOP<=1;LOOP++){
-      string saveName = "harm2";
-      if(LOOP==1) saveName = "trunc40";
+   std::unordered_map<unsigned int,double> TrackerGains;
+   LoadDeDxCalibration(TrackerGains, DIRNAME+"/Gains.root");
 
-      TH1D* HdedxMIP          = new TH1D(    (saveName + "_MIP"    ).c_str(), "MIP"    ,  200, 0, 20);
-      TH2D* HdedxVsPHSCP      = new TH2D(    (saveName + "_dedxVsPHSCP").c_str(), "dedxVsPHSCP", 3000, 0, 2000,1500,0,15);
-      TH2D* HdedxVsP          = new TH2D(    (saveName + "_dedxVsP").c_str(), "dedxVsP", 3000, 0, 30,1500,0,15);
-      TH2D* HdedxVsPM         = new TH2D(    (saveName + "_dedxVsPM").c_str(), "dedxVsPM", 3000, 0, 30,1500,0,15);
-      TH2D* HdedxVsQP         = new TH2D(    (saveName + "_dedxVsQP").c_str(), "dedxVsQP", 6000, -30, 30,1500,0,25);
-      TProfile* HdedxVsPProfile   = new TProfile((saveName + "_Profile").c_str(), "Profile",  100, 0,100);
-      TProfile* HdedxVsEtaProfile = new TProfile((saveName + "_Eta"    ).c_str(), "Eta"    ,  100,-3,  3);
-      TH2D* HdedxVsEta        = new TH2D    ((saveName + "_Eta2D"  ).c_str(), "Eta"    ,  100,-3,  3, 1000,0,5);
-      TProfile* HNOSVsEtaProfile  = new TProfile((saveName + "_NOS"    ).c_str(), "NOS"    ,  100,-3,  3);
-      TProfile* HNOMVsEtaProfile  = new TProfile((saveName + "_NOM"    ).c_str(), "NOM"    ,  100,-3,  3);
-      TProfile* HNOMSVsEtaProfile = new TProfile((saveName + "_NOMS"    ).c_str(), "NOMS"    ,  100,-3,  3);
-      TH1D* HMass             = new TH1D(    (saveName + "_Mass"   ).c_str(), "Mass"   ,  500, 0, 10);
-      TH1D* HP                = new TH1D(    (saveName + "_P"      ).c_str(), "P"      ,  500, 0, 100);
+   printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
+   printf("Looping on Tree              :");
+   int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
+   for(Long64_t e=0;e<ev.size();e++){
+      ev.to(e); 
+      if(e%TreeStep==0){printf(".");fflush(stdout);}
 
-      TH1D* HHit          = new TH1D(    (saveName + "_Hit"      ).c_str(), "P"      ,  200, 0, 20);
- 
-      TH2D* HIasVsP          = new TH2D(    (saveName + "_IasVsP").c_str(), "IasVsP", 3000, 0, 30,1500,0,1);
-      TH2D* HIasVsPM         = new TH2D(    (saveName + "_IasVsPM").c_str(), "IasVsPM", 3000, 0, 30,1500,0,1);
-      TH1D* HIasMIP          = new TH1D(    (saveName + "_IasMIP"    ).c_str(), "IasMIP"    ,  1000, 0, 1);
+      fwlite::Handle<DeDxHitInfoAss> dedxCollH;
+      dedxCollH.getByLabel(ev, "dedxHitInfo");
+      if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
 
+      fwlite::Handle< std::vector<reco::Track> > trackCollHandle;
+      trackCollHandle.getByLabel(ev,"RefitterForDeDx");
+      if(!trackCollHandle.isValid()){
+         trackCollHandle.getByLabel(ev,"generalTracks");
+	    if (!trackCollHandle.isValid()){
+	       printf("Invalid trackCollHandle\n");
+	       continue;
+	    }
+      }
 
+      for(unsigned int c=0;c<trackCollHandle->size();c++){
+          reco::TrackRef track = reco::TrackRef( trackCollHandle.product(), c );
 
-      printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
-      printf("Looping on Tree              :");
-      int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
-      for(Long64_t e=0;e<ev.size();e++){
-   //      if(e>10)break;
-         ev.to(e); 
-         if(e%TreeStep==0){printf(".");fflush(stdout);}
-
-         fwlite::Handle<DeDxHitInfoAss> dedxCollH;
-         dedxCollH.getByLabel(ev, "dedxHitInfo");
-         if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
-
-         fwlite::Handle< std::vector<reco::Track> > trackCollHandle;
-         trackCollHandle.getByLabel(ev,"RefitterForDeDx");
-         if(!trackCollHandle.isValid()){
-		 trackCollHandle.getByLabel(ev,"generalTracks");
-		 if (!trackCollHandle.isValid()){
-			 printf("Invalid trackCollHandle\n");
-			 continue;
-		 }
-	 }
+          if(track->chi2()/track->ndof()>5 )continue;  //WAS >1
+          if(track->found()<8)continue;
 
 
-         for(unsigned int c=0;c<trackCollHandle->size();c++){
-             reco::TrackRef track = reco::TrackRef( trackCollHandle.product(), c );
-
-             if(track->chi2()/track->ndof()>5 )continue;  //WAS >1
-             if(track->found()<8)continue;
-
-
-             const DeDxHitInfo* dedxHits = NULL;
-             if(TypeMode!=3 && !track.isNull()) {
-                DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
-                if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
-             }
-             if(!dedxHits)continue;
+          const DeDxHitInfo* dedxHits = NULL;
+          if(TypeMode!=3 && !track.isNull()) {
+             DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
+             if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
+          }
+          if(!dedxHits)continue;
 
 
-             for(unsigned int h=0;h<dedxHits->size();h++){
-                DetId detid(dedxHits->detId(h));
-                if(detid.subdetId()<3)continue; // skip pixels
+         for(unsigned int h=0;h<dedxHits->size();h++){
+             DetId detid(dedxHits->detId(h));
+             if(detid.subdetId()<3)continue; // skip pixels
                
-                double scaleFactor = 1.0;
-                double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
-                double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
+             double scaleFactor = 1.0;
+             double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
+             double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
-		SiStripDetId SSdetId(detid);
-		if (track->p() > 5) Charge_Vs_Path->Fill (SSdetId.moduleGeometry(),
-				dedxHits->pathlength(h)*10,
-				dedxHits->charge(h)/(dedxHits->pathlength(h)*10));
-                HHit->Fill(ChargeOverPathlength);
+             SiStripDetId SSdetId(detid);
+
+             
+    	     if (track->p() > 5){
+                 for(unsigned int R=0;R<Nstudies;R++){ results[R]->Charge_Vs_Path->Fill (SSdetId.moduleGeometry(), dedxHits->pathlength(h)*10, dedxHits->charge(h)/(dedxHits->pathlength(h)*10)); }
+             }
+             for(unsigned int R=0;R<Nstudies;R++){ results[R]->HHit->Fill(ChargeOverPathlength); }
+          }
+
+
+          for(unsigned int R=0;R<Nstudies;R++){ 
+             DeDxData* dedxObj = NULL;
+             if      (studies[R]=="harm2"      ){ dedxObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false, false, &TrackerGains );  
+             }else if(studies[R]=="harm2_raw"  ){ dedxObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false, false, NULL          ); 
+             }else if(studies[R]=="trunc40"    ){ dedxObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, true,  false, &TrackerGains );  
+             }else if(studies[R]=="trunc40_raw"){ dedxObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, true,  false, NULL          );  
+             }else if(studies[R]=="Ias"        ){ dedxObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, false, false );                 
+             }else{ printf("Unknown case: %s!  Exit here.\n", studies[R].c_str());  exit(0);
              }
 
-             DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, false, false );
-             DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false, LOOP==0?false:true  );
+             results[R]->HdedxVsPHSCP->Fill(track->pt(), dedxObj->dEdx());
 
-             HdedxVsPHSCP->Fill(track->pt(), dedxMObj->dEdx());
-
-             if(track->pt()>20 && track->pt()<40 && dedxMObj->numberOfMeasurements()>6 ){
-               HdedxVsEtaProfile->Fill(track->eta(), dedxMObj->dEdx() );
-               HdedxVsEta->Fill(track->eta(), dedxMObj->dEdx() );
-               HNOMVsEtaProfile->Fill(track->eta(),dedxMObj->numberOfMeasurements() );
-               HNOSVsEtaProfile->Fill(track->eta(),dedxMObj->numberOfSaturatedMeasurements() );
-               HNOMSVsEtaProfile->Fill(track->eta(),dedxMObj->numberOfMeasurements() - dedxMObj->numberOfSaturatedMeasurements() );
+             if(track->pt()>20 && track->pt()<40 && dedxObj->numberOfMeasurements()>6 ){
+               results[R]->HdedxVsEtaProfile->Fill(track->eta(), dedxObj->dEdx() );
+               results[R]->HdedxVsEta->Fill(track->eta(), dedxObj->dEdx() );
+               results[R]->HNOMVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() );
+               results[R]->HNOSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfSaturatedMeasurements() );
+               results[R]->HNOMSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() - dedxObj->numberOfSaturatedMeasurements() );
              }
 
+	     if (track->p() > 5 && dEdxNewTemplatesSplit && dEdxNewTemplatesUnsplit){
+                bool useraw   = studies[R].find("raw")  !=std::string::npos ? true : false,
+		     truncate = studies[R].find("trunc")!=std::string::npos ? true : false;
+
+		DeDxData* dedxNewObjS = computedEdx(dedxHits, dEdxSF, dEdxNewTemplatesSplit,   false, useClusterCleaning, truncate, false, useraw ? &TrackerGains : NULL);
+		DeDxData* dedxNewObjU = computedEdx(dedxHits, dEdxSF, dEdxNewTemplatesUnsplit, false, useClusterCleaning, truncate, false, useraw ? &TrackerGains : NULL);
+
+                results[R]->IasVsEta_Split   ->Fill(track->eta(), dedxNewObjS->dEdx());
+                results[R]->IasVsEta_ProfileS->Fill(track->eta(), dedxNewObjS->dEdx());
+                results[R]->IasVsEta_Unsplit ->Fill(track->eta(), dedxNewObjU->dEdx());
+                results[R]->IasVsEta_ProfileU->Fill(track->eta(), dedxNewObjU->dEdx());
+	     }
 
              if(fabs(track->eta())>2.1)continue;
-             if((int)dedxMObj->numberOfMeasurements()<10)continue;
+             if((int)dedxObj->numberOfMeasurements()<10)continue;
              if(track->p()>5 && track->p()<40){
-                HdedxMIP->Fill(dedxMObj->dEdx());
-                HP->Fill(track->p());
-                HIasMIP->Fill(dedxSObj->dEdx());
+                results[R]->HdedxMIP->Fill(dedxObj->dEdx());
+                results[R]->HP->Fill(track->p());
              }
-             HdedxVsP ->Fill(track->p(), dedxMObj->dEdx() );
-             HdedxVsQP->Fill(track->p()*track->charge(), dedxMObj->dEdx() );
-             HIasVsP ->Fill(track->p(), dedxSObj->dEdx() );
+             results[R]->HdedxVsP ->Fill(track->p(), dedxObj->dEdx() );
+             results[R]->HdedxVsQP->Fill(track->p()*track->charge(), dedxObj->dEdx() );
 
-             if(fabs(track->eta())<0.4)HdedxVsPProfile->Fill(track->p(), dedxMObj->dEdx() );
-             double Mass = GetMass(track->p(),dedxMObj->dEdx(), false);
-             if(dedxMObj->dEdx()>4.0 && track->p()<3.0){
-                HMass->Fill(Mass);
+             if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
+             double Mass = GetMass(track->p(),dedxObj->dEdx(), false);
+             if(dedxObj->dEdx()>4.0 && track->p()<3.0){
+                results[R]->HMass->Fill(Mass);
                 if(isnan((float)Mass) || Mass<0.94-0.3 || Mass>0.94+0.3)continue;
-                HdedxVsPM ->Fill(track->p(), dedxMObj->dEdx() );
-                HIasVsPM ->Fill(track->p(), dedxSObj->dEdx() );
+                results[R]->HdedxVsPM ->Fill(track->p(), dedxObj->dEdx() );
              }
-
-
-
-         }
-      }printf("\n");
-
-
-      HdedxMIP->Scale(1.0/HdedxMIP->Integral() );
-      HHit->Scale(1.0/HHit->Integral() );
-
-   }
-
-   Charge_Vs_Path->SaveAs(("ChargeVsPath"+OUTPUT).c_str());
+          }
+      }
+   }printf("\n");
+   for (int study_i = 0; study_i < Nstudies; study_i++)
+	   Write_dEdxStudyObj (results[study_i]);
    OutputHisto->Write();
    OutputHisto->Close();  
 }
