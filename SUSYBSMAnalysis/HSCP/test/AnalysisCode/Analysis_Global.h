@@ -101,10 +101,10 @@ std::string        dEdxS_Legend    = "I_{as}";
 std::string        dEdxM_Label     = "dedxHarm2";
 double             dEdxM_UpLim     = 30.0;
 std::string        dEdxM_Legend    = "I_{h} (MeV/cm)";
-double             dEdxK_Data      = 2.529;
-double             dEdxC_Data      = 2.772;
-double             dEdxK_MC        = 2.529;
-double             dEdxC_MC        = 2.772;
+double             dEdxK_Data      = 2.779;
+double             dEdxC_Data      = 2.879;
+double             dEdxK_MC        = 2.683;
+double             dEdxC_MC        = 2.453;
 
 // TOF object to be used for combined, DT and CSC TOF measurement
 std::string        TOF_Label       = "combined";
