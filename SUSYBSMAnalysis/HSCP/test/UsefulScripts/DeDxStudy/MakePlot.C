@@ -157,7 +157,7 @@ void MakePlot()
 
    TFile* InputFile = new TFile("dEdxHistosNew.root");
    std::vector<string> ObjName;
-   ObjName.push_back("trunc40");
+   ObjName.push_back("harm2");
 
 
    for(unsigned int i=0;i<ObjName.size();i++){
@@ -169,7 +169,6 @@ void MakePlot()
 
 //      ExtractConstants(HdedxVsP);
 
-
    TPaveText* T = new TPaveText(0.05, 0.995, 0.95, 0.945, "NDC");
    T->SetTextFont(43);  //give the font size in pixel (instead of fraction)
    T->SetTextSize(21);  //font size
@@ -177,52 +176,56 @@ void MakePlot()
    T->SetFillColor(0);
    T->SetFillStyle(0);
    T->SetTextAlign(22);
-   T->AddText("#bf{CMS} Preliminary   -   Run 251252    -    #sqrt{s} = 13 TeV");
+   T->AddText("#bf{CMS} Preliminary   -   2.74 pb^{-1}   -    #sqrt{s} = 13 TeV");
 
       std::cout << "TESTA\n";
       TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
       c1->SetLogz(true);
       HdedxVsP->SetStats(kFALSE);
-      HdedxVsP->GetXaxis()->SetTitle("track momentum (GeV/c)");
+      HdedxVsP->GetXaxis()->SetTitle("momentum (GeV/c)");
       HdedxVsP->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
       HdedxVsP->SetAxisRange(0,5,"X");
       HdedxVsP->SetAxisRange(0,15,"Y");
       HdedxVsP->Draw("COLZ");
 
 //      PionLine->Draw("same");
-      KaonLine->Draw("same");
-      ProtonLine->Draw("same");
-      DeuteronLine->Draw("same");
-      TritonLine->Draw("same");
-      ProtonLineFit->Draw("same");
+//      KaonLine->Draw("same");
+//      ProtonLine->Draw("same");
+//      DeuteronLine->Draw("same");
+//      TritonLine->Draw("same");
+//      ProtonLineFit->Draw("same");
     T->Draw("same");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_dedxVsP", true);
+      c1->SaveAs((string("pictures/")+ObjName[i] + "_dedxVsP.C").c_str());
+      c1->SaveAs((string("pictures/")+ObjName[i] + "_dedxVsP.pdf").c_str());
       delete c1;
 
 
       c1 = new TCanvas("c1", "c1", 600,600);
       c1->SetLogz(true);
       HdedxVsQP->SetStats(kFALSE);
-      HdedxVsQP->GetXaxis()->SetTitle("charge X track momentum (GeV/c)");
+      HdedxVsQP->GetXaxis()->SetTitle("charge * momentum (GeV/c)");
       HdedxVsQP->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
       HdedxVsQP->SetAxisRange(-5,5,"X");
       HdedxVsQP->SetAxisRange(0,15,"Y");
       HdedxVsQP->Draw("COLZ");
 
-      KaonLine->Draw("same");
-      ProtonLine->Draw("same");
-      DeuteronLine->Draw("same");
-      TritonLine->Draw("same");
-      ProtonLineFit->Draw("same");
+//      KaonLine->Draw("same");
+//      ProtonLine->Draw("same");
+//      DeuteronLine->Draw("same");
+//      TritonLine->Draw("same");
+//      ProtonLineFit->Draw("same");
 
-      KaonLineLeft->Draw("same");
-      ProtonLineLeft->Draw("same");
-      DeuteronLineLeft->Draw("same");
+//      KaonLineLeft->Draw("same");
+//      ProtonLineLeft->Draw("same");
+//      DeuteronLineLeft->Draw("same");
 //      TritonLineLeft->Draw("same");
 
       
     T->Draw("same");     
       SaveCanvas(c1, "pictures/", ObjName[i] + "_dedxVsQP", true);
+      c1->SaveAs((string("pictures/")+ObjName[i] + "_dedxVsQP.C").c_str());
+      c1->SaveAs((string("pictures/")+ObjName[i] + "_dedxVsQP.pdf").c_str());
       delete c1;
 
 

@@ -471,12 +471,12 @@ class DuplicatesClass{
 #ifdef FWLITE
 
 
-TH3F* loadDeDxTemplate(string path);
+TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
 reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
-TH3F* loadDeDxTemplate(string path){
+TH3F* loadDeDxTemplate(string path, bool splitByModuleType){
    TFile* InputFile = new TFile(path.c_str());
    TH3F* DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Charge_Vs_Path");
    if(!DeDxMap_){printf("dEdx templates in file %s can't be open\n", path.c_str()); exit(0);}
@@ -484,6 +484,10 @@ TH3F* loadDeDxTemplate(string path){
    TH3F* Prob_ChargePath  = (TH3F*)(DeDxMap_->Clone("Prob_ChargePath")); 
    Prob_ChargePath->Reset();
    Prob_ChargePath->SetDirectory(0); 
+
+   if(!splitByModuleType){
+      Prob_ChargePath->RebinX(Prob_ChargePath->GetNbinsX());
+   }
 
    for(int i=0;i<=Prob_ChargePath->GetXaxis()->GetNbins()+1;i++){
       for(int j=0;j<=Prob_ChargePath->GetYaxis()->GetNbins()+1;j++){
@@ -506,6 +510,7 @@ TH3F* loadDeDxTemplate(string path){
    return Prob_ChargePath;
 }
 
+#include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
@@ -530,7 +535,8 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
 
         if(templateHisto){  //save discriminator probability
            double ChargeOverPathlength = scaleFactor*dedxHits->charge(h)/(dedxHits->pathlength(h)*10.0);
-           int    BinX   = templateHisto->GetXaxis()->FindBin(50.0);//trajState.localMomentum().mag()); //our template does not depends on this variable currently
+           SiStripDetId SSdetId(detid); //we sure it's strip since template force the use of usePixel=false
+           int    BinX   = templateHisto->GetXaxis()->FindBin(SSdetId.moduleGeometry());
            int    BinY   = templateHisto->GetYaxis()->FindBin(dedxHits->pathlength(h)*10.0); //*10 because of cm-->mm
            int    BinZ   = templateHisto->GetZaxis()->FindBin(ChargeOverPathlength);
            double Prob   = templateHisto->GetBinContent(BinX,BinY,BinZ);

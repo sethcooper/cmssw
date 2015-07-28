@@ -62,7 +62,7 @@ void Analysis_Step3_MakePlots()
 
 
 
-   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 84;
+   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 67;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
@@ -71,7 +71,7 @@ void Analysis_Step3_MakePlots()
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
 
-   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 905; CutIndex_Flip=16;
+   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 695; CutIndex_Flip=16;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
@@ -596,7 +596,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    t2->SetTopMargin(0);
    t2->SetBottomMargin(0.5);
 
-   TH1D* frameR = new TH1D("frameR", "frameR", 1,0, 1400);
+   TH1D* frameR = new TH1D("frameR", "frameR", 1,0, 2800);
    frameR->GetXaxis()->SetNdivisions(505);
    frameR->SetTitle("");
    frameR->SetStats(kFALSE);
@@ -654,7 +654,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    }
 
 
-   TLine* LineAtOne = new TLine(0,1,1400,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
+   TLine* LineAtOne = new TLine(0,1,2800,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
 
    c1->cd();
    SaveCanvas(c1, InputPattern, string("Rescale_") + HistoSuffix + "_" + DataName);
