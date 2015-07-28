@@ -177,7 +177,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                 double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
 		SiStripDetId SSdetId(detid);
-		if (track->p() > 5) Charge_Vs_Path->Fill (SSdetId.moduleGeometry,
+		if (track->p() > 5) Charge_Vs_Path->Fill (SSdetId.moduleGeometry(),
 				dedxHits->pathlength(h),
 				dedxHits->charge(h)/dedxHits->pathlength(h));
                 HHit->Fill(ChargeOverPathlength);
