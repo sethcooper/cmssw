@@ -135,27 +135,35 @@ void MakePlot()
    TritonLineLeft->SetLineColor(1);
    TritonLineLeft->SetLineWidth(2);
 
-   TFile* InputFile = new TFile("dEdxHistos_251252.root");
+   TFile* InputFile = new TFile("dEdxHistosNew.root");
    std::vector<string> ObjName;
-   ObjName.push_back("harm2");
+//   ObjName.push_back("harm2");
+   ObjName.push_back("harm2_raw");
+//   ObjName.push_back("trunc40");
+//   ObjName.push_back("trunc40_raw");
+//   ObjName.push_back("Ias");
 
    for(unsigned int i=0;i<ObjName.size();i++){
-      TH1D*       HdedxMIP        = (TH1D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_MIP"      ).c_str() );
-      TH1D*       HMass           = (TH1D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_Mass"     ).c_str() );
-      TH2D*       HdedxVsP        = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsP"  ).c_str() );
-      TH2D*       HdedxVsQP       = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsQP" ).c_str() );
-      TProfile*   HdedxVsPProfile = (TProfile*)GetObjectFromPath(InputFile, (ObjName[i] + "_Profile"  ).c_str() );
+      TH1D*       HdedxMIP           = (TH1D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_MIP"               ).c_str() );
+      TH1D*       HMass              = (TH1D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_Mass"              ).c_str() );
+      TH2D*       HdedxVsP           = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsP"           ).c_str() );
+      TH2D*       HdedxVsQP          = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsQP"          ).c_str() );
+      TProfile*   HdedxVsPProfile    = (TProfile*)GetObjectFromPath(InputFile, (ObjName[i] + "_Profile"           ).c_str() );
+      TProfile*   IasVsEta_ProfileS  = (TProfile*)GetObjectFromPath(InputFile, (ObjName[i] + "_IasVsEta_ProfileS" ).c_str() );
+      TProfile*   IasVsEta_ProfileU  = (TProfile*)GetObjectFromPath(InputFile, (ObjName[i] + "_IasVsEta_ProfileU" ).c_str() );
+      TH2D*       IasVsEta_Split     = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_IasVsEta_Split"    ).c_str() );
+      TH2D*       IasVsEta_Unsplit   = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_IasVsEta_Unsplit"  ).c_str() );
 
       ExtractConstants(HdedxVsP);
 
-   TPaveText* T = new TPaveText(0.05, 0.995, 0.95, 0.945, "NDC");
-   T->SetTextFont(43);  //give the font size in pixel (instead of fraction)
-   T->SetTextSize(21);  //font size
-   T->SetBorderSize(0);
-   T->SetFillColor(0);
-   T->SetFillStyle(0);
-   T->SetTextAlign(22);
-   T->AddText("#bf{CMS} Preliminary   -   2.74 pb^{-1}   -    #sqrt{s} = 13 TeV");
+      TPaveText* T = new TPaveText(0.05, 0.995, 0.95, 0.945, "NDC");
+      T->SetTextFont(43);  //give the font size in pixel (instead of fraction)
+      T->SetTextSize(21);  //font size
+      T->SetBorderSize(0);
+      T->SetFillColor(0);
+      T->SetFillStyle(0);
+      T->SetTextAlign(22);
+      T->AddText("#bf{CMS} Preliminary   -   2.74 pb^{-1}   -    #sqrt{s} = 13 TeV");
 
       std::cout << "TESTA\n";
       TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
@@ -219,6 +227,45 @@ void MakePlot()
       HdedxVsPProfile->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
       HdedxVsPProfile->Draw("");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_Profile");
+      delete c1;
+
+      c1 = new TCanvas("c1", "c1", 600,600);
+      c1->SetLogz(true);
+      IasVsEta_Split->SetStats(kFALSE);
+      IasVsEta_Split->GetXaxis()->SetTitle("Eta");
+      IasVsEta_Split->GetYaxis()->SetTitle("I_{as}");
+      IasVsEta_Split->SetAxisRange(-2.1,2.1,"X");
+      IasVsEta_Split->Draw("COLZ");
+      SaveCanvas(c1, "pictures/", ObjName[i] + "_IasVsEta_Split");
+      delete c1;
+
+      c1 = new TCanvas("c1", "c1", 600,600);
+      c1->SetLogz(true);
+      IasVsEta_Unsplit->SetStats(kFALSE);
+      IasVsEta_Unsplit->GetXaxis()->SetTitle("Eta");
+      IasVsEta_Unsplit->GetYaxis()->SetTitle("I_{as}");
+      IasVsEta_Unsplit->SetAxisRange(-2.1,2.1,"X");
+      IasVsEta_Unsplit->Draw("COLZ");
+      SaveCanvas(c1, "pictures/", ObjName[i] + "_IasVsEta_Unsplit");
+      delete c1;
+
+      c1 = new TCanvas("c1", "c1", 600,600);
+      TLegend* leg = new TLegend(0.50, 0.80, 0.80, 0.90);
+      leg->SetFillColor(0);
+      leg->SetFillStyle(0);
+      leg->SetBorderSize(0);
+      leg->AddEntry (IasVsEta_ProfileU, "Unsplit", "P");
+      leg->AddEntry (IasVsEta_ProfileS, "Split per module", "P");
+      IasVsEta_ProfileU->SetStats(kFALSE);
+      IasVsEta_ProfileS->SetMarkerStyle(23);
+      IasVsEta_ProfileS->SetMarkerColor(kBlue);
+      IasVsEta_ProfileU->GetXaxis()->SetTitle("pseudo-rapidity, #eta");
+      IasVsEta_ProfileU->GetYaxis()->SetTitle("I_{as}");
+      IasVsEta_ProfileU->Draw("");
+      IasVsEta_ProfileS->Draw("same");
+      leg->Draw();
+      SaveCanvas(c1, "pictures/", ObjName[i] + "_IasVsEta_Profile");
+      delete leg;
       delete c1;
 
       c1 = new TCanvas("c1", "c1", 600,600);
