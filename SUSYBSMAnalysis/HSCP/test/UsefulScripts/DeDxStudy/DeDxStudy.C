@@ -72,7 +72,12 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    std::vector<string> FileName;
    bool isData = true;
    if(INPUT.find(".root")<std::string::npos){
-      FileName.push_back(INPUT);    
+      char* pch=strtok(&INPUT[0],",");
+      while (pch!=NULL){
+         FileName.push_back(pch);    
+         pch=strtok(NULL,",");
+      }
+
    }else{
       string SampleId = INPUT;
       InitBaseDirectory();
@@ -92,9 +97,16 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 
    TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");
 
-   for(int LOOP=0;LOOP<=1;LOOP++){
-      string saveName = "harm2";
-      if(LOOP==1) saveName = "trunc40";
+   std::unordered_map<unsigned int,double> TrackerGains;
+   LoadDeDxCalibration(TrackerGains, DIRNAME+"/Gains.root");
+
+   for(int LOOP=0;LOOP<=3;LOOP++){
+      string saveName = "";
+      if(LOOP%2==0) saveName = "harm2";
+      if(LOOP%2==1) saveName = "trunc40";
+
+      if(LOOP>=2) saveName+= "_calib";
+
 
       TH1D* HdedxMIP          = new TH1D(    (saveName + "_MIP"    ).c_str(), "MIP"    ,  200, 0, 20);
       TH2D* HdedxVsPHSCP      = new TH2D(    (saveName + "_dedxVsPHSCP").c_str(), "dedxVsPHSCP", 3000, 0, 2000,1500,0,15);
@@ -164,7 +176,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
              }
 
              DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, false, false );
-             DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false, LOOP==0?false:true  );
+             DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false, LOOP%2==0?false:true, LOOP>=2?(&TrackerGains):NULL  );
 
              HdedxVsPHSCP->Fill(track->pt(), dedxMObj->dEdx());
 

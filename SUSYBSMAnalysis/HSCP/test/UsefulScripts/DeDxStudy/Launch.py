@@ -119,7 +119,8 @@ for DATASET in datasetList :
          f.write("process.tracksForDeDx.src = cms.InputTag('ALCARECOSiStripCalMinBias') #for SiStripCalMinBias ALCARECO format\n")
          f.write("\n")
       f.close()   
-      LaunchOnCondor.Jobs_FinalCmds = ["sh " + os.getcwd() + "/DeDxStudy.sh dEdxSkim.root out.root", "mv out.root " + os.getcwd() + "/out/dEdxHistos_%i.root" % LaunchOnCondor.Jobs_Count, "mv dEdxSkim.root " + os.getcwd() + "/out/dEdxSkim_%i.root" % LaunchOnCondor.Jobs_Count]
+#      LaunchOnCondor.Jobs_FinalCmds = ["sh " + os.getcwd() + "/DeDxStudy.sh dEdxSkim.root out.root", "mv out.root " + os.getcwd() + "/out/dEdxHistos_%i.root" % LaunchOnCondor.Jobs_Count, "mv dEdxSkim.root " + os.getcwd() + "/out/dEdxSkim_%i.root" % LaunchOnCondor.Jobs_Count]
+      LaunchOnCondor.Jobs_FinalCmds = ["sh " + os.getcwd() + "/DeDxStudy.sh dEdxSkim.root out.root", "mv out.root " + os.getcwd() + "/out/dEdxHistos_%i.root" % LaunchOnCondor.Jobs_Count]
       LaunchOnCondor.SendCluster_Push  (["CMSSW", "dEdxSkimmer_cfg.py" ])
       os.system("rm -f dEdxSkimmer_cfg.py")
 

@@ -29,54 +29,35 @@ using namespace std;
 void getScaleFactor(TFile* InputFile, string OutName, string ObjName1, string ObjName2);
 void ExtractConstants(TH2D* input);
 
+//const double K = 2.4496; //Truncated40
+//const double C = 2.2364; //Truncated40
+
+//const double K = 2.4236; //Truncated40
+//const double C = 2.6474; //Truncated40
+
+//const double K = 2.24; //Truncated40
+//const double C = 2.72; //Truncated40
+
+//const double K = 2.37; //Truncated40
+//const double C = 2.55; //Truncated40
+
+//const double K = 2.63; //Truncated40
+//const double C = 2.39; //Truncated40
+
+//2012 constants
+//const double K = 2.529; //Harm2
+//const double C = 2.772; //Harm2
+
+//2015B prompt constants
+double K = 2.779; double Kerr = 0.001;   //Harm2
+double C = 2.879; double Cerr = 0.001;   //Harm2
 
 double GetMass(double P, double I){
-//   const double K = 2.4496; //Truncated40
-//   const double C = 2.2364; //Truncated40
-
-//   const double K = 2.4236; //Truncated40
-//   const double C = 2.6474; //Truncated40
-
-//   const double K = 2.24; //Truncated40
-//   const double C = 2.72; //Truncated40
-
-//   const double K = 2.37; //Truncated40
-//   const double C = 2.55; //Truncated40
-
-//   const double K = 2.63; //Truncated40
-//   const double C = 2.39; //Truncated40
-
-   const double K = 2.529; //Harm2
-   const double C = 2.772; //Harm2
-
    return sqrt((I-C)/K)*P;
 }
 
 TF1* GetMassLine(double M, bool left=false)
 {  
-//   const double K = 2.4496; //Truncated40
-//   const double C = 2.2364; //Truncated40
-
-//   const double K = 2.4236; //Truncated40
-//   const double C = 2.6474; //Truncated40
-
-//   const double K = 2.24; //Truncated40
-//   const double C = 2.72; //Truncated40
-
-//   const double K = 2.37; //Truncated40
-//   const double C = 2.55; //Truncated40
-
-//   const double K = 2.63; //Truncated40
-//   const double C = 2.39; //Truncated40
-
-//2012 constants
-//   const double K = 2.529; //Harm2
-//   const double C = 2.772; //Harm2
-
-//2015B prompt constants
-   const double K = 2.716; //Harm2
-   const double C = 2.955; //Harm2
-
    double BetaMax = 0.9;
    double PMax = sqrt((BetaMax*BetaMax*M*M)/(1-BetaMax*BetaMax));
 
@@ -98,6 +79,9 @@ TF1* GetMassLine(double M, bool left=false)
 
 void MakePlot()
 {
+   system("mkdir -p pictures");
+   system("mkdir -p fit");
+
    setTDRStyle();
    gStyle->SetPadTopMargin   (0.06);
    gStyle->SetPadBottomMargin(0.10);
@@ -151,14 +135,9 @@ void MakePlot()
    TritonLineLeft->SetLineColor(1);
    TritonLineLeft->SetLineWidth(2);
 
-
-
-
-
-   TFile* InputFile = new TFile("dEdxHistosNew.root");
+   TFile* InputFile = new TFile("dEdxHistos_251252.root");
    std::vector<string> ObjName;
    ObjName.push_back("harm2");
-
 
    for(unsigned int i=0;i<ObjName.size();i++){
       TH1D*       HdedxMIP        = (TH1D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_MIP"      ).c_str() );
@@ -167,7 +146,7 @@ void MakePlot()
       TH2D*       HdedxVsQP       = (TH2D*)    GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsQP" ).c_str() );
       TProfile*   HdedxVsPProfile = (TProfile*)GetObjectFromPath(InputFile, (ObjName[i] + "_Profile"  ).c_str() );
 
-//      ExtractConstants(HdedxVsP);
+      ExtractConstants(HdedxVsP);
 
    TPaveText* T = new TPaveText(0.05, 0.995, 0.95, 0.945, "NDC");
    T->SetTextFont(43);  //give the font size in pixel (instead of fraction)
@@ -188,13 +167,13 @@ void MakePlot()
       HdedxVsP->SetAxisRange(0,15,"Y");
       HdedxVsP->Draw("COLZ");
 
-//      PionLine->Draw("same");
-//      KaonLine->Draw("same");
-//      ProtonLine->Draw("same");
-//      DeuteronLine->Draw("same");
-//      TritonLine->Draw("same");
-//      ProtonLineFit->Draw("same");
-    T->Draw("same");
+      PionLine->Draw("same");
+      KaonLine->Draw("same");
+      ProtonLine->Draw("same");
+      DeuteronLine->Draw("same");
+      TritonLine->Draw("same");
+      ProtonLineFit->Draw("same");
+      T->Draw("same");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_dedxVsP", true);
       c1->SaveAs((string("pictures/")+ObjName[i] + "_dedxVsP.C").c_str());
       c1->SaveAs((string("pictures/")+ObjName[i] + "_dedxVsP.pdf").c_str());
@@ -255,6 +234,21 @@ void MakePlot()
 
       std::cout << "TESTC\n";
 
+      c1 = new TCanvas("c1", "c1", 600,600);
+      c1->SetLogy(true);
+      c1->SetGridx(true);
+      HMass->Reset();
+      for(int x=1;x<=HdedxVsP->GetNbinsX();x++){
+      if(HdedxVsP->GetXaxis()->GetBinCenter(x)>3.0)continue;
+      for(int y=1;y<=HdedxVsP->GetNbinsY();y++){
+        if(HdedxVsP->GetYaxis()->GetBinCenter(y)<5.0)continue;
+        HMass->Fill(GetMass(HdedxVsP->GetXaxis()->GetBinCenter(x),HdedxVsP->GetYaxis()->GetBinCenter(y)),HdedxVsP->GetBinContent(x,y));
+      }}
+      HMass->SetStats(kFALSE);
+      HMass->GetXaxis()->SetTitle("Mass (GeV/c^{2})");
+      HMass->GetYaxis()->SetTitle("number of tracks");
+      HMass->SetAxisRange(0,5,"X");
+      HMass->Draw("");
 
       TLine* lineKaon = new TLine(0.493667, HMass->GetMinimum(), 0.493667, HMass->GetMaximum());
       lineKaon->SetLineWidth(2);
@@ -273,21 +267,6 @@ void MakePlot()
       lineTriton->SetLineStyle(2);
       lineTriton->SetLineColor(9);
 
-      c1 = new TCanvas("c1", "c1", 600,600);
-      c1->SetLogy(true);
-      c1->SetGridx(true);
-      HMass->Reset();
-      for(int x=1;x<=HdedxVsP->GetNbinsX();x++){
-      if(HdedxVsP->GetXaxis()->GetBinCenter(x)>3.0)continue;
-      for(int y=1;y<=HdedxVsP->GetNbinsY();y++){
-        if(HdedxVsP->GetYaxis()->GetBinCenter(y)<4.5)continue;
-        HMass->Fill(GetMass(HdedxVsP->GetXaxis()->GetBinCenter(x),HdedxVsP->GetYaxis()->GetBinCenter(y)),HdedxVsP->GetBinContent(x,y));
-      }}
-      HMass->SetStats(kFALSE);
-      HMass->GetXaxis()->SetTitle("Mass (GeV/c^{2})");
-      HMass->GetYaxis()->SetTitle("number of tracks");
-      HMass->SetAxisRange(0,5,"X");
-      HMass->Draw("");
       lineKaon->Draw("same");
       lineProton->Draw("same");
       lineDeuteron->Draw("same");
@@ -409,134 +388,148 @@ void getScaleFactor(TFile* InputFile, string OutName, string ObjName1, string Ob
 
 
 
-
-
 void ExtractConstants(TH2D* input){
-       input->Rebin2D(5,10);
        double MinRange = 0.60;
        double MaxRange = 1.20;
-          char buffer[2048];
+       char buffer[2048];
+       bool hasConverged = false;
+
+       for(unsigned int loop=0;loop<5 and !hasConverged; loop++){
+	      TH2D* inputnew = (TH2D*)input->Clone("tempTH2D");
+	      inputnew->Rebin2D(5,10);
+	      for(int x=1;x<=inputnew->GetNbinsX();x++){
+	      for(int y=1;y<=inputnew->GetNbinsY();y++){
+		double Mass = GetMass(inputnew->GetXaxis()->GetBinCenter(x),inputnew->GetYaxis()->GetBinCenter(y));
+		if(isnan(float(Mass)) || Mass<0.94-0.3 || Mass>0.94+0.3)inputnew->SetBinContent(x,y,0);        
+	      }}
+
+	      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
+	      c1->SetLogz(true);
+	      inputnew->SetStats(kFALSE);
+	      inputnew->GetXaxis()->SetTitle("track momentum (GeV/c)");
+	      inputnew->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
+	      inputnew->SetAxisRange(0,5,"X");
+	      inputnew->SetAxisRange(0,15,"Y");
+	      inputnew->Draw("COLZ");
+
+	//      KaonLine->Draw("same");
+	//      ProtonLine->Draw("same");
+	//      DeuteronLine->Draw("same");
+	//      TritonLine->Draw("same");
+	      SaveCanvas(c1, "fit/", "dedxVsP");
+	      delete c1;
 
 
-       TH1D* FitResult = new TH1D("FitResult"       , "FitResult"      ,input->GetXaxis()->GetNbins(),input->GetXaxis()->GetXmin(),input->GetXaxis()->GetXmax());
-       FitResult->SetTitle("");
-       FitResult->SetStats(kFALSE);  
-       FitResult->GetXaxis()->SetTitle("P [GeV/c]");
-       FitResult->GetYaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
-       FitResult->GetYaxis()->SetTitleOffset(1.20);
-       FitResult->Reset();
+	       TH1D* FitResult = new TH1D("FitResult"       , "FitResult"      ,inputnew->GetXaxis()->GetNbins(),inputnew->GetXaxis()->GetXmin(),inputnew->GetXaxis()->GetXmax());
+	       FitResult->SetTitle("");
+	       FitResult->SetStats(kFALSE);  
+	       FitResult->GetXaxis()->SetTitle("P [GeV/c]");
+	       FitResult->GetYaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
+	       FitResult->GetYaxis()->SetTitleOffset(1.20);
+	       FitResult->Reset();     
+
+	       for(int x=1;x<inputnew->GetXaxis()->FindBin(5);x++){
+		  double P       = inputnew->GetXaxis()->GetBinCenter(x);
+	    
+		  TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
+		  if(Projection->Integral()<100)continue;
+		  Projection->SetAxisRange(0.1,25,"X");
+		  Projection->Sumw2();
+		  Projection->Scale(1.0/Projection->Integral());
+
+		  TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
+		  Projection->Fit("mygaus","Q0 RME");
+		  double chiFromFit  = (mygaus->GetChisquare())/(mygaus->GetNDF());
+		  FitResult->SetBinContent(x, mygaus->GetParameter(1));
+		  FitResult->SetBinError  (x, mygaus->GetParError (1));
+		  mygaus->SetLineColor(2);
+		  mygaus->SetLineWidth(2);
+
+		  c1  = new TCanvas("canvas", "canvas", 600,600);
+		  Projection->Draw();
+		  Projection->SetTitle("");
+		  Projection->SetStats(kFALSE);
+		  Projection->GetXaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
+		  Projection->GetYaxis()->SetTitle("#Entries");
+		  Projection->GetYaxis()->SetTitleOffset(1.30);
+		  Projection->SetAxisRange(1E-5,1.0,"Y");
+
+		  mygaus->Draw("same");
 
 
-      TH2D* inputnew = (TH2D*)input->Clone("tempTH2D");
-      inputnew->Reset();
-      for(int x=1;x<=input->GetNbinsX();x++){
-      for(int y=1;y<=input->GetNbinsY();y++){
-        double Mass = GetMass(input->GetXaxis()->GetBinCenter(x),input->GetYaxis()->GetBinCenter(y));
-        if(isnan(float(Mass)) || Mass<0.94-0.3 || Mass>0.94+0.3)continue;
-        inputnew->SetBinContent(x,y,input->GetBinContent(x,y));
-      }}
+		  TPaveText* stt = new TPaveText(0.55,0.82,0.79,0.92, "NDC");
+		  stt->SetFillColor(0);
+		  stt->SetTextAlign(31);
+		  sprintf(buffer,"Proton  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
+		  sprintf(buffer,"Proton  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
+		  stt->Draw("same");
+
+		  //std::cout << "P = " << P << "  --> Proton dE/dx = " << mygaus->GetParameter(1) << endl;
+
+		  c1->SetLogy(true);
+		  sprintf(buffer,"%sProjectionFit_P%03i_%03i","fit/",(int)(100*FitResult->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResult->GetXaxis()->GetBinUpEdge(x)) );
+		  if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"./",buffer);}
+		  delete c1;
+                  delete Projection;
+                  delete mygaus;
+                  delete stt;
+	       }
+	       c1  = new TCanvas("canvas", "canvas", 600,600);
+	       FitResult->SetAxisRange(0,2.5,"X");
+	       FitResult->SetAxisRange(0,15,"Y");
+	       FitResult->Draw("");
+
+	       TLine* line1 = new TLine(MinRange, FitResult->GetMinimum(), MinRange, FitResult->GetMaximum());
+	       line1->SetLineWidth(2);
+	       line1->SetLineStyle(2);
+	       line1->Draw();
+
+	       TLine* line2 = new TLine(MaxRange, FitResult->GetMinimum(), MaxRange, FitResult->GetMaximum());
+	       line2->SetLineWidth(2);
+	       line2->SetLineStyle(2);
+	       line2->Draw();
+
+	       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
+	       TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange);
+	       myfit->SetParName  (0,"K");
+	       myfit->SetParName  (1,"C");
+	       myfit->SetParameter(0, 2.7);
+	       myfit->SetParameter(1, 2.7);
+	       myfit->SetParLimits(0, 2.00,4.0);
+	       myfit->SetParLimits(1, 2.00,4.0);
+	       myfit->SetLineWidth(2);
+	       myfit->SetLineColor(2);
+	       FitResult->Fit("myfit", "M R E I 0");
+	       myfit->SetRange(MinRange,MaxRange);
+	       myfit->Draw("same");
+
+	       double prevConstants [] = {K, Kerr, C, Cerr};
+	       K    = myfit->GetParameter(0);
+	       C    = myfit->GetParameter(1);
+	       Kerr = myfit->GetParError(0);
+	       Cerr = myfit->GetParError(1);
+
+	       printf("K Constant changed from %6.4f+-%6.4f to %6.4f+-%6.4f    (diff = %6.3f%%)\n", prevConstants[0], prevConstants[1], K, Kerr, 100.0*(K-prevConstants[0])/K);
+	       printf("C Constant changed from %6.4f+-%6.4f to %6.4f+-%6.4f    (diff = %6.3f%%)\n", prevConstants[2], prevConstants[3], C, Cerr, 100.0*(C-prevConstants[2])/C);
+
+               if(std::max(fabs(100.0*(K-prevConstants[0])/K), fabs(100.0*(C-prevConstants[2])/C))<1.0)hasConverged=true;  //<1% variation of the constant --> converged
 
 
-      TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
-      c1->SetLogz(true);
-      inputnew->SetStats(kFALSE);
-      inputnew->GetXaxis()->SetTitle("track momentum (GeV/c)");
-      inputnew->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
-      inputnew->SetAxisRange(0,5,"X");
-      inputnew->SetAxisRange(0,15,"Y");
-      inputnew->Draw("COLZ");
+	       TPaveText* st = new TPaveText(0.40,0.78,0.79,0.89, "NDC");
+	       st->SetFillColor(0);
+	       sprintf(buffer,"K = %4.3f +- %6.4f",myfit->GetParameter(0), myfit->GetParError(0));
+	       st->AddText(buffer);
+	       sprintf(buffer,"C = %4.3f +- %6.4f",myfit->GetParameter(1), myfit->GetParError(1));
+	       st->AddText(buffer);
+	       st->Draw("same");
+	       sprintf(buffer,"%sFit","fit/");
+	       SaveCanvas(c1,"./",buffer);              
+	       delete c1;
 
-//      KaonLine->Draw("same");
-//      ProtonLine->Draw("same");
-//      DeuteronLine->Draw("same");
-//      TritonLine->Draw("same");
-      SaveCanvas(c1, "./", "tmp_dedxVsP");
-      delete c1;
-
-       for(int x=1;x<inputnew->GetXaxis()->FindBin(5);x++){
-          double P       = inputnew->GetXaxis()->GetBinCenter(x);
-    
-          TH1D* Projection = (TH1D*)(inputnew->ProjectionY("proj",x,x))->Clone();
-          if(Projection->Integral()<100)continue;
-          Projection->SetAxisRange(0.1,25,"X");
-          Projection->Sumw2();
-          Projection->Scale(1.0/Projection->Integral());
-
-          TF1* mygaus = new TF1("mygaus","gaus", 2.5, 15);
-          Projection->Fit("mygaus","Q0 RME");
-          double chiFromFit  = (mygaus->GetChisquare())/(mygaus->GetNDF());
-          FitResult->SetBinContent(x, mygaus->GetParameter(1));
-          FitResult->SetBinError  (x, mygaus->GetParError (1));
-          mygaus->SetLineColor(2);
-          mygaus->SetLineWidth(2);
-
-          c1  = new TCanvas("canvas", "canvas", 600,600);
-          Projection->Draw();
-          Projection->SetTitle("");
-          Projection->SetStats(kFALSE);
-          Projection->GetXaxis()->SetTitle("dE/dx Estimator [MeV/cm]");
-          Projection->GetYaxis()->SetTitle("#Entries");
-          Projection->GetYaxis()->SetTitleOffset(1.30);
-          Projection->SetAxisRange(1E-5,1.0,"Y");
-
-          mygaus->Draw("same");
-
-
-          TPaveText* stt = new TPaveText(0.55,0.82,0.79,0.92, "NDC");
-          stt->SetFillColor(0);
-          stt->SetTextAlign(31);
-          sprintf(buffer,"Proton  #mu:%5.1fMeV/cm",mygaus->GetParameter(1));      stt->AddText(buffer);
-          sprintf(buffer,"Proton  #sigma:%5.1fMeV/cm",mygaus->GetParameter(2));      stt->AddText(buffer);
-          stt->Draw("same");
-
-          //std::cout << "P = " << P << "  --> Proton dE/dx = " << mygaus->GetParameter(1) << endl;
-
-          c1->SetLogy(true);
-          sprintf(buffer,"%s_ProjectionFit_P%03i_%03i","tmp",(int)(100*FitResult->GetXaxis()->GetBinLowEdge(x)),(int)(100*FitResult->GetXaxis()->GetBinUpEdge(x)) );
-          if(P>=MinRange && P<=MaxRange){SaveCanvas(c1,"./",buffer);}
-          delete c1;
+               delete line1;
+               delete line2;
+               delete myfit;
+               delete FitResult;
+               delete inputnew;
        }
-       c1  = new TCanvas("canvas", "canvas", 600,600);
-       FitResult->SetAxisRange(0,2.5,"X");
-       FitResult->SetAxisRange(0,15,"Y");
-       FitResult->Draw("");
-
-       TLine* line1 = new TLine(MinRange, FitResult->GetMinimum(), MinRange, FitResult->GetMaximum());
-       line1->SetLineWidth(2);
-       line1->SetLineStyle(2);
-       line1->Draw();
-
-       TLine* line2 = new TLine(MaxRange, FitResult->GetMinimum(), MaxRange, FitResult->GetMaximum());
-       line2->SetLineWidth(2);
-       line2->SetLineStyle(2);
-       line2->Draw();
-
-       //   TF1* myfit = new TF1("myfit","[1]+(pow(0.93827,2) + x*x)/([0]*x*x)", MinRange, MaxRange);
-       TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange);
-       myfit->SetParName  (0,"K");
-       myfit->SetParName  (1,"C");
-       myfit->SetParameter(0, 2.7);
-       myfit->SetParameter(1, 2.7);
-       myfit->SetParLimits(0, 2.00,4.0);
-       myfit->SetParLimits(1, 2.00,4.0);
-       myfit->SetLineWidth(2);
-       myfit->SetLineColor(2);
-       FitResult->Fit("myfit", "M R E I 0");
-       myfit->SetRange(MinRange,MaxRange);
-       myfit->Draw("same");
-
-       TPaveText* st = new TPaveText(0.40,0.78,0.79,0.89, "NDC");
-       st->SetFillColor(0);
-//       K   [i] = myfit->GetParameter(0);
-//       C   [i] = myfit->GetParameter(1);
-//       KErr[i] = myfit->GetParError(0);
-//       CErr[i] = myfit->GetParError(1);
-       sprintf(buffer,"K = %3.2f +- %6.3f",myfit->GetParameter(0), myfit->GetParError(0));
-       st->AddText(buffer);
-       sprintf(buffer,"C = %3.2f +- %6.3f",myfit->GetParameter(1), myfit->GetParError(1));
-       st->AddText(buffer);
-       st->Draw("same");
-       sprintf(buffer,"%s_Fit","tmp");
-       SaveCanvas(c1,"./",buffer);
-       delete c1;
 }
