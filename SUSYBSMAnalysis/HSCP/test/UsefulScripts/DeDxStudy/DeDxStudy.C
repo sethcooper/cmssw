@@ -45,6 +45,7 @@ using namespace trigger;
 
 
 #include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
+#include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 
 
 #endif
@@ -94,6 +95,17 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    }
 
    //system("mkdir -p pictures/");
+   double P_Min               = 1;
+   double P_Max               = 15;
+   int    P_NBins             = 14  ;
+   double Path_Min            = 0.2 ;
+   double Path_Max            = 1.6 ;
+   int    Path_NBins          = 42  ;
+   double Charge_Min          = 0   ;
+   double Charge_Max          = 5000;
+   int    Charge_NBins        = 500 ;
+
+   TH3D* Charge_Vs_Path = new TH3D ("Charge_Vs_Path"     , "Charge_Vs_Path" , P_NBins, P_Min, P_Max, Path_NBins, Path_Min, Path_Max, Charge_NBins, Charge_Min, Charge_Max);
 
    TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");
 
@@ -143,10 +155,14 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
 
          fwlite::Handle< std::vector<reco::Track> > trackCollHandle;
-   //      trackCollHandle.getByLabel(ev,"generalTracks");
          trackCollHandle.getByLabel(ev,"RefitterForDeDx");
-         if(!trackCollHandle.isValid()){printf("Invalid trackCollHandle\n");continue;}
-
+         if(!trackCollHandle.isValid()){
+		 trackCollHandle.getByLabel(ev,"generalTracks");
+		 if (!trackCollHandle.isValid()){
+			 printf("Invalid trackCollHandle\n");
+			 continue;
+		 }
+	 }
 
 
          for(unsigned int c=0;c<trackCollHandle->size();c++){
@@ -172,6 +188,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                 double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
                 double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
+		SiStripDetId SSdetId(detid);
+		if (track->p() > 5) Charge_Vs_Path->Fill (SSdetId.moduleGeometry(),
+				dedxHits->pathlength(h)*10,
+				dedxHits->charge(h)/(dedxHits->pathlength(h)*10));
                 HHit->Fill(ChargeOverPathlength);
              }
 
@@ -220,6 +240,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 
    }
 
+   Charge_Vs_Path->SaveAs(("ChargeVsPath"+OUTPUT).c_str());
    OutputHisto->Write();
    OutputHisto->Close();  
 }
