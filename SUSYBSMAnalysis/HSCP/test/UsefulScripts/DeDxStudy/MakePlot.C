@@ -139,14 +139,17 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
    TFile* InputFile = new TFile(INPUT.c_str());
    std::vector<string> ObjName;
-   ObjName.push_back("harm2");
-   ObjName.push_back("harm2_raw");
+   ObjName.push_back("harm2_PO");
+   ObjName.push_back("harm2_SO");
+   ObjName.push_back("harm2_SP");
+   ObjName.push_back("harm2_PO_raw");
+   ObjName.push_back("harm2_SO_raw");
+   ObjName.push_back("harm2_SP_raw");
+   ObjName.push_back("Ias_SO_inc");
+   ObjName.push_back("Ias_SO");
 //   ObjName.push_back("trunc40");
 //   ObjName.push_back("trunc40_raw");
-   ObjName.push_back("Ias");
-   ObjName.push_back("IasInc");
-
-   DrawComparisons (InputFile, NULL, "Ias", "IasInc");
+//   ObjName.push_back("Ias");
 
    for(unsigned int i=0;i<ObjName.size();i++){
       TH1D*       HdedxMIP           = (TH1D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_MIP"               ).c_str() );
