@@ -101,6 +101,7 @@ edm::LumiReWeighting LumiWeightsMCSyst;
 //reweight::PoissonMeanShifter PShift(0.6);//0.6 for upshift, -0.6 for downshift
 
 TH3F* dEdxTemplates = NULL;
+std::unordered_map<unsigned int,double> TrackerGains;
 double dEdxSF = 1.0;
 bool useClusterCleaning = true;
 /////////////////////////// CODE PARAMETERS /////////////////////////////
@@ -956,8 +957,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
       bool isSignal = (samples[s].Type>=2);
 
       dEdxSF = 1.00;
-      if(isData){    dEdxTemplates = loadDeDxTemplate("../../data/Data7TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
-      }else{         dEdxTemplates = loadDeDxTemplate("../../data/MC7TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
+      if(isData){    dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
+      }else{         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
+      }
+
+      if(isData){    LoadDeDxCalibration(TrackerGains, "../../data/Data13TeVGains.root"); 
+      }else{  //FIXME check gain for MC
       }
 
       //check that the plot container exist for this sample, otherwise create it
@@ -1174,8 +1179,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5);
-               DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      );
+               DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL);
+               DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL);
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
                //compute systematic uncertainties on signal
