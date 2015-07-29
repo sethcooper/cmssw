@@ -7,8 +7,8 @@
 #
 ### BACKGROUND SAMPLES:
 #
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu"                     , "MC: DYToMuMu"                            , "S10"   ,      0, 1.3389000000E+03, 0, 0.000, 0.000, 0.000
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu"                       , "MC: WToLNu"                              , "S10"   ,      0, 1.3389000000E+03, 0, 0.000, 0.000, 0.000
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu"                       , "MC: WToLNu"                              , "S10"   ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu"                     , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
 # 
 ### SIGNAL SAMPLES:
 #
