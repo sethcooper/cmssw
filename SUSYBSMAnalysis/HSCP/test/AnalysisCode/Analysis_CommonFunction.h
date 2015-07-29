@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -530,14 +530,16 @@ TH3F* loadDeDxTemplate(string path, bool splitByModuleType){
 }
 
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
 
      std::vector<double> vect;
+     unsigned int NSat=0;
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
         if(!usePixel && detid.subdetId()<3)continue; // skip pixels
+        if(!useStrip && detid.subdetId()>=3)continue; // skip strips
 //        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
@@ -554,21 +556,33 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
 
         int ClusterCharge = dedxHits->charge(h);
 
-        if(detid.subdetId()>=3 && TrackerGains!=NULL){//for strip only
+        if(detid.subdetId()>=3){//for strip only
            const SiStripCluster* cluster = dedxHits->stripCluster(h);
            const vector<unsigned char>& amplitutes = cluster->amplitudes();
            int firstStrip = cluster->firstStrip();
+           int prevAPV = -1;
+           double gain = 1.0;
+
+           bool isSatCluster = false;
            ClusterCharge = 0;
            for(unsigned int s=0;s<amplitutes.size();s++){               
+              if(TrackerGains!=NULL){ //don't reload the gain if unnecessary  since map access are slow
+                 int APV = (firstStrip+s)/128;
+                 if(APV != prevAPV){gain = TrackerGains->at(detid.rawId()<<3 |APV); prevAPV=APV; }
+              }
+
               int StripCharge =  amplitutes[s];
               if(StripCharge<254){
-                 StripCharge=(int)(StripCharge/(TrackerGains->at(detid.rawId()<<3 | (firstStrip+s)/128)));
+                 StripCharge=(int)(StripCharge/gain);
                  if(StripCharge>=1024){         StripCharge = 255;
                  }else if(StripCharge>=254){    StripCharge = 254;
                  }
               }
+
+              if(StripCharge>=254){isSatCluster=true;}
               ClusterCharge += StripCharge;
             } 
+            if(isSatCluster)NSat++;
         }
 
         if(templateHisto){  //save discriminator probability
@@ -632,7 +646,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
      }else{
         result = -1;
      }
-     return new DeDxData(result, -1, size);  //Nsaturated must replace the -1 here
+     return new DeDxData(result, NSat, size);
 }
 
 

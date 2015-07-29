@@ -29,6 +29,7 @@
 #include "TObject.h"
 #include "TPaveText.h"
 #include "TProfile.h"
+#include "TProfile2D.h"
 #include "TRandom3.h"
 #include "TTree.h"
 

@@ -30,7 +30,7 @@ if sys.argv[1]=='1':
         os.system("sh " + os.getcwd() + "/DeDxStudy.sh ") #just compile
 
 	for DATASET in datasetList :
-	   outdir =  os.getcwd() + "/HistosOut/"+DATASET[0]+"/"
+	   outdir =  os.getcwd() + "/Histos/"+DATASET[0]+"/"
 	   os.system('mkdir -p ' + outdir)
 
 	   JobName = "DEDXHISTO_"+DATASET[0]
