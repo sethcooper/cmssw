@@ -14,7 +14,7 @@ def getChunksFromList(MyList, n):
 
 
 if len(sys.argv)==1:
-        print "Please pass in argument a number between 1 and 5"
+        print "Please pass in argument a number between 1 and 2"
         print "  1  - Run dEdxStudy on RECO, AOD, or dEdxSKIM files         --> submitting 1job per file"
         print "  2  - Hadd root files containing the histograms             --> interactive processing" 
         sys.exit()
@@ -39,7 +39,7 @@ if sys.argv[1]=='1':
 	   LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
 	   FILELIST = LaunchOnCondor.GetListOfFiles('', DATASET[1]+'/*.root', '')
-           for inFileList in getChunksFromList(FILELIST,20): #20 root files per jobs, this is a trade off between hadding time and processing time
+           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/20): #20 jobs, this is a trade off between hadding time and processing time
               InputListCSV = ''
   	      for inFile in inFileList:
                  InputListCSV+= inFile + ','
@@ -49,7 +49,7 @@ if sys.argv[1]=='1':
 
 elif sys.argv[1]=='2':
         for DATASET in datasetList :
-           indir =  os.getcwd() + "/HistosOut/"+DATASET[0]+'/'
+           indir =  os.getcwd() + "/Histos/"+DATASET[0]+'/'
            os.system('hadd -f Histos_'+DATASET[0]+'.root ' + indir + '*.root')
 
 else:
