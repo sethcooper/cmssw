@@ -11,5 +11,5 @@ root -l -b << EOF
   gSystem->Load("libDataFormatsCommon.so");
   gSystem->Load("libDataFormatsTrackerRecHit2D.so");
   gSystem->Load("libAnalysisDataFormatsSUSYBSMObjects.so");
-  .x MakePlot.C+
+  .x MakePlot.C+("$1");
 EOF
