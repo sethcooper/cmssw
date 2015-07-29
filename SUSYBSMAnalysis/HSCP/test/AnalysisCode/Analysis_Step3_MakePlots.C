@@ -20,6 +20,7 @@ using namespace std;
 void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuffix="Mass", bool showMC=true, string Data="Data13TeV");
 void PredictionAndControlPlot(string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip);
 void CutFlow(string InputPattern, unsigned int CutIndex=0);
+void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, double ylow=8e-6, double yhigh=8e+5, bool setLog=true);
 void SelectionPlot (string InputPattern, unsigned int CutIndex, unsigned int CutIndexTight);
 
 void Make2DPlot_Core(string ResultPattern, unsigned int CutIndex);
@@ -67,6 +68,8 @@ void Analysis_Step3_MakePlots()
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, CutIndex);
+   CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
@@ -76,6 +79,8 @@ void Analysis_Step3_MakePlots()
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, CutIndex);
+   CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
@@ -1364,6 +1369,172 @@ void CutFlow(string InputPattern, unsigned int CutIndex){
 
     fclose(pFile);
     InputFile->Close();
+}
+
+void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double yhigh, bool setLog){
+
+    TFile* InputFile = new TFile((InputPattern + "Histos.root").c_str());
+    if (!InputFile) std::cerr << "File could not be opened!" << std::endl;
+
+    typedef struct sampleDetails_t {
+        string  SampleName;
+        string  HistoName;
+        string  LegEntry;
+        Color_t Color;
+
+        sampleDetails_t (string SampleName_, string HistoName_, string LegEntry_, Color_t Color_){
+            SampleName = SampleName_;
+            HistoName  = HistoName_;
+            LegEntry   = LegEntry_;
+            Color      = Color_;
+        }
+    } sampleDetails_t;
+
+    vector < sampleDetails_t > SampleDetails;
+    SampleDetails.push_back(sampleDetails_t("Data13TeV",              "Data13TeV",  "13 TeV data",  kBlack  ));
+    SampleDetails.push_back(sampleDetails_t("MCTr_13TeV",             "MCTr_13TeV", "MC (SM)",      kBlue-3 ));
+    SampleDetails.push_back(sampleDetails_t("Gluino_13TeV_M1400_f10", "Gluino",     "Gluino (M = 1000 GeV/#font[12]{c}^{2})", kRed+1     ));
+    SampleDetails.push_back(sampleDetails_t("Stop_13TeV_M1000",       "Stop",       "Stop (M = 1000 GeV/#font[12]{c}^{2})",   kSpring-9  ));
+    SampleDetails.push_back(sampleDetails_t("GMStau_13TeV_M494",      "Stau",       "Stau (M = 494 GeV/#font[12]{c}^{2})",    kOrange+7  ));
+    pair < TH1F*, TH1F* > * histos = new pair < TH1F*, TH1F* >[SampleDetails.size()];
+
+    const char * AxisLabels [19] = {"Total", "TNOH", "TNOM", "nDof", "Qual", "Chi2",
+	    "Min Pt", "Min Ias", "Min TOF", "Dxy", "TIsol", "EIsol", "Pterr", "Dz", "PreSel",
+	    "Pt", "Ias", "TOF", "Selection"};
+
+    // initialize histograms and fill them
+    for (unsigned int sample_i = 0; sample_i < SampleDetails.size(); sample_i++){
+        stPlots st;
+        stPlots_InitFromFile (InputFile, st, SampleDetails[sample_i].SampleName.c_str());
+
+        histos[sample_i].first  = new TH1F ((SampleDetails[sample_i].HistoName+"_Abs").c_str(),
+                (SampleDetails[sample_i].HistoName+"_Abs").c_str(), 19, 0, 19);
+        histos[sample_i].second = new TH1F ((SampleDetails[sample_i].HistoName+"_Eff").c_str(),
+                (SampleDetails[sample_i].HistoName+"_Eff").c_str(), 19, 0, 19);
+
+        vector <double> Num, Eff;
+        Num.push_back (st.Total->GetBinContent (1));          Eff.push_back (1.0);
+        Num.push_back (st.TNOH ->GetBinContent (1));          Eff.push_back (1.0*Num[ 1]/ Num[ 0]);
+        Num.push_back (st.TNOM ->GetBinContent (1));          Eff.push_back (1.0*Num[ 2]/ Num[ 1]);
+        Num.push_back (st.nDof ->GetBinContent (1));          Eff.push_back (1.0*Num[ 3]/ Num[ 2]);
+        Num.push_back (st.Qual ->GetBinContent (1));          Eff.push_back (1.0*Num[ 4]/ Num[ 3]);
+        Num.push_back (st.Chi2 ->GetBinContent (1));          Eff.push_back (1.0*Num[ 5]/ Num[ 4]);
+        Num.push_back (st.MPt  ->GetBinContent (1));          Eff.push_back (1.0*Num[ 6]/ Num[ 5]);
+        Num.push_back (st.MI   ->GetBinContent (1));          Eff.push_back (1.0*Num[ 7]/ Num[ 6]);
+        Num.push_back (st.MTOF ->GetBinContent (1));          Eff.push_back (1.0*Num[ 8]/ Num[ 7]);
+        Num.push_back (st.Dxy  ->GetBinContent (1));          Eff.push_back (1.0*Num[ 9]/ Num[ 8]);
+        Num.push_back (st.TIsol->GetBinContent (1));          Eff.push_back (1.0*Num[10]/ Num[ 9]);
+        Num.push_back (st.EIsol->GetBinContent (1));          Eff.push_back (1.0*Num[11]/ Num[10]);
+        Num.push_back (st.Pterr->GetBinContent (1));          Eff.push_back (1.0*Num[12]/ Num[11]);
+        Num.push_back (st.Dz   ->GetBinContent (1));          Eff.push_back (1.0*Num[13]/ Num[12]);
+        Num.push_back (st.Basic->GetBinContent (1));          Eff.push_back (1.0*Num[14]/ Num[ 0]);
+        Num.push_back (st.Pt   ->GetBinContent (CutIndex+1)); Eff.push_back (1.0*Num[15]/ Num[14]);
+        Num.push_back (st.I    ->GetBinContent (CutIndex+1)); Eff.push_back (1.0*Num[16]/ Num[15]);
+        Num.push_back (st.TOF  ->GetBinContent (CutIndex+1)); Eff.push_back (1.0*Num[17]/ Num[16]);
+        Num.push_back (st.TOF  ->GetBinContent (CutIndex+1)); Eff.push_back (1.0*Num[17]/ Num[14]);
+
+        for (int cut_i = 1; cut_i <= 19; cut_i++){
+            if (std::isnan(Eff[cut_i-1])) Eff[cut_i-1] = 0.0;
+            histos[sample_i].first ->SetBinContent (cut_i, Num[cut_i-1]);
+            histos[sample_i].second->SetBinContent (cut_i, Eff[cut_i-1]);
+        }
+        histos[sample_i].first ->SetLineColor (SampleDetails[sample_i].Color);
+        histos[sample_i].first ->SetLineWidth (2.0);
+        histos[sample_i].first ->SetFillStyle (0); // <--makes the fill transparent
+
+        histos[sample_i].second->SetLineColor   (SampleDetails[sample_i].Color);
+        histos[sample_i].second->SetLineWidth (2.0);
+        histos[sample_i].second->SetMarkerColor (SampleDetails[sample_i].Color);
+        histos[sample_i].second->SetMarkerStyle (20+sample_i);
+    }
+
+    // ----------------------------------
+    // Draw the Absolute Value histograms
+    // ----------------------------------
+    TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
+    c1->SetLogy(setLog);
+    c1->SetGridx();
+    double Dx = 0.4, Dy = 6*0.03, x = 0.15, y = 0.15;
+    TLegend* leg = new TLegend(x+Dx, y+Dy, x, y);
+    leg->SetFillColor(0);
+    leg->SetFillStyle(0);
+    leg->SetBorderSize(0);
+
+    TH1F h ("Name", "Title", 19, 0, 19);
+    h.SetStats(0);
+    h.GetYaxis()->SetTitle ("number of tracks");
+    h.GetYaxis()->SetRangeUser(ylow,yhigh);
+    h.GetXaxis()->SetNdivisions(19);
+    h.GetXaxis()->SetLabelOffset (99); // disable label
+    h.Draw("hist");
+    for (unsigned int sample_i=0; sample_i < SampleDetails.size(); sample_i++){
+        leg->AddEntry (histos[sample_i].first, SampleDetails[sample_i].LegEntry.c_str(), "L");
+        histos[sample_i].first->Draw("same");
+    }
+
+    // now put the axis labels -- each cut at each place
+    TText T;
+    T.SetTextAngle(45);
+    T.SetTextAlign(33);
+    T.SetTextSize (0.03);
+    double Y = histos[0].first->GetYaxis()->GetBinLowEdge(1);
+    for (int cut_i = 0; cut_i < 19; cut_i++)
+        T.DrawText (histos[0].first->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
+
+    leg->Draw();
+    SQRTS=13; string LegendTitle = LegendFromType(InputPattern);
+    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+    char SaveName [128]; sprintf (SaveName, "CutFlowPlot_Abs_%u", CutIndex);
+    SaveCanvas(c1, InputPattern, SaveName);
+    delete c1;
+    delete leg;
+
+    // ----------------------------------
+    // Draw the Cut Efficiency histograms
+    // ----------------------------------
+    c1 = new TCanvas ("c1", "c1", 600, 600);
+    c1->SetLogy(false); // Efficiency should
+    c1->SetGridx();
+    c1->SetGridy();
+    leg = new TLegend(x+Dx, y+Dy, x, y);
+    leg->SetFillColor(0);
+    leg->SetFillStyle(0);
+    leg->SetBorderSize(0);
+
+    h.Reset();
+    h.SetStats(0);
+    h.GetYaxis()->SetTitle ("cut efficiency (%)");
+    h.GetYaxis()->SetRangeUser(0.0,1.0);
+    h.GetXaxis()->SetNdivisions(19);
+    h.GetYaxis()->SetNdivisions(5);
+    h.GetXaxis()->SetLabelOffset (99); // disable label
+    h.Draw("");
+    for (unsigned int sample_i=0; sample_i < SampleDetails.size(); sample_i++){
+        leg->AddEntry (histos[sample_i].second, SampleDetails[sample_i].LegEntry.c_str(), "LP");
+        histos[sample_i].second->Draw("same LP");
+    }
+
+    // now put the axis labels -- each cut at each place
+    T.SetTextAngle(45);
+    T.SetTextAlign(33);
+    T.SetTextSize (0.03);
+    Y = histos[0].second->GetYaxis()->GetBinLowEdge(1);
+    for (int cut_i = 0; cut_i < 19; cut_i++)
+        T.DrawText (histos[0].second->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
+
+    leg->Draw();
+    SQRTS=13; LegendTitle = LegendFromType(InputPattern);
+    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
+    sprintf (SaveName, "CutFlowPlot_Eff_%u", CutIndex);
+    SaveCanvas(c1, InputPattern, SaveName);
+    delete c1;
+    delete leg;
+
+    for (unsigned int sample_i = 0; sample_i < SampleDetails.size(); sample_i++){
+        histos[sample_i].first ->~TH1F();
+        histos[sample_i].second->~TH1F();
+    }
+    delete [] histos;
 }
 
 // make all plots of the preselection and selection variables as well as some plots showing 2D planes
