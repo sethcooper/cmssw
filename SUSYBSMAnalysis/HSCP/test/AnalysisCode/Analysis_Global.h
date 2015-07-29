@@ -34,7 +34,7 @@
 #include "TTree.h"
 
 //double IntegratedLuminosity13TeV               = 72.63; //pb
-double IntegratedLuminosity13TeV               = 5.59; //pb
+double IntegratedLuminosity13TeV               = 40.03; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
