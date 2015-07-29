@@ -7,9 +7,9 @@ from SUSYBSMAnalysis.HSCP.HSCPVersion_cff import *
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 5000
 process.source = cms.Source("PoolSource",
-   fileNames = cms.untracked.vstring(
+   fileNames = cms.untracked.vstring( *(
 XXX_INPUT_XXX
-   )
+   ) )
 )
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
