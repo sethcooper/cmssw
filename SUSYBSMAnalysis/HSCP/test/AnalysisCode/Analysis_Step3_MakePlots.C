@@ -61,8 +61,6 @@ void Analysis_Step3_MakePlots()
    std::vector<string> Legends;                 std::vector<string> Inputs;
 
 
-
-
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 67;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
@@ -1556,14 +1554,14 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
  
     stPlots* SignPlots = new stPlots[samples.size()];  
     for(unsigned int s=0;s<samples.size();s++){
-         if(samples[s].Type!=2)continue;
+       if(samples[s].Type!=2)continue;
+       if (samples[s].Name!="Gluino_13TeV_M1000_f10" && samples[s].Name!="Gluino_13TeV_M1400_f10" && samples[s].Name!="Stop_13TeV_M1000" && samples[s].Name!="GMStau_13TeV_M494") continue;
 
-//       if (samples[s].Name!="Gluino_7TeV_M300_f10" && samples[s].Name!="Gluino_7TeV_M600_f10" && samples[s].Name!="Gluino_7TeV_M800_f10" && samples[s].Name!="Gluino_8TeV_M1200_f100" && samples[s].Name!="Gluino_8TeV_M300_f10" && samples[s].Name!="Gluino_8TeV_M600_f10" && samples[s].Name!="Gluino_8TeV_M800_f10" && samples[s].Name!="GMStau_7TeV_M247" && samples[s].Name!="GMStau_7TeV_M370" && samples[s].Name!="GMStau_7TeV_M494" && samples[s].Name!="GMStau_8TeV_M247" && samples[s].Name!="GMStau_8TeV_M370" && samples[s].Name!="GMStau_8TeV_M494" && samples[s].Name!="DY_7TeV_M100_Q1o3" &&  samples[s].Name!="DY_7TeV_M600_Q1o3" && samples[s].Name!="DY_7TeV_M100_Q2o3" &&  samples[s].Name!="DY_7TeV_M600_Q2o3" && samples[s].Name!="DY_8TeV_M100_Q1o3" &&  samples[s].Name!="DY_8TeV_M600_Q1o3" && samples[s].Name!="DY_8TeV_M100_Q2o3" &&  samples[s].Name!="DY_8TeV_M600_Q2o3" &&  samples[s].Name!="DY_8TeV_M400_Q1" && samples[s].Name!="DY_8TeV_M400_Q3" &&  samples[s].Name!="DY_8TeV_M400_Q5" && samples[s].Name!="DY_7TeV_M400_Q1" && samples[s].Name!="DY_7TeV_M400_Q3" && samples[s].Name!="DY_7TeV_M400_Q5" && samples[s].Name!="Gluino_8TeV_M500_f100" && samples[s].Name!="Stop_8TeV_M500") continue;
+       //Note that loading the plots for ALL signal samples is too much, and it's likely that the code either stops or is killed without error message
        if(!stPlots_InitFromFile(InputFile, SignPlots[s],samples[s].Name)){printf("Missing sample %s\n",samples[s].Name.c_str());continue;}
-//       if(samples[s].Name=="Gluino_8TeV_M600_f10" || samples[s].Name=="DY_8TeV_M600_Q2o3")stPlots_Draw(SignPlots[s], InputPattern + "/Selection_" +  samples[s].Name, LegendTitle, CutIndex);
-       if(!samples[s].MakePlot)continue;       
+       if(!samples[s].MakePlot)continue;     
        stPlots_Draw(SignPlots[s], InputPattern + "/Selection_" +  samples[s].Name, LegendTitle, CutIndex);       
-    }
+    } 
 
     SQRTS=13; stPlots_Draw(Data13TeVPlots, InputPattern + "/Selection_Data13TeV", LegendTitle, CutIndex);
     SQRTS=13; stPlots_Draw(MCTr13TeVPlots, InputPattern + "/Selection_MCTr_13TeV", LegendTitle, CutIndex);
