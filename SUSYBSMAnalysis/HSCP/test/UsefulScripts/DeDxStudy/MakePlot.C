@@ -29,7 +29,7 @@ using namespace std;
 
 void getScaleFactor(TFile* InputFile, string OutName, string ObjName1, string ObjName2);
 void ExtractConstants(TH2D* input);
-void DrawComparisons (TFile* InputFile1, TFile* InputFile2=NULL, string ObjName1="_Ias", string ObjName2="_IasInc");
+void DrawComparisons (TFile* InputFile1, TFile* InputFile2=NULL, string ObjName1="Ias_SO", string ObjName2="Ias_SO_inc");
 
 //const double K = 2.4496; //Truncated40
 //const double C = 2.2364; //Truncated40
@@ -139,7 +139,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
    TFile* InputFile = new TFile(INPUT.c_str());
    std::vector<string> ObjName;
-   ObjName.push_back("harm2_PO");
    ObjName.push_back("harm2_SO");
    ObjName.push_back("harm2_SP");
    ObjName.push_back("harm2_PO_raw");
@@ -150,6 +149,8 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 //   ObjName.push_back("trunc40");
 //   ObjName.push_back("trunc40_raw");
 //   ObjName.push_back("Ias");
+
+   DrawComparisons (InputFile);
 
    for(unsigned int i=0;i<ObjName.size();i++){
       TH1D*       HdedxMIP           = (TH1D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_MIP"               ).c_str() );
@@ -256,6 +257,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       delete c1;
 
       c1 = new TCanvas("c1", "c1", 600,600);
+      c1->SetLogz(true);
       HdedxVsP_NS->SetStats(kFALSE);
       HdedxVsP_NS->GetXaxis()->SetTitle("track momentum (GeV/c)");
       HdedxVsP_NS->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
@@ -277,46 +279,48 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
       std::cout << "TESTC\n";
 
-      c1 = new TCanvas("c1", "c1", 600,600);
-      c1->SetLogy(true);
-      c1->SetGridx(true);
-      HMass->Reset();
-      for(int x=1;x<=HdedxVsP->GetNbinsX();x++){
-      if(HdedxVsP->GetXaxis()->GetBinCenter(x)>3.0)continue;
-      for(int y=1;y<=HdedxVsP->GetNbinsY();y++){
-        if(HdedxVsP->GetYaxis()->GetBinCenter(y)<5.0)continue;
-        HMass->Fill(GetMass(HdedxVsP->GetXaxis()->GetBinCenter(x),HdedxVsP->GetYaxis()->GetBinCenter(y)),HdedxVsP->GetBinContent(x,y));
-      }}
-      HMass->SetStats(kFALSE);
-      HMass->GetXaxis()->SetTitle("Mass (GeV/c^{2})");
-      HMass->GetYaxis()->SetTitle("number of tracks");
-      HMass->SetAxisRange(0,5,"X");
-      HMass->Draw("");
-
-      TLine* lineKaon = new TLine(0.493667, HMass->GetMinimum(), 0.493667, HMass->GetMaximum());
-      lineKaon->SetLineWidth(2);
-      lineKaon->SetLineStyle(2);
-      lineKaon->SetLineColor(9);
-      TLine* lineProton = new TLine(0.938272, HMass->GetMinimum(), 0.938272, HMass->GetMaximum());
-      lineProton->SetLineWidth(2);
-      lineProton->SetLineStyle(2);
-      lineProton->SetLineColor(9);
-      TLine* lineDeuteron = new TLine(1.88, HMass->GetMinimum(), 1.88, HMass->GetMaximum());
-      lineDeuteron->SetLineWidth(2);
-      lineDeuteron->SetLineStyle(2);
-      lineDeuteron->SetLineColor(9);
-      TLine* lineTriton = new TLine(2.80, HMass->GetMinimum(), 2.80, HMass->GetMaximum());
-      lineTriton->SetLineWidth(2);
-      lineTriton->SetLineStyle(2);
-      lineTriton->SetLineColor(9);
-
-      lineKaon->Draw("same");
-      lineProton->Draw("same");
-      lineDeuteron->Draw("same");
-      lineTriton->Draw("same");
-      SaveCanvas(c1, "pictures/", ObjName[i] + "_Mass", true);
-      delete c1;
-
+      if (ObjName[i].find("harm2")!=std::string::npos){
+            c1 = new TCanvas("c1", "c1", 600,600);
+            c1->SetLogy(true);
+            c1->SetGridx(true);
+            HMass->Reset();
+            for(int x=1;x<=HdedxVsP->GetNbinsX();x++){
+            if(HdedxVsP->GetXaxis()->GetBinCenter(x)>3.0)continue;
+            for(int y=1;y<=HdedxVsP->GetNbinsY();y++){
+              if(HdedxVsP->GetYaxis()->GetBinCenter(y)<5.0)continue;
+              HMass->Fill(GetMass(HdedxVsP->GetXaxis()->GetBinCenter(x),HdedxVsP->GetYaxis()->GetBinCenter(y)),HdedxVsP->GetBinContent(x,y));
+            }}
+            HMass->SetStats(kFALSE);
+            HMass->GetXaxis()->SetTitle("Mass (GeV/c^{2})");
+            HMass->GetYaxis()->SetTitle("number of tracks");
+            HMass->SetAxisRange(0,5,"X");
+            HMass->Draw("");
+      
+            TLine* lineKaon = new TLine(0.493667, HMass->GetMinimum(), 0.493667, HMass->GetMaximum());
+            lineKaon->SetLineWidth(2);
+            lineKaon->SetLineStyle(2);
+            lineKaon->SetLineColor(9);
+            TLine* lineProton = new TLine(0.938272, HMass->GetMinimum(), 0.938272, HMass->GetMaximum());
+            lineProton->SetLineWidth(2);
+            lineProton->SetLineStyle(2);
+            lineProton->SetLineColor(9);
+            TLine* lineDeuteron = new TLine(1.88, HMass->GetMinimum(), 1.88, HMass->GetMaximum());
+            lineDeuteron->SetLineWidth(2);
+            lineDeuteron->SetLineStyle(2);
+            lineDeuteron->SetLineColor(9);
+            TLine* lineTriton = new TLine(2.80, HMass->GetMinimum(), 2.80, HMass->GetMaximum());
+            lineTriton->SetLineWidth(2);
+            lineTriton->SetLineStyle(2);
+            lineTriton->SetLineColor(9);
+      
+            lineKaon->Draw("same");
+            lineProton->Draw("same");
+            lineDeuteron->Draw("same");
+            lineTriton->Draw("same");
+            SaveCanvas(c1, "pictures/", ObjName[i] + "_Mass", true);
+            delete c1;
+      } else continue;
+      
       std::cout << "TESTD\n";
 
    }
