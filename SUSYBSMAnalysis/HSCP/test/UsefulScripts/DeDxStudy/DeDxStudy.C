@@ -157,7 +157,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    TH1::AddDirectory(kTRUE);
 
    std::vector<string> FileName;
-   bool isData = true;
+   bool isData = INPUT.find("MC")!=string::npos ? false : true;
    if(INPUT.find(".root")<std::string::npos){
       char* pch=strtok(&INPUT[0],",");
       while (pch!=NULL){

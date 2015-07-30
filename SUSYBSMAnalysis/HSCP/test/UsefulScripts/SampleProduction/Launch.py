@@ -109,6 +109,7 @@ samples = [
   ['PPStau_13TeV_M1599', 'Configuration/GenProduction/python/ThirteenTeV/HSCPppstau_M_1599_TuneZ2star_13TeV_pythia6_cff.py', 50, 500],
 
   ['MC_13TeV_DYToMuMu' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 250, 1000],
+  ['MC_13TeV_MinBias'  , 'MinBIas_13TeV_pythia8_TuneCUETP8M1_cfi', 1000, 1000],
 ]
 
 
@@ -163,16 +164,17 @@ elif sys.argv[1]=='2':  #AOD --> EDM files
          f.write("isBckg = True\n")
       f.write("isData = False\n")
       f.write("isSkimmedSample = False\n")
-      f.write("GTAG = 'MCRUN2_74_V8::all'\n")
+      f.write("GTAG = 'MCRUN2_74_V8'\n")
       f.write("OUTPUTFILE = 'XXX_OUTPUT_XXX.root'\n")
       f.write("InputFileList = cms.untracked.vstring()\n")
       f.write("\n")
       for i in range(0,S[2]):
          inFile = os.getcwd()+"/FARM_"+S[0]+"_SIMAOD/outputs/"+S[0]+"_SIMAOD_%04i.root" % i
-         if(checkInputFile(inFile) ):
-            f.write("InputFileList.extend(['file:"+inFile+"'])\n")
-         else:
-            print "missing "+ inFile
+         f.write("InputFileList.extend(['file:"+inFile+"'])\n")
+#         if(checkInputFile(inFile) ):
+#            f.write("InputFileList.extend(['file:"+inFile+"'])\n")
+#         else:
+#            print "missing "+ inFile
       f.write("\n")
       f.write("#main EDM tuple cfg that depends on the above parameters\n")
       f.write("execfile( os.path.expandvars('${CMSSW_BASE}/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/HSCParticleProducer_cfg.py') )\n")
