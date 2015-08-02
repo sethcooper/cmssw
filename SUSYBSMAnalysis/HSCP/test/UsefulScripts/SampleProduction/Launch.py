@@ -107,9 +107,6 @@ samples = [
   ['PPStau_13TeV_M1218', 'Configuration/GenProduction/python/ThirteenTeV/HSCPppstau_M_1218_TuneZ2star_13TeV_pythia6_cff.py', 50, 500],
   ['PPStau_13TeV_M1409', 'Configuration/GenProduction/python/ThirteenTeV/HSCPppstau_M_1409_TuneZ2star_13TeV_pythia6_cff.py', 50, 500],
   ['PPStau_13TeV_M1599', 'Configuration/GenProduction/python/ThirteenTeV/HSCPppstau_M_1599_TuneZ2star_13TeV_pythia6_cff.py', 50, 500],
-
-  ['MC_13TeV_DYToMuMu' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 250, 1000],
-  ['MC_13TeV_MinBias'  , 'MinBIas_13TeV_pythia8_TuneCUETP8M1_cfi', 1000, 1000],
 ]
 
 

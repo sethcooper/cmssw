@@ -14,9 +14,10 @@ def getChunksFromList(MyList, n):
 
 
 if len(sys.argv)==1:
-        print "Please pass in argument a number between 1 and 2"
+        print "Please pass in argument a number between 1 and 3"
         print "  1  - Run dEdxStudy on RECO, AOD, or dEdxSKIM files         --> submitting 1job per file"
         print "  2  - Hadd root files containing the histograms             --> interactive processing" 
+        print "  3  - run the plotter on the hadded root files              --> interactive processing" 
         sys.exit()
 
 
@@ -39,7 +40,7 @@ if sys.argv[1]=='1':
 	   LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
 	   FILELIST = LaunchOnCondor.GetListOfFiles('', DATASET[1]+'/*.root', '')
-           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/20): #20 jobs, this is a trade off between hadding time and processing time
+           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/30): #30 jobs, this is a trade off between hadding time and processing time
               InputListCSV = ''
   	      for inFile in inFileList:
                  InputListCSV+= inFile + ','
@@ -51,6 +52,9 @@ elif sys.argv[1]=='2':
         for DATASET in datasetList :
            indir =  os.getcwd() + "/Histos/"+DATASET[0]+'/'
            os.system('hadd -f Histos_'+DATASET[0]+'.root ' + indir + '*.root')
+
+elif sys.argv[1]=='3':
+        for DATASET in datasetList :
            os.system('./MakePlot.sh Histos_'+DATASET[0]+'.root > MakePlot_'+DATASET[0]+'.log 2>&1')
            os.system('mv pictures pictures_'+DATASET[0]+' && MakePlot_'+DATASET[0]+'.log pictures_'+DATASET[0])
 

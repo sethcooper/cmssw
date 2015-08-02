@@ -156,15 +156,14 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    gStyle->SetNdivisions(505,"X");
    TH1::AddDirectory(kTRUE);
 
-   std::vector<string> FileName;
    bool isData = INPUT.find("MC")!=string::npos ? false : true;
+   std::vector<string> FileName;
    if(INPUT.find(".root")<std::string::npos){
       char* pch=strtok(&INPUT[0],",");
       while (pch!=NULL){
          FileName.push_back(pch);    
          pch=strtok(NULL,",");
       }
-
    }else{
       string SampleId = INPUT;
       InitBaseDirectory();
@@ -173,7 +172,6 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
       isData = (sample.Type==0);
       GetInputFiles(sample, BaseDirectory, FileName, 0);
    }
-   fwlite::ChainEvent ev(FileName);
 
    TH3F* dEdxTemplates    = NULL;
    TH3F* dEdxTemplatesInc = NULL;
@@ -203,6 +201,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    results.push_back(new dEdxStudyObj("Ias_SO_inc"  , 2, 2, dEdxTemplatesInc, NULL) );
    results.push_back(new dEdxStudyObj("Ias_SO"      , 2, 2, dEdxTemplates   , NULL) );
 
+   fwlite::ChainEvent ev(FileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Looping on Tree              :");
    int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
