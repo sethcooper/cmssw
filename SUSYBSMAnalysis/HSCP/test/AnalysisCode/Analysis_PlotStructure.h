@@ -809,7 +809,6 @@ bool stPlots_InitFromFile(TFile* HistoFile, stPlots& st, std::string BaseName)
    st.BS_OpenAngle  = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_OpenAngle");
    st.BS_OpenAngle_Cosmic  = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_OpenAngle_Cosmic");
 
-
    st.BS_Pt_FailDz  = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_Pt_FailDz");
    st.BS_Pt_FailDz_DT  = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_Pt_FailDz_DT");
    st.BS_Pt_FailDz_CSC  = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_Pt_FailDz_CSC");
@@ -826,7 +825,6 @@ bool stPlots_InitFromFile(TFile* HistoFile, stPlots& st, std::string BaseName)
    st.genlevelpT     = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/genlevelpT");
    st.genleveleta     = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/genleveleta");
    st.genlevelbeta     = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/genlevelbeta");
-
 
    st.BS_P      = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/BS_P");
    st.AS_P      = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/AS_P");

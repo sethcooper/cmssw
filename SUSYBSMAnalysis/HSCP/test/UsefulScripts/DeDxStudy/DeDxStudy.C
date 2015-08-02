@@ -45,17 +45,104 @@ using namespace trigger;
 
 
 #include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
+#include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 
 
 #endif
 
+const double P_Min               = 1;
+const double P_Max               = 15;
+const int    P_NBins             = 14  ;
+const double Path_Min            = 0.2 ;
+const double Path_Max            = 1.6 ;
+const int    Path_NBins          = 42  ;
+const double Charge_Min          = 0   ;
+const double Charge_Max          = 5000;
+const int    Charge_NBins        = 500 ;
 
+struct dEdxStudyObj
+{
+   string Name;
+   bool isDiscrim;
+   bool isEstim;
+   bool isHit;
+
+   bool usePixel;
+   bool useStrip;
+
+   TH3D* Charge_Vs_Path;
+   TH1D* HdedxMIP;
+   TH2D* HdedxVsPHSCP;
+   TH2D* HdedxVsP;
+   TH2D* HdedxVsQP;
+   TProfile2D* HdedxVsP_NS;
+   TProfile* HdedxVsPProfile;
+   TProfile* HdedxVsEtaProfile;
+   TH2D* HdedxVsEta;
+   TProfile* HNOSVsEtaProfile;
+   TProfile* HNOMVsEtaProfile;
+   TProfile* HNOMSVsEtaProfile;
+   TH1D* HMass;
+   TH1D* HP;
+   TH1D* HHit; 
+   TProfile* Charge_Vs_FS[15];
+
+   TH3F* dEdxTemplates = NULL;
+   std::unordered_map<unsigned int,double>* TrackerGains = NULL;
+
+   dEdxStudyObj(string Name_, int type_, int subdet_, TH3F* dEdxTemplates_=NULL, std::unordered_map<unsigned int,double>* TrackerGains_=NULL){
+      Name = Name_;
+
+      if     (type_==0){ isHit=true;  isEstim= false; isDiscrim = false;}
+      else if(type_==1){ isHit=false; isEstim= true;  isDiscrim = false;}
+      else if(type_==2){ isHit=false; isEstim= false; isDiscrim = true; }
+      else             { isHit=false; isEstim= false; isDiscrim = false;}
+
+           if(subdet_==1){ usePixel = true;  useStrip = false;}
+      else if(subdet_==2){ usePixel = false; useStrip = true; }
+      else               { usePixel = true;  useStrip = true; }
+
+      dEdxTemplates = dEdxTemplates_;
+      TrackerGains  = TrackerGains_;
+
+      string HistoName;
+      //HitLevel plot
+      if(isHit){ 
+         HistoName = Name + "_ChargeVsPath";      Charge_Vs_Path        = new TH3D(      HistoName.c_str(), HistoName.c_str(), P_NBins, P_Min, P_Max, Path_NBins, Path_Min, Path_Max, Charge_NBins, Charge_Min, Charge_Max);
+         HistoName = Name + "_Hit";               HHit                  = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, 20); 
+         for(unsigned int g=0;g<15;g++){
+            char Id[255]; sprintf(Id, "%02i", g);
+            HistoName = Name + "_ChargeVsFS"+Id;    Charge_Vs_FS[g]       = new TProfile( HistoName.c_str(), HistoName.c_str(),  800, 0, 800);
+         }
+      }
+
+      //Track Level plots
+      if(isEstim || isDiscrim){
+         HistoName = Name + "_MIP";               HdedxMIP              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
+         HistoName = Name + "_dedxVsPHSCP";       HdedxVsPHSCP          = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 2000,1500,0, isDiscrim?1.0:15);
+         HistoName = Name + "_dedxVsP";           HdedxVsP              = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
+         HistoName = Name + "_dedxVsQP";          HdedxVsQP             = new TH2D(      HistoName.c_str(), HistoName.c_str(), 6000, -30, 30,1500,0, isDiscrim?1.0:15);
+         HistoName = Name + "_dedxVsP_NS";        HdedxVsP_NS           = new TProfile2D(HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
+         HistoName = Name + "_Profile";           HdedxVsPProfile       = new TProfile(  HistoName.c_str(), HistoName.c_str(),  100, 0,100);
+         HistoName = Name + "_Eta";               HdedxVsEtaProfile     = new TProfile(  HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+         HistoName = Name + "_Eta2D";             HdedxVsEta            = new TH2D(      HistoName.c_str(), HistoName.c_str(),  100,-3,  3, 1000,0, isDiscrim?1.0:5);
+         HistoName = Name + "_NOS";               HNOSVsEtaProfile      = new TProfile(  HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+         HistoName = Name + "_NOM";               HNOMVsEtaProfile      = new TProfile(  HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+         HistoName = Name + "_NOMS";              HNOMSVsEtaProfile     = new TProfile(  HistoName.c_str(), HistoName.c_str(),  100,-3,  3);
+         HistoName = Name + "_P";                 HP                    = new TH1D(      HistoName.c_str(), HistoName.c_str(),  500, 0, 100);  
+      }
+
+      //estimator plot only
+      if(isEstim){
+         HistoName = Name + "_Mass";              HMass                 = new TH1D(      HistoName.c_str(), HistoName.c_str(),  500, 0, 10);
+      }
+
+   }
+};
 
 void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT="out.root")
 {
   if(DIRNAME=="COMPILE") return;
-
-   system("mkdir -p pictures");
 
    setTDRStyle();
    gStyle->SetPadTopMargin   (0.06);
@@ -69,10 +156,14 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    gStyle->SetNdivisions(505,"X");
    TH1::AddDirectory(kTRUE);
 
+   bool isData = INPUT.find("MC")!=string::npos ? false : true;
    std::vector<string> FileName;
-   bool isData = true;
    if(INPUT.find(".root")<std::string::npos){
-      FileName.push_back(INPUT);    
+      char* pch=strtok(&INPUT[0],",");
+      while (pch!=NULL){
+         FileName.push_back(pch);    
+         pch=strtok(NULL,",");
+      }
    }else{
       string SampleId = INPUT;
       InitBaseDirectory();
@@ -81,132 +172,129 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
       isData = (sample.Type==0);
       GetInputFiles(sample, BaseDirectory, FileName, 0);
    }
-   fwlite::ChainEvent ev(FileName);
 
-   TH3F* dEdxTemplates = NULL;
-   if(isData){    dEdxTemplates = loadDeDxTemplate(DIRNAME + "/../../../data/Data7TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
-   }else{         dEdxTemplates = loadDeDxTemplate(DIRNAME + "/../../../data/MC7TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
+   TH3F* dEdxTemplates    = NULL;
+   TH3F* dEdxTemplatesInc = NULL;
+   if(isData){   //FIXME update template on data directory
+         dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+         dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
+   }else{
+         dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+         dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false); 
    }
 
-   //system("mkdir -p pictures/");
+   std::unordered_map<unsigned int,double> TrackerGains;
+   LoadDeDxCalibration(TrackerGains, DIRNAME+"/../../../data/Data13TeVGains.root");
 
-   TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");
+   TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");  //File must be opened before the histogram are created
 
-   for(int LOOP=0;LOOP<=1;LOOP++){
-      string saveName = "harm2";
-      if(LOOP==1) saveName = "trunc40";
+   std::vector<dEdxStudyObj*> results;
+   results.push_back(new dEdxStudyObj("hit_PO"      , 0, 1, NULL            , NULL) );
+   results.push_back(new dEdxStudyObj("hit_SO_raw"  , 0, 2, NULL            , NULL) );
+   results.push_back(new dEdxStudyObj("hit_SO"      , 0, 2, NULL            , &TrackerGains) );
+   results.push_back(new dEdxStudyObj("hit_SP"      , 0, 3, NULL            , &TrackerGains) );
+   results.push_back(new dEdxStudyObj("harm2_PO_raw", 1, 1, NULL            , NULL) );
+   results.push_back(new dEdxStudyObj("harm2_SO_raw", 1, 2, NULL            , NULL) );
+   results.push_back(new dEdxStudyObj("harm2_SP_raw", 1, 3, NULL            , NULL) );
+   results.push_back(new dEdxStudyObj("harm2_SO"    , 1, 2, NULL            , &TrackerGains) );
+   results.push_back(new dEdxStudyObj("harm2_SP"    , 1, 3, NULL            , &TrackerGains) );
+   results.push_back(new dEdxStudyObj("Ias_SO_inc"  , 2, 2, dEdxTemplatesInc, NULL) );
+   results.push_back(new dEdxStudyObj("Ias_SO"      , 2, 2, dEdxTemplates   , NULL) );
 
-      TH1D* HdedxMIP          = new TH1D(    (saveName + "_MIP"    ).c_str(), "MIP"    ,  200, 0, 20);
-      TH2D* HdedxVsPHSCP      = new TH2D(    (saveName + "_dedxVsPHSCP").c_str(), "dedxVsPHSCP", 3000, 0, 2000,1500,0,15);
-      TH2D* HdedxVsP          = new TH2D(    (saveName + "_dedxVsP").c_str(), "dedxVsP", 3000, 0, 30,1500,0,15);
-      TH2D* HdedxVsPM         = new TH2D(    (saveName + "_dedxVsPM").c_str(), "dedxVsPM", 3000, 0, 30,1500,0,15);
-      TH2D* HdedxVsQP         = new TH2D(    (saveName + "_dedxVsQP").c_str(), "dedxVsQP", 6000, -30, 30,1500,0,25);
-      TProfile* HdedxVsPProfile   = new TProfile((saveName + "_Profile").c_str(), "Profile",  100, 0,100);
-      TProfile* HdedxVsEtaProfile = new TProfile((saveName + "_Eta"    ).c_str(), "Eta"    ,  100,-3,  3);
-      TH2D* HdedxVsEta        = new TH2D    ((saveName + "_Eta2D"  ).c_str(), "Eta"    ,  100,-3,  3, 1000,0,5);
-      TProfile* HNOSVsEtaProfile  = new TProfile((saveName + "_NOS"    ).c_str(), "NOS"    ,  100,-3,  3);
-      TProfile* HNOMVsEtaProfile  = new TProfile((saveName + "_NOM"    ).c_str(), "NOM"    ,  100,-3,  3);
-      TProfile* HNOMSVsEtaProfile = new TProfile((saveName + "_NOMS"    ).c_str(), "NOMS"    ,  100,-3,  3);
-      TH1D* HMass             = new TH1D(    (saveName + "_Mass"   ).c_str(), "Mass"   ,  500, 0, 10);
-      TH1D* HP                = new TH1D(    (saveName + "_P"      ).c_str(), "P"      ,  500, 0, 100);
+   fwlite::ChainEvent ev(FileName);
+   printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
+   printf("Looping on Tree              :");
+   int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
+   for(Long64_t e=0;e<ev.size();e++){
+      ev.to(e); 
+      if(e%TreeStep==0){printf(".");fflush(stdout);}
 
-      TH1D* HHit          = new TH1D(    (saveName + "_Hit"      ).c_str(), "P"      ,  200, 0, 20);
- 
-      TH2D* HIasVsP          = new TH2D(    (saveName + "_IasVsP").c_str(), "IasVsP", 3000, 0, 30,1500,0,1);
-      TH2D* HIasVsPM         = new TH2D(    (saveName + "_IasVsPM").c_str(), "IasVsPM", 3000, 0, 30,1500,0,1);
-      TH1D* HIasMIP          = new TH1D(    (saveName + "_IasMIP"    ).c_str(), "IasMIP"    ,  1000, 0, 1);
+      fwlite::Handle<DeDxHitInfoAss> dedxCollH;
+      dedxCollH.getByLabel(ev, "dedxHitInfo");
+      if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
 
+      fwlite::Handle< std::vector<reco::Track> > trackCollHandle;
+      trackCollHandle.getByLabel(ev,"RefitterForDeDx");
+      if(!trackCollHandle.isValid()){
+         trackCollHandle.getByLabel(ev,"generalTracks");
+	    if (!trackCollHandle.isValid()){
+	       printf("Invalid trackCollHandle\n");
+	       continue;
+	    }
+      }
 
+      for(unsigned int c=0;c<trackCollHandle->size();c++){
+         //basic track quality cuts
+         reco::TrackRef track = reco::TrackRef( trackCollHandle.product(), c );
+         if(track.isNull())continue;
+         if(track->chi2()/track->ndof()>5 )continue;  //WAS >1
+         if(track->found()<8)continue;
 
-      printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
-      printf("Looping on Tree              :");
-      int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
-      for(Long64_t e=0;e<ev.size();e++){
-   //      if(e>10)break;
-         ev.to(e); 
-         if(e%TreeStep==0){printf(".");fflush(stdout);}
+         //load dEdx informations
+         const DeDxHitInfo* dedxHits = NULL;
+         DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
+         if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
+         if(!dedxHits)continue;
 
-         fwlite::Handle<DeDxHitInfoAss> dedxCollH;
-         dedxCollH.getByLabel(ev, "dedxHitInfo");
-         if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
-
-         fwlite::Handle< std::vector<reco::Track> > trackCollHandle;
-   //      trackCollHandle.getByLabel(ev,"generalTracks");
-         trackCollHandle.getByLabel(ev,"RefitterForDeDx");
-         if(!trackCollHandle.isValid()){printf("Invalid trackCollHandle\n");continue;}
-
-
-
-         for(unsigned int c=0;c<trackCollHandle->size();c++){
-             reco::TrackRef track = reco::TrackRef( trackCollHandle.product(), c );
-
-             if(track->chi2()/track->ndof()>5 )continue;  //WAS >1
-             if(track->found()<8)continue;
-
-
-             const DeDxHitInfo* dedxHits = NULL;
-             if(TypeMode!=3 && !track.isNull()) {
-                DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
-                if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
-             }
-             if(!dedxHits)continue;
-
-
-             for(unsigned int h=0;h<dedxHits->size();h++){
+         //hit level dEdx information (only done for MIPs)
+         if(track->p() > 5){
+            for(unsigned int h=0;h<dedxHits->size();h++){
                 DetId detid(dedxHits->detId(h));
-                if(detid.subdetId()<3)continue; // skip pixels
-               
                 double scaleFactor = 1.0;
                 double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
                 double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
-                HHit->Fill(ChargeOverPathlength);
+                int moduleGeometry = 1; //0 will be used for the pixels since strips geom start at 1
+                if(detid.subdetId()>=3){ SiStripDetId SSdetId(detid); moduleGeometry = SSdetId.moduleGeometry();}
+
+                for(unsigned int R=0;R<results.size();R++){ 
+                   if(!results[R]->isHit) continue; //only consider results related to hit info here
+                   if(!results[R]->usePixel and detid.subdetId() <3)continue; // skip pixels
+                   if(!results[R]->useStrip and detid.subdetId()>=3)continue; // skip strips
+         
+                   results[R]->Charge_Vs_Path->Fill (moduleGeometry, dedxHits->pathlength(h)*10, dedxHits->charge(h)/(dedxHits->pathlength(h)*10)); 
+                   if(detid.subdetId()>=3)results[R]->Charge_Vs_FS[moduleGeometry]->Fill(dedxHits->stripCluster(h)->firstStrip(),  dedxHits->charge(h)); 
+                   results[R]->HHit->Fill(ChargeOverPathlength);
+                }
              }
+          }
 
-             DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, false, false );
-             DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false, LOOP==0?false:true  );
+          for(unsigned int R=0;R<results.size();R++){ 
+             if(!results[R]->isEstim and !results[R]->isDiscrim ) continue; //only consider results related to estimator/discriminator variables here
 
-             HdedxVsPHSCP->Fill(track->pt(), dedxMObj->dEdx());
+             DeDxData* dedxObj = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates,             results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip );
 
-             if(track->pt()>20 && track->pt()<40 && dedxMObj->numberOfMeasurements()>6 ){
-               HdedxVsEtaProfile->Fill(track->eta(), dedxMObj->dEdx() );
-               HdedxVsEta->Fill(track->eta(), dedxMObj->dEdx() );
-               HNOMVsEtaProfile->Fill(track->eta(),dedxMObj->numberOfMeasurements() );
-               HNOSVsEtaProfile->Fill(track->eta(),dedxMObj->numberOfSaturatedMeasurements() );
-               HNOMSVsEtaProfile->Fill(track->eta(),dedxMObj->numberOfMeasurements() - dedxMObj->numberOfSaturatedMeasurements() );
+             results[R]->HdedxVsP    ->Fill(track->p(), dedxObj->dEdx() );
+             results[R]->HdedxVsQP   ->Fill(track->p()*track->charge(), dedxObj->dEdx() );
+             results[R]->HdedxVsP_NS ->Fill(track->p(), dedxObj->dEdx(), dedxObj->numberOfSaturatedMeasurements() );
+             results[R]->HdedxVsPHSCP->Fill(track->pt(), dedxObj->dEdx());
+
+             if(track->pt()>10 && track->pt()<45 && dedxObj->numberOfMeasurements()>=(results[R]->useStrip?7:3) ){
+               results[R]->HdedxVsEtaProfile->Fill(track->eta(), dedxObj->dEdx() );
+               results[R]->HdedxVsEta->Fill(track->eta(), dedxObj->dEdx() );
+               results[R]->HNOMVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() );
+               results[R]->HNOSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfSaturatedMeasurements() );
+               results[R]->HNOMSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() - dedxObj->numberOfSaturatedMeasurements() );
              }
-
 
              if(fabs(track->eta())>2.1)continue;
-             if((int)dedxMObj->numberOfMeasurements()<10)continue;
+             if((int)dedxObj->numberOfMeasurements()<(results[R]->useStrip?10:3))continue;
              if(track->p()>5 && track->p()<40){
-                HdedxMIP->Fill(dedxMObj->dEdx());
-                HP->Fill(track->p());
-                HIasMIP->Fill(dedxSObj->dEdx());
-             }
-             HdedxVsP ->Fill(track->p(), dedxMObj->dEdx() );
-             HdedxVsQP->Fill(track->p()*track->charge(), dedxMObj->dEdx() );
-             HIasVsP ->Fill(track->p(), dedxSObj->dEdx() );
-
-             if(fabs(track->eta())<0.4)HdedxVsPProfile->Fill(track->p(), dedxMObj->dEdx() );
-             double Mass = GetMass(track->p(),dedxMObj->dEdx(), false);
-             if(dedxMObj->dEdx()>4.0 && track->p()<3.0){
-                HMass->Fill(Mass);
-                if(isnan((float)Mass) || Mass<0.94-0.3 || Mass>0.94+0.3)continue;
-                HdedxVsPM ->Fill(track->p(), dedxMObj->dEdx() );
-                HIasVsPM ->Fill(track->p(), dedxSObj->dEdx() );
+                results[R]->HdedxMIP->Fill(dedxObj->dEdx());
+                results[R]->HP->Fill(track->p());
              }
 
+             if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
 
-
-         }
-      }printf("\n");
-
-
-      HdedxMIP->Scale(1.0/HdedxMIP->Integral() );
-      HHit->Scale(1.0/HHit->Integral() );
-
-   }
+             if(results[R]->isEstim){  //mass can only be computed for dEdx estimators
+                double Mass = GetMass(track->p(),dedxObj->dEdx(), false);
+                if(dedxObj->dEdx()>4.0 && track->p()<3.0){
+                   results[R]->HMass->Fill(Mass);
+                }
+             }
+          }
+      }
+   }printf("\n");
 
    OutputHisto->Write();
    OutputHisto->Close();  

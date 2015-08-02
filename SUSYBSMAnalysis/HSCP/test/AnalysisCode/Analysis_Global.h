@@ -6,6 +6,7 @@
 //Include widely used in all the codes
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <fstream>
 #include "TROOT.h"
 #include "TCanvas.h"
@@ -28,10 +29,12 @@
 #include "TObject.h"
 #include "TPaveText.h"
 #include "TProfile.h"
+#include "TProfile2D.h"
 #include "TRandom3.h"
 #include "TTree.h"
 
-double IntegratedLuminosity13TeV               = 18823; //pb
+//double IntegratedLuminosity13TeV               = 72.63; //pb
+double IntegratedLuminosity13TeV               = 40.03; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
@@ -41,7 +44,7 @@ double IntegratedLuminosityBeforeTriggerChange =    0; //pb
 string IntegratedLuminosityFromE(double SQRTS_){
   char LumiText[1024];
 
-  if(SQRTS_==13)                    sprintf(LumiText,"%1.1f fb^{-1} (%1.0f TeV)", 0.001*IntegratedLuminosity13TeV, 13.0);
+  if(SQRTS_==13)                    sprintf(LumiText,"%1.1f pb^{-1} (%1.0f TeV)", IntegratedLuminosity13TeV, 13.0);
   //else if(SQRTS_==78 || SQRTS_==87)sprintf(LumiText,"#sqrt{s} = %1.0f TeV, L = %1.1f fb^{-1}   #sqrt{s} = %1.0f TeV, L = %1.1f fb^{-1}", 7.0, 0.001*IntegratedLuminosity7TeV,8.0, 0.001*IntegratedLuminosity8TeV);
   else                              sprintf(LumiText, "unknown energy and int. lumi");
   return LumiText;
@@ -62,8 +65,8 @@ std::string BaseDirectory = "undefined... Did you call InitBaseDirectory() ? -->
 
 // binning for the pT, mass, and IP distributions
 double             PtHistoUpperBound   = 1200;
-double             MassHistoUpperBound = 2000;
-int		   MassNBins           = 200;
+double             MassHistoUpperBound = 3000;
+int                MassNBins           = 300;
 double             IPbound             = 1.0;
 
 // Thresholds for candidate preselection --> note that some of the followings can be replaced at the beginning of Analysis_Step1_EventLoop function
@@ -100,10 +103,10 @@ std::string        dEdxS_Legend    = "I_{as}";
 std::string        dEdxM_Label     = "dedxHarm2";
 double             dEdxM_UpLim     = 30.0;
 std::string        dEdxM_Legend    = "I_{h} (MeV/cm)";
-double             dEdxK_Data      = 2.529;
-double             dEdxC_Data      = 2.772;
-double             dEdxK_MC        = 2.529;
-double             dEdxC_MC        = 2.772;
+double             dEdxK_Data      = 2.779;
+double             dEdxC_Data      = 2.879;
+double             dEdxK_MC        = 2.683;
+double             dEdxC_MC        = 2.453;
 
 // TOF object to be used for combined, DT and CSC TOF measurement
 std::string        TOF_Label       = "combined";
