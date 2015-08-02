@@ -20,7 +20,7 @@ using namespace std;
 void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuffix="Mass", bool showMC=true, string Data="Data13TeV");
 void PredictionAndControlPlot(string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip);
 void CutFlow(string InputPattern, unsigned int CutIndex=0);
-void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, double ylow=8e-6, double yhigh=8e+5, bool setLog=true);
+void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, double ylow=8e-3, double yhigh=8e+6, bool setLog=true);
 void SelectionPlot (string InputPattern, unsigned int CutIndex, unsigned int CutIndexTight);
 
 void Make2DPlot_Core(string ResultPattern, unsigned int CutIndex);
@@ -1375,15 +1375,15 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     if (!InputFile) std::cerr << "File could not be opened!" << std::endl;
 
     vector < pair<stSample, Color_t> > SamplesToDraw;
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV", samples)],              kBlack      ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("MC_13TeV_DYToMuMu", samples)],      kBlue - 3   ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Gluino_13TeV_M1000_f10", samples)], kRed + 1    ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Stop_13TeV_M1000", samples)],       kSpring - 9 ));
-    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("GMStau_13TeV_M494", samples)],      kOrange + 7 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV"             , samples)], kBlack      ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("MC_13TeV_DYToMuMu"     , samples)], kBlue   - 3 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Gluino_13TeV_M1000_f10", samples)], kRed    + 1 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Stop_13TeV_M1000"      , samples)], kSpring - 9 ));
+    SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("GMStau_13TeV_M494"     , samples)], kOrange + 7 ));
     pair < TH1F*, TH1F* > * histos = new pair < TH1F*, TH1F* >[SamplesToDraw.size()];
 
-    const char * AxisLabels [17] = {"Initial", "TNOH", "TNOM", "nDof", "Quality", "Chi2",
-	    "Min Pt", "Min Ias", "Min TOF", "Dxy", "TIsol", "E/p Isol", "Pterr", "Dz", 
+    const char * AxisLabels [17] = {"Initial", "No. of hits", "No. of dE/dx hits", "nDof", "Track purity", "Chi2",
+	    "Min Pt", "Min Ias", "Min TOF", "Dxy", "Track Isolation", "E/p Isolation", "Pterr", "Dz", 
 	    "Pt", "Ias", "TOF"};
     unsigned int NumberOfCuts = sizeof(AxisLabels)/sizeof(const char *);
 
@@ -1437,11 +1437,14 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
     c1->SetLogy(setLog);
     c1->SetGridx();
-    double Dx = 0.4, Dy = 6*0.03, x = 0.15, y = 0.15;
+    c1->SetBottomMargin(1.3*c1->GetBottomMargin());
+    double Dx = 0.60, Dy = 3*0.03, x = 0.17, y = 0.82;
     TLegend* leg = new TLegend(x+Dx, y+Dy, x, y);
     leg->SetFillColor(0);
     leg->SetFillStyle(0);
     leg->SetBorderSize(0);
+    leg->SetTextSize (0.03);
+    leg->SetNColumns(2);
 
     TH1F h ("Name", "Title", NumberOfCuts, 0, NumberOfCuts);
     h.SetStats(0);
@@ -1458,16 +1461,16 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     SelectionLine.DrawLine (NumberOfCuts - 3 - 0.08, ylow, NumberOfCuts - 3 - 0.08, yhigh);
     // draw preselection/selection text
     TText SelectionText;
-    SelectionText.SetTextAngle(30);
+    SelectionText.SetTextAngle(0);
     SelectionText.SetTextAlign(22);
     SelectionText.SetTextFont(72);
     SelectionText.SetTextColorAlpha(41, 0.80);
     SelectionText.SetTextSize(0.05);
     SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(8),
-            setLog ? TMath::Log(TMath::Sqrt(yhigh*ylow)) : (yhigh + ylow)/2, "Preselection");
+            setLog ? TMath::Power(yhigh*ylow,0.20) : (yhigh + ylow)/5, "Preselection");
     SelectionText.SetTextAngle(75);
     SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(NumberOfCuts-1),
-            setLog ? TMath::Log(TMath::Sqrt(yhigh*ylow)) : (yhigh + ylow)/2, "Selection");
+            setLog ? TMath::Power(yhigh*ylow,0.20) : (yhigh + ylow)/5, "Selection");
 
     for (unsigned int sample_i=0; sample_i < SamplesToDraw.size(); sample_i++){
         leg->AddEntry (histos[sample_i].first, SamplesToDraw[sample_i].first.Legend.c_str(), "L");
@@ -1475,7 +1478,7 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     }
     // now put the axis labels -- each cut at each respective bin
     TText T;
-    T.SetTextAngle(45);
+    T.SetTextAngle(35);
     T.SetTextAlign(33);
     T.SetTextSize (0.03);
 
@@ -1499,10 +1502,13 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     c1->SetLogy(false); // Efficiency should not be in logscale -- ever!
     c1->SetGridx();
     c1->SetGridy();
+    c1->SetBottomMargin(1.3*c1->GetBottomMargin());
     leg = new TLegend(x+Dx, y+Dy, x, y);
     leg->SetFillColor(0);
     leg->SetFillStyle(0);
     leg->SetBorderSize(0);
+    leg->SetTextSize (0.03);
+    leg->SetNColumns(2);
 
     h.Reset();
     h.SetStats(0);
@@ -1518,23 +1524,23 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     SelectionLine.SetLineStyle(7);
     SelectionLine.DrawLine (NumberOfCuts - 3 - 0.08, ylow, NumberOfCuts - 3 - 0.08, yhigh);
     // draw preselection/selection text
-    SelectionText.SetTextAngle(30);
+    SelectionText.SetTextAngle(0);
     SelectionText.SetTextAlign(22);
     SelectionText.SetTextFont(72);
     SelectionText.SetTextColorAlpha(41, 0.80);
     SelectionText.SetTextSize(0.05);
     SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(8),
-            (yhigh + ylow)/2, "Preselection");
+            (yhigh + ylow)/5, "Preselection");
     SelectionText.SetTextAngle(75);
     SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(NumberOfCuts-1),
-            (yhigh + ylow)/2, "Selection");
+            (yhigh + ylow)/5, "Selection");
 
     for (unsigned int sample_i=0; sample_i < SamplesToDraw.size(); sample_i++){
         leg->AddEntry (histos[sample_i].second, SamplesToDraw[sample_i].first.Legend.c_str(), "L");
         histos[sample_i].second->Draw("same histo");
     }
     // now put the axis labels -- each cut at each respective bin
-    T.SetTextAngle(45);
+    T.SetTextAngle(35);
     T.SetTextAlign(33);
     T.SetTextSize (0.03);
     Y = histos[0].second->GetYaxis()->GetBinLowEdge(1);
