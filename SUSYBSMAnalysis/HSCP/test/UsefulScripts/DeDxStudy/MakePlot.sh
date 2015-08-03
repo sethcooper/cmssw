@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$2"="" ]; then
+if [ -z "$2" ]; then
    arg2="EMPTY"
 else
    arg2="$2"
@@ -18,5 +18,5 @@ root -l -b << EOF
   gSystem->Load("libDataFormatsCommon.so");
   gSystem->Load("libDataFormatsTrackerRecHit2D.so");
   gSystem->Load("libAnalysisDataFormatsSUSYBSMObjects.so");
-  .x MakePlot.C+("$1", "$arg2");
+  .x MakePlot.C+("$1", "$2");
 EOF

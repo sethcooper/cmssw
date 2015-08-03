@@ -17,6 +17,7 @@
 #include "TTree.h"
 #include "TF1.h"
 #include "TGraphAsymmErrors.h"
+#include "TGraph.h"
 #include "TPaveText.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
@@ -27,7 +28,7 @@
 using namespace std;
 
 
-void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string OutName, string ObjName);
+void getScaleFactor(TFile* InputFile1, string OutName, string ObjName1, TFile* InputFile2, string ObjName2="EMPTY");
 void ExtractConstants(TH2D* input);
 void DrawComparisons (TFile* InputFile1, TFile* InputFile2=NULL, string ObjName1="Ias_SO", string ObjName2="Ias_SO_inc");
 
@@ -155,7 +156,8 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 //   ObjName.push_back("trunc40_raw");
 //   ObjName.push_back("Ias");
 
-   DrawComparisons (InputFile);
+   DrawComparisons (InputFile, InputFile2);
+   DrawComparisons (InputFile, InputFile2, "harm2_SO_raw", "harm2_SO");
 
    for(unsigned int i=0;i<ObjName.size();i++){
       TH3F*       dEdxTemplate       = (TH3F*)      GetObjectFromPath(InputFile, (ObjName[i] + "_ChargeVsPath"      ).c_str() );
@@ -383,18 +385,32 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
    }
 
-   getScaleFactor(InputFile, InputFile2, "All_Rescale", "harm2_SO");
+   getScaleFactor(InputFile, "All_Rescale", "harm2_SO", InputFile2);
+   getScaleFactor(InputFile, "All_Rescale", "harm2_SO_raw", InputFile2);
+//   getScaleFactor(InputFile, "All_Rescale", "harm2_SO", NULL, "harm2_PO");
 }
 
 
 
-void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string OutName, string ObjName){
-   if (!InputFile2) return;
-   TProfile*   HdedxVsPProfile1 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName + "_Profile"  ).c_str() );
-   TProfile*   HdedxVsPProfile2 = (TProfile*)GetObjectFromPath(InputFile2, (ObjName + "_Profile"  ).c_str() );
+void getScaleFactor(TFile* InputFile1, string OutName, string ObjName1, TFile* InputFile2, string ObjName2){
+   TProfile*   HdedxVsPProfile1;
+   TProfile*   HdedxVsPProfile2;
+   TH1D*       HdedxMIP1;
+   TH1D*       HdedxMIP2;
 
-   TH1D*       HdedxMIP1        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName + "_MIP"  ).c_str() );
-   TH1D*       HdedxMIP2        = (TProfile*)GetObjectFromPath(InputFile2, (ObjName + "_MIP"  ).c_str() );
+   if (InputFile2){
+      HdedxVsPProfile1 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_Profile"  ).c_str() );
+      HdedxVsPProfile2 = (TProfile*)GetObjectFromPath(InputFile2, (ObjName1 + "_Profile"  ).c_str() );
+
+      HdedxMIP1        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_MIP"  ).c_str() );
+      HdedxMIP2        = (TProfile*)GetObjectFromPath(InputFile2, (ObjName1 + "_MIP"  ).c_str() );
+   } else if (ObjName2 != "EMPTY") {
+      HdedxVsPProfile1 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_Profile"  ).c_str() );
+      HdedxVsPProfile2 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName2 + "_Profile"  ).c_str() );
+
+      HdedxMIP1        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_MIP"  ).c_str() );
+      HdedxMIP2        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName2 + "_MIP"  ).c_str() );
+   } else return;
 
    TF1* mygausMIP = new TF1("mygausMIP","gaus", 1, 5);
    HdedxMIP1->Fit("mygausMIP","Q0","");
@@ -642,9 +658,9 @@ void ExtractConstants(TH2D* input){
 
 void DrawComparisons (TFile* InputFile1, TFile* InputFile2, string ObjName1, string ObjName2){
 	TProfile*   HdedxVsEtaProfile1  = (TProfile*)  GetObjectFromPath(InputFile1, (ObjName1 + "_Eta" ).c_str() );
-	TProfile*   HdedxVsEtaProfile2  = (TProfile*)  GetObjectFromPath(InputFile2?InputFile2:InputFile1, (ObjName2 + "_Eta" ).c_str() );
+	TProfile*   HdedxVsEtaProfile2  = (TProfile*)  GetObjectFromPath(InputFile1, (ObjName2 + "_Eta" ).c_str() );
 	
-	TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
+	TCanvas* c1  = new TCanvas("c1", "c1", 600,600);
 	TLegend* leg = new TLegend(0.50, 0.80, 0.80, 0.90);
 	leg->SetFillColor(0);
 	leg->SetFillStyle(0);
@@ -662,4 +678,49 @@ void DrawComparisons (TFile* InputFile1, TFile* InputFile2, string ObjName1, str
 	SaveCanvas(c1, "pictures/", "Comparison_"+ObjName1+"_"+ObjName2+"_HdedxVsEtaProfile");
 	delete leg;
 	delete c1;
+
+	if (InputFile2){
+		TH1D* HdedxSIG1 = (TH1D*) GetObjectFromPath(InputFile1, (ObjName1 + "_SIG").c_str() );
+		TH1D* HdedxSIG2 = (TH1D*) GetObjectFromPath(InputFile2, (ObjName1 + "_SIG").c_str() );
+		TGraph* ROC     = new TGraph(HdedxSIG1->GetNbinsX());
+
+		double fullBkg  = HdedxSIG1->Integral(),
+		       fullSig  = HdedxSIG2->Integral();
+		for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX(); cut_i++)
+			ROC->SetPoint (cut_i-1, HdedxSIG2->Integral(1, cut_i)/fullSig, HdedxSIG1->Integral(1, cut_i)/fullBkg);
+
+		c1  = new TCanvas ("c1", "c1", 600,600); 
+		TH1D h;
+		h.GetXaxis()->SetTitle("signal efficiency");
+		h.GetYaxis()->SetTitle("background efficiency");
+		h.SetStats(0);
+		h.Draw();
+		ROC->SetMarkerStyle (23);
+		ROC->SetLineColor   (kBlue);
+		ROC->SetMarkerColor (kBlue);
+		ROC->Draw("LP");
+		SaveCanvas(c1, "pictures/", "Comparison_" + ObjName1 + "_ROC");
+		delete c1;
+
+		HdedxSIG1->~TH1D(); HdedxSIG2->~TH1D();
+		HdedxSIG1 = (TH1D*) GetObjectFromPath(InputFile1, (ObjName2 + "_SIG").c_str() );
+		HdedxSIG2 = (TH1D*) GetObjectFromPath(InputFile2, (ObjName2 + "_SIG").c_str() );
+
+		fullBkg  = HdedxSIG1->Integral();
+		fullSig  = HdedxSIG2->Integral();
+		for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX(); cut_i++){
+			ROC->SetPoint (cut_i-1, HdedxSIG2->Integral(1, cut_i)/fullSig, HdedxSIG1->Integral(1, cut_i)/fullBkg);
+		}
+
+		c1  = new TCanvas ("c1", "c1", 600,600); 
+		h.Draw();
+		ROC->SetMarkerStyle (23);
+		ROC->SetLineColor   (kBlue);
+		ROC->SetMarkerColor (kBlue);
+		ROC->GetXaxis()->SetTitle ("signal efficiency");
+		ROC->GetYaxis()->SetTitle ("background efficiency");
+		ROC->Draw("LP");
+		SaveCanvas(c1, "pictures/", "Comparison_" + ObjName2 + "_ROC");
+		delete c1;
+	}
 }
