@@ -6,7 +6,7 @@ import os
 import sys
 import SUSYBSMAnalysis.HSCP.LaunchOnCondor as LaunchOnCondor  
 import glob
-
+import time
 """
 check that a file exist and is not corrupted
 """

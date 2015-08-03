@@ -955,9 +955,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
       bool isMC     = (samples[s].Type==1);
       bool isSignal = (samples[s].Type>=2);
 
-      dEdxSF = 1.00;
-      if(isData){    dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
-      }else{         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root");
+      if(isData){ 
+         dEdxSF           = 1.00000;
+         dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+      }else{  
+         dEdxSF           = 1.09708;      
+         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
       }
 
       if(isData){    LoadDeDxCalibration(TrackerGains, "../../data/Data13TeVGains.root"); 

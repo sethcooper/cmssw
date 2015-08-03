@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -530,7 +530,47 @@ TH3F* loadDeDxTemplate(string path, bool splitByModuleType){
 }
 
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip){
+
+const double TkModGeomThickness[] = {1, 0.029000, 0.029000, 0.047000, 0.047000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.047000, 0.047000, 0.047000};
+const double TkModGeomLength   [] = {1, 5.844250, 5.844250, 9.306700, 9.306700,  5.542900, 4.408000, 5.533000, 4.258000, 4.408000, 5.533000, 5.758000, 7.363125, 9.204400, 10.235775};
+const double TkModGeomWidthB   [] = {1, 3.072000, 3.072000, 4.684800, 4.684800, 4.579445, 5.502407, 3.158509, 4.286362, 5.502407, 4.049915, 3.561019, 6.002559, 5.235483, 3.574395};
+const double TkModGeomWidthT   [] = {1, 3.072000, 3.072000, 4.684800,  4.684800, 3.095721, 4.322593, 4.049915, 3.146580, 4.322593, 3.158509, 2.898798, 4.824683, 4.177638,  4.398049};
+
+bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
+   if(detid.subdetId()<3){return true;} //do nothing for pixel modules
+   SiStripDetId SSdetId(detid);
+   int moduleGeometry = SSdetId.moduleGeometry();
+
+   double nx, ny;
+   if(moduleGeometry<=4){
+      ny = hitPos.y() /  TkModGeomLength[moduleGeometry];
+      nx = hitPos.x() /  TkModGeomWidthT[moduleGeometry];
+   }else{
+      double  offset = TkModGeomLength[moduleGeometry] * (TkModGeomWidthT[moduleGeometry]+TkModGeomWidthB[moduleGeometry]) / (TkModGeomWidthT[moduleGeometry]-TkModGeomWidthB[moduleGeometry]);  // check sign if GeomWidthT[moduleGeometry] < TkModGeomWidthB[moduleGeometry] !!! 
+      double  tan_a = TkModGeomWidthT[moduleGeometry] / std::abs(offset + TkModGeomLength[moduleGeometry]);
+      ny = hitPos.y() /  TkModGeomLength[moduleGeometry];
+      nx = hitPos.x() / (tan_a*std::abs(hitPos.y()+offset));
+   }
+   if(fabs(nx)>1.0)return false;
+   if(fabs(ny)>1.0)return false;
+
+        //Remove hits close to the border  //FIXME to be activated in this code
+        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
+        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
+        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
+        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
+        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
+        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
+        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
+        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
+
+   return true;
+}
+
+
+
+
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -543,16 +583,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
 //        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
-
-        //Remove hits close to the border  //FIXME to be activated in this code
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
+        if(mustBeInside && !isHitInsideTkModule(dedxHits->pos(h), detid))continue;
 
         int ClusterCharge = dedxHits->charge(h);
 

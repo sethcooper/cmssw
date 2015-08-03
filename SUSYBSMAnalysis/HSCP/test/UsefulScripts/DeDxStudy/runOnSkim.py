@@ -40,7 +40,7 @@ if sys.argv[1]=='1':
 	   LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
 	   FILELIST = LaunchOnCondor.GetListOfFiles('', DATASET[1]+'/*.root', '')
-           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/30): #30 jobs, this is a trade off between hadding time and processing time
+           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/15): #30 jobs, this is a trade off between hadding time and processing time
               InputListCSV = ''
   	      for inFile in inFileList:
                  InputListCSV+= inFile + ','
