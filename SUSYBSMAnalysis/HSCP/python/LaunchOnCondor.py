@@ -108,6 +108,7 @@ def CreateTheConfigFile(argv):
 
 def CreateTheShellFile(argv):   
 	global Path_Shell
+	global Path_Log
 	global Path_Cfg
 	global CopyRights	
 	global Jobs_RunHere
@@ -116,6 +117,7 @@ def CreateTheShellFile(argv):
         global absoluteShellPath
         if(subTool=='crab'):return
 
+        Path_Log   = Farm_Directories[2]+Jobs_Index+Jobs_Name
         Path_Shell = Farm_Directories[1]+Jobs_Index+Jobs_Name+'.sh'
         function_argument=''
         hostname = os.getenv("HOSTNAME", "")

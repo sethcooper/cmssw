@@ -211,8 +211,13 @@ void keepOnlySamplesAtSQRTS(std::vector<stSample>& samples, double SQRTS_){
    }
 }
 
-
-
+int numberOfMatchingSamples(string JobId, std::vector<stSample>& samples){ 
+   int toReturn=0;
+   for(unsigned int s=0;s<samples.size();s++){
+      if(samples[s].Name==JobId)toReturn++;
+   }
+   return toReturn;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Genertic code related to samples processing in FWLITE --> functions below will be loaded only if FWLITE compiler variable is defined
@@ -264,14 +269,14 @@ double GetSampleWeight(const double& IntegratedLuminosityInPb, const double& Int
 }
 
 // compute event weight for the MC background samples based on number of events in the sample, cross section and intergated luminosity
-double GetSampleWeightMC(const double& IntegratedLuminosityInPb, const std::vector<string> fileNames, const double& XSection, const double& SampleSize, double MaxEvent){
+double GetSampleWeightMC(const double& IntegratedLuminosityInPb, const std::vector<string> fileNames, const double& XSection, const double& SampleSize, double MaxEvent, int NSubSamples=1){
   double Weight = 1.0;
    unsigned long InitNumberOfEvents = GetInitialNumberOfMCEvent(fileNames); 
    double SampleEquivalentLumi = InitNumberOfEvents / XSection;
    if(MaxEvent<0)MaxEvent=SampleSize;
    printf("GetSampleWeight MC: IntLumi = %6.2E  SampleLumi = %6.2E --> EventWeight = %6.2E --> ",IntegratedLuminosityInPb,SampleEquivalentLumi, IntegratedLuminosityInPb/SampleEquivalentLumi);
 //   printf("Sample NEvent = %6.2E   SampleEventUsed = %6.2E --> Weight Rescale = %6.2E\n",SampleSize, MaxEvent, SampleSize/MaxEvent);
-   Weight = (IntegratedLuminosityInPb/SampleEquivalentLumi) * (SampleSize/MaxEvent);
+   Weight = (IntegratedLuminosityInPb/SampleEquivalentLumi) * (SampleSize/MaxEvent) * (1.0/NSubSamples);
    printf("FinalWeight = %6.2f\n",Weight);
    return Weight;
 }
