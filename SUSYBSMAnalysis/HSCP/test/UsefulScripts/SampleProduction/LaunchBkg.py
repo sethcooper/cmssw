@@ -18,10 +18,14 @@ def checkInputFile(url):
     return True
 
 
+def getChunksFromList(MyList, n):
+  return [MyList[x:x+n] for x in range(0, len(MyList), n)]
+
 samples = [
-#SampleName, generator config file, NJobs, NEvents/Job
-  ['MC_13TeV_DYToMuMu' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 4000, 2500],
-  ['MC_13TeV_WToLNu' , 'WToLNu_13TeV_pythia8_cff', 4000, 2500],
+#SampleName, generator config file, NJobs, NEvents/Job, NumberOfFinalEDMMergedfiles
+  ['MC_13TeV_DYToMuMu' , 'ZMM_13TeV_TuneCUETP8M1_cfi', 4000, 2500, 10],  #carefull this is a huge number!
+#  ['MC_13TeV_WToLNu' , 'WToLNu_13TeV_pythia8_cff', 4000, 2500, 5],  #carefull this is a huge number
+#  ['MC_13TeV_MinBias'  , 'MinBIas_13TeV_pythia8_TuneCUETP8M1_cfi', 1000, 1000, 1],
 ]
 
 
@@ -83,13 +87,20 @@ if sys.argv[1]=='1':  #GEN-SIM-DIGI-RECO-AOD in one shot
 
 elif sys.argv[1]=='2':  #MergeAll EDM files into one
    for S in samples:
-      JobName = S[0]
-      FarmDirectory = "FARM_"+JobName
       InputFiles = LaunchOnCondor.GetListOfFiles('"file:',os.getcwd()+"/FARM_"+S[0]+"_SIMEDM/outputs/*.root",'"')
-      LaunchOnCondor.SendCMSMergeJob(FarmDirectory, JobName, InputFiles,  '"'+S[0]+'.root"', '"keep *"')
+      chunks = getChunksFromList(InputFiles, (len(InputFiles)/S[4])+1)
+      for I in range(0,S[4]):
+         if(I>=len(chunks)):continue
+         JobName = S[0]
+         if(I>0):JobName+="_" + str(I)
+         FarmDirectory = "FARM_"+JobName
+         LaunchOnCondor.SendCMSMergeJob(FarmDirectory, JobName, chunks[I],  '"'+JobName+'.root"', '"keep *"')
 
 
 
 elif sys.argv[1]=='3':  #Transfert final EDM files from your place to CERN CMST3
    for S in samples:
-      os.system('lcg-cp --verbose -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN=/storage/data/cms/store/user/quertenmont/15_05_20_HSCP_AODSIM/'+S[0]+'.root" "srm://srm-eoscms.cern.ch:8443/srm/v2/server?SFN=/eos/cms//store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/'+S[0]+'.root" &> LOG_'+S[0]+'.log &')
+      for I in range(0,S[4]):
+         fileName = S[0]
+         if(I>0):fileName+="_" + str(I)
+         os.system('lcg-cp --verbose -b -D srmv2 "srm://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2?SFN=/storage/data/cms/store/user/quertenmont/15_05_20_HSCP_AODSIM/'+fileName+'.root" "srm://srm-eoscms.cern.ch:8443/srm/v2/server?SFN=/eos/cms//store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/'+fileName+'.root" &> LOG_'+fileName+'.log &')
