@@ -14,9 +14,10 @@ def getChunksFromList(MyList, n):
 
 
 if len(sys.argv)==1:
-        print "Please pass in argument a number between 1 and 2"
+        print "Please pass in argument a number between 1 and 3"
         print "  1  - Run dEdxStudy on RECO, AOD, or dEdxSKIM files         --> submitting 1job per file"
         print "  2  - Hadd root files containing the histograms             --> interactive processing" 
+        print "  3  - run the plotter on the hadded root files              --> interactive processing" 
         sys.exit()
 
 
@@ -24,6 +25,14 @@ if len(sys.argv)==1:
 datasetList = [
    ["Run251252", "/storage/data/cms/store/user/jozobec/ZeroBias/crab_DeDxSkimmerNEW/150720_122314/0000/"],
    ["MCMinBias", "/home/fynu/jzobec/scratch/CMSSW_7_4_6/src/SUSYBSMAnalysis/HSCP/test/UsefulScripts/SampleProduction/FARM_MC_13TeV_MinBias_TuneCUETP8M1_SIMAOD/outputs/"],
+]
+
+signalList = [
+   ["MCGluino_1000_f10", "/storage/data/cms/users/quertenmont/HSCP/2015/Gluino_13TeV_M1000_f10.root"],
+   ["MCGluino_1400_f10", "/storage/data/cms/users/quertenmont/HSCP/2015/Gluino_13TeV_M1400_f10.root"],
+   ["MCGluino_1800_f10", "/storage/data/cms/users/quertenmont/HSCP/2015/Gluino_13TeV_M1800_f10.root"],
+   ["MCGMStau_494", "/storage/data/cms/users/quertenmont/HSCP/2015/GMStau_13TeV_M494.root"],
+   ["MCStop_M1000", "/storage/data/cms/users/quertenmont/HSCP/2015/Stop_13TeV_M1000.root"],
 ]
 
 if sys.argv[1]=='1':
@@ -39,7 +48,7 @@ if sys.argv[1]=='1':
 	   LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
 
 	   FILELIST = LaunchOnCondor.GetListOfFiles('', DATASET[1]+'/*.root', '')
-           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/20): #20 jobs, this is a trade off between hadding time and processing time
+           for inFileList in getChunksFromList(FILELIST,len(FILELIST)/30): #30 jobs, this is a trade off between hadding time and processing time
               InputListCSV = ''
   	      for inFile in inFileList:
                  InputListCSV+= inFile + ','
@@ -47,10 +56,27 @@ if sys.argv[1]=='1':
               LaunchOnCondor.SendCluster_Push  (["BASH", "sh " + os.getcwd() + "/DeDxStudy.sh " + InputListCSV + " out.root; mv out.root " + outdir+"dEdxHistos_%i.root" %  LaunchOnCondor.Jobs_Count ])
 	   LaunchOnCondor.SendCluster_Submit()
 
+	for SIGNAL in signalList :
+	   outdir =  os.getcwd() + "/Histos/"+SIGNAL[0]+"/"
+	   os.system('mkdir -p ' + outdir)
+
+	   JobName = "DEDXHISTO_"+SIGNAL[0]
+	   FarmDirectory = "FARM_DEDXHISTO_"+SIGNAL[0]
+	   LaunchOnCondor.Jobs_Queue = '8nh'
+	   LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
+	   LaunchOnCondor.SendCluster_Push  (["BASH", "sh " + os.getcwd() + "/DeDxStudy.sh " + SIGNAL[1] + " out.root; mv out.root " + outdir+"dEdxHistos_%i.root" %  LaunchOnCondor.Jobs_Count ])
+	   LaunchOnCondor.SendCluster_Submit()
+
 elif sys.argv[1]=='2':
-        for DATASET in datasetList :
+        for DATASET in datasetList :#+signalList :
            indir =  os.getcwd() + "/Histos/"+DATASET[0]+'/'
+           os.system('rm -f Histos_'+DATASET[0]+'.root')
            os.system('hadd -f Histos_'+DATASET[0]+'.root ' + indir + '*.root')
+           os.system('sh MakePlot.sh Histos_'+DATASET[0]+'.root')
+           os.system('mv pictures pictures_'+DATASET[0]+' && MakePlot_'+DATASET[0]+'.log pictures_'+DATASET[0])
+
+elif sys.argv[1]=='3':
+        for DATASET in datasetList+signalList :
            os.system('./MakePlot.sh Histos_'+DATASET[0]+'.root > MakePlot_'+DATASET[0]+'.log 2>&1')
            os.system('mv pictures pictures_'+DATASET[0]+' && MakePlot_'+DATASET[0]+'.log pictures_'+DATASET[0])
 

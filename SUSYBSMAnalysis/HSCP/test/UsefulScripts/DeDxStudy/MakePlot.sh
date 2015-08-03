@@ -1,4 +1,11 @@
 #!/bin/bash
+
+if [ "$2"="" ]; then
+   arg2="EMPTY"
+else
+   arg2="$2"
+fi
+
 root -l -b << EOF
   TString makeshared(gSystem->GetMakeSharedLib());
   TString dummy = makeshared.ReplaceAll("-W ", "-D__USE_XOPEN2K8 ");
@@ -11,5 +18,5 @@ root -l -b << EOF
   gSystem->Load("libDataFormatsCommon.so");
   gSystem->Load("libDataFormatsTrackerRecHit2D.so");
   gSystem->Load("libAnalysisDataFormatsSUSYBSMObjects.so");
-  .x MakePlot.C+("$1");
+  .x MakePlot.C+("$1", "$arg2");
 EOF

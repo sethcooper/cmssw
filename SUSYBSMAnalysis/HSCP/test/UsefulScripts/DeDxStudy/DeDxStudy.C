@@ -72,6 +72,7 @@ struct dEdxStudyObj
 
    TH3D* Charge_Vs_Path;
    TH1D* HdedxMIP;
+   TH1D* HdedxSIG;
    TH2D* HdedxVsPHSCP;
    TH2D* HdedxVsP;
    TH2D* HdedxVsQP;
@@ -119,6 +120,7 @@ struct dEdxStudyObj
       //Track Level plots
       if(isEstim || isDiscrim){
          HistoName = Name + "_MIP";               HdedxMIP              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
+         HistoName = Name + "_SIG";               HdedxSIG              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
          HistoName = Name + "_dedxVsPHSCP";       HdedxVsPHSCP          = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 2000,1500,0, isDiscrim?1.0:15);
          HistoName = Name + "_dedxVsP";           HdedxVsP              = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
          HistoName = Name + "_dedxVsQP";          HdedxVsQP             = new TH2D(      HistoName.c_str(), HistoName.c_str(), 6000, -30, 30,1500,0, isDiscrim?1.0:15);
@@ -156,15 +158,14 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    gStyle->SetNdivisions(505,"X");
    TH1::AddDirectory(kTRUE);
 
-   std::vector<string> FileName;
    bool isData = INPUT.find("MC")!=string::npos ? false : true;
+   std::vector<string> FileName;
    if(INPUT.find(".root")<std::string::npos){
       char* pch=strtok(&INPUT[0],",");
       while (pch!=NULL){
          FileName.push_back(pch);    
          pch=strtok(NULL,",");
       }
-
    }else{
       string SampleId = INPUT;
       InitBaseDirectory();
@@ -173,14 +174,15 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
       isData = (sample.Type==0);
       GetInputFiles(sample, BaseDirectory, FileName, 0);
    }
-   fwlite::ChainEvent ev(FileName);
 
    TH3F* dEdxTemplates    = NULL;
    TH3F* dEdxTemplatesInc = NULL;
    if(isData){   //FIXME update template on data directory
+	 dEdxSF           = 1.0;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
    }else{
+	 dEdxSF           = 1.09708;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false); 
    }
@@ -203,6 +205,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    results.push_back(new dEdxStudyObj("Ias_SO_inc"  , 2, 2, dEdxTemplatesInc, NULL) );
    results.push_back(new dEdxStudyObj("Ias_SO"      , 2, 2, dEdxTemplates   , NULL) );
 
+   fwlite::ChainEvent ev(FileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Looping on Tree              :");
    int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
@@ -241,7 +244,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(track->p() > 5){
             for(unsigned int h=0;h<dedxHits->size();h++){
                 DetId detid(dedxHits->detId(h));
-                double scaleFactor = 1.0;
+                double scaleFactor = dEdxSF;
                 double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
                 double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
@@ -253,7 +256,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                    if(!results[R]->usePixel and detid.subdetId() <3)continue; // skip pixels
                    if(!results[R]->useStrip and detid.subdetId()>=3)continue; // skip strips
          
-                   results[R]->Charge_Vs_Path->Fill (moduleGeometry, dedxHits->pathlength(h)*10, dedxHits->charge(h)/(dedxHits->pathlength(h)*10)); 
+                   results[R]->Charge_Vs_Path->Fill (moduleGeometry, dedxHits->pathlength(h)*10, scaleFactor*dedxHits->charge(h)/(dedxHits->pathlength(h)*10)); 
                    if(detid.subdetId()>=3)results[R]->Charge_Vs_FS[moduleGeometry]->Fill(dedxHits->stripCluster(h)->firstStrip(),  dedxHits->charge(h)); 
                    results[R]->HHit->Fill(ChargeOverPathlength);
                 }
@@ -283,7 +286,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
              if(track->p()>5 && track->p()<40){
                 results[R]->HdedxMIP->Fill(dedxObj->dEdx());
                 results[R]->HP->Fill(track->p());
-             }
+             } else if (track->p() > 40)
+                results[R]->HdedxSIG->Fill(dedxObj->dEdx());
 
              if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
 
