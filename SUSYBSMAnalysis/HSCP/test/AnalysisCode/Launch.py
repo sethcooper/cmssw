@@ -6,6 +6,7 @@ import os
 import sys
 import SUSYBSMAnalysis.HSCP.LaunchOnCondor as LaunchOnCondor 
 import glob
+import commands
 
 
 #the vector below contains the "TypeMode" of the analyses that should be run
@@ -68,7 +69,11 @@ elif sys.argv[1]=='2':
         for Type in AnalysesToRun:
            Path = "Results/Type"+str(Type)+"/"
            os.system('rm -f ' + Path + 'Histos.root')
-           os.system('hadd -f ' + Path + 'Histos.root ' + Path + '*.root')
+           #os.system('hadd -f ' + Path + 'Histos.root ' + Path + '*.root')           
+           smallFiles = commands.getstatusoutput('find ' + Path + 'Histos_*.root  -type f -size -1024c -exec ls -lSh {} +')[1]
+           if(len(smallFiles)>1):
+              print("Small files have been found, these are generally due to either crashed jobs, or to still running jobs.\nThe following files will NOT be hadd:\n" + smallFiles + "\n\n")           
+           os.system('find ' + Path + 'Histos_*.root  -type f -size +1024c | xargs hadd -f ' + Path + 'Histos.root ')
            LaunchOnCondor.SendCluster_Push(["ROOT", os.getcwd()+"/Analysis_Step2_BackgroundPrediction.C", '"'+Path+'"'])
         LaunchOnCondor.SendCluster_Submit()
 elif sys.argv[1]=='3':
