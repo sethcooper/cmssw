@@ -197,11 +197,13 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    TH3F* dEdxTemplates    = NULL;
    TH3F* dEdxTemplatesInc = NULL;
    if(isData){   //FIXME update template on data directory
-         dEdxSF           = 1.0;
+         dEdxSF [0] = 1.00000;
+         dEdxSF [1] = 1.14985;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
    }else{
-         dEdxSF           = 1.09708;
+         dEdxSF [0] = 1.09708;
+         dEdxSF [1] = 1.01875;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false); 
    }
@@ -266,7 +268,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(track->p() > 5){
             for(unsigned int h=0;h<dedxHits->size();h++){
                 DetId detid(dedxHits->detId(h));
-                double scaleFactor = dEdxSF;
+                double scaleFactor = dEdxSF[0];
+                if (detid.subdetId()<3) scaleFactor *= dEdxSF[1];
                 double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
                 double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 

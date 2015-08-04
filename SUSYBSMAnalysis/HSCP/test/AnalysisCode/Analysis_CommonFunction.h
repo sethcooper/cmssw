@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -570,7 +570,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
 
 
 
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -615,6 +615,9 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
             } 
             if(isSatCluster)NSat++;
         }
+
+	double scaleFactor = scaleFactors[0];
+	if (detid.subdetId()<3) scaleFactor *= scaleFactors[1];
 
         if(templateHisto){  //save discriminator probability
            double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0);
