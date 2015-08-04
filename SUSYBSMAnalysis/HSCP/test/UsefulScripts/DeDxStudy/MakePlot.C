@@ -17,6 +17,7 @@
 #include "TTree.h"
 #include "TF1.h"
 #include "TGraphAsymmErrors.h"
+#include "TGraph.h"
 #include "TPaveText.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
@@ -27,7 +28,7 @@
 using namespace std;
 
 
-void getScaleFactor(TFile* InputFile, string OutName, string ObjName1, string ObjName2);
+void getScaleFactor(TFile* InputFile1, string OutName, string ObjName1, TFile* InputFile2, string ObjName2="EMPTY");
 void ExtractConstants(TH2D* input);
 void DrawComparisons (TFile* InputFile1, TFile* InputFile2=NULL, string ObjName1="Ias_SO", string ObjName2="Ias_SO_inc");
 
@@ -137,30 +138,47 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
    TritonLineLeft->SetLineColor(1);
    TritonLineLeft->SetLineWidth(2);
 
-   TFile* InputFile = new TFile(INPUT.c_str());
+   TFile* InputFile  = new TFile(INPUT .c_str());
+   TFile* InputFile2 = INPUT2=="EMPTY" ? NULL : new TFile(INPUT2.c_str());
+
+
    std::vector<string> ObjName;
+   ObjName.push_back("hit_SO");
+   ObjName.push_back("hit_SO_raw");
    ObjName.push_back("harm2_SO");
-   ObjName.push_back("harm2_SP");
-   ObjName.push_back("harm2_PO_raw");
+//   ObjName.push_back("harm2_SP");
+//   ObjName.push_back("harm2_PO_raw");
    ObjName.push_back("harm2_SO_raw");
-   ObjName.push_back("harm2_SP_raw");
+//   ObjName.push_back("harm2_SP_raw");
    ObjName.push_back("Ias_SO_inc");
    ObjName.push_back("Ias_SO");
 //   ObjName.push_back("trunc40");
 //   ObjName.push_back("trunc40_raw");
 //   ObjName.push_back("Ias");
 
-   DrawComparisons (InputFile);
+   DrawComparisons (InputFile, InputFile2);
+   DrawComparisons (InputFile, InputFile2, "harm2_SO_raw", "harm2_SO");
 
    for(unsigned int i=0;i<ObjName.size();i++){
+      TH3F*       dEdxTemplate       = (TH3F*)      GetObjectFromPath(InputFile, (ObjName[i] + "_ChargeVsPath"      ).c_str() );
       TH1D*       HdedxMIP           = (TH1D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_MIP"               ).c_str() );
+      TH1D*       HdedxSIG           = (TH1D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_SIG"               ).c_str() );
       TH1D*       HMass              = (TH1D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_Mass"              ).c_str() );
       TH2D*       HdedxVsP           = (TH2D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsP"           ).c_str() );
       TH2D*       HdedxVsQP          = (TH2D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsQP"          ).c_str() );
       TProfile*   HdedxVsPProfile    = (TProfile*)  GetObjectFromPath(InputFile, (ObjName[i] + "_Profile"           ).c_str() );
-      TH2D*       HdedxVsEta         = (TH2D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_Eta2D" ).c_str() );
-      TProfile*   HdedxVsEtaProfile  = (TProfile*)  GetObjectFromPath(InputFile, (ObjName[i] + "_Eta" ).c_str() );
-      TProfile2D* HdedxVsP_NS        = (TProfile2D*)GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsP_NS" ).c_str() );
+      TH2D*       HdedxVsEta         = (TH2D*)      GetObjectFromPath(InputFile, (ObjName[i] + "_Eta2D"             ).c_str() );
+      TProfile*   HdedxVsEtaProfile  = (TProfile*)  GetObjectFromPath(InputFile, (ObjName[i] + "_Eta"               ).c_str() );
+      TProfile2D* HdedxVsP_NS        = (TProfile2D*)GetObjectFromPath(InputFile, (ObjName[i] + "_dedxVsP_NS"        ).c_str() );
+
+      if (ObjName[i].find("hit")!=string::npos){
+         dEdxTemplate->SetName("Charge_Vs_Path");
+         string SaveName (INPUT.c_str());
+         size_t firstToken = SaveName.find_first_of ("_"),
+                lastToken  = SaveName.size()/sizeof(char) - firstToken;
+         dEdxTemplate->SaveAs (("dEdxTemplate_" + ObjName[i] + SaveName.substr (firstToken,lastToken)).c_str());
+         continue;
+      }
 
       ExtractConstants(HdedxVsP);
 
@@ -178,7 +196,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       c1->SetLogz(true);
       HdedxVsP->SetStats(kFALSE);
       HdedxVsP->GetXaxis()->SetTitle("momentum (GeV/c)");
-      HdedxVsP->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
+      HdedxVsP->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
       HdedxVsP->SetAxisRange(0,5,"X");
       HdedxVsP->SetAxisRange(0,15,"Y");
       HdedxVsP->Draw("COLZ");
@@ -187,7 +205,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       KaonLine->Draw("same");
       ProtonLine->Draw("same");
       DeuteronLine->Draw("same");
-      TritonLine->Draw("same");
+//      TritonLine->Draw("same");
       ProtonLineFit->Draw("same");
       T->Draw("same");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_dedxVsP", true);
@@ -200,7 +218,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       c1->SetLogz(true);
       HdedxVsQP->SetStats(kFALSE);
       HdedxVsQP->GetXaxis()->SetTitle("charge * momentum (GeV/c)");
-      HdedxVsQP->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
+      HdedxVsQP->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
       HdedxVsQP->SetAxisRange(-5,5,"X");
       HdedxVsQP->SetAxisRange(0,15,"Y");
       HdedxVsQP->Draw("COLZ");
@@ -232,7 +250,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       HdedxVsPProfile->SetStats(kFALSE);
       HdedxVsPProfile->SetAxisRange(2.5,5,"Y");
       HdedxVsPProfile->GetXaxis()->SetTitle("track momentum (GeV/c)");
-      HdedxVsPProfile->GetYaxis()->SetTitle("dE/dx (MeV/cm)");
+      HdedxVsPProfile->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
       HdedxVsPProfile->Draw("");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_Profile");
       delete c1;
@@ -262,7 +280,15 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       HdedxVsP_NS->GetXaxis()->SetTitle("track momentum (GeV/c)");
       HdedxVsP_NS->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
       HdedxVsP_NS->GetZaxis()->SetTitle("Number of saturated strips");
+      HdedxVsP_NS->SetAxisRange(0.0, 5.0, "X");
       HdedxVsP_NS->Draw("COLZ");
+      PionLine->Draw("same");
+      KaonLine->Draw("same");
+      ProtonLine->Draw("same");
+      DeuteronLine->Draw("same");
+//      TritonLine->Draw("same");
+      ProtonLineFit->Draw("same");
+      T->Draw("same");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_dedxVsP_NS");
       delete c1;
 
@@ -270,11 +296,45 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       c1->SetLogy(true);
       c1->SetGridx(true);
       HdedxMIP->SetStats(kFALSE);
-      HdedxMIP->GetXaxis()->SetTitle("dE/dx (MeV/cm)");
+      HdedxMIP->GetXaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
       HdedxMIP->GetYaxis()->SetTitle("number of tracks");
       HdedxMIP->SetAxisRange(0,5,"X");
       HdedxMIP->Draw("");
       SaveCanvas(c1, "pictures/", ObjName[i] + "_MIP", true);
+      delete c1;
+
+      c1 = new TCanvas("c1", "c1", 600,600);
+      c1->SetLogy(true);
+      c1->SetGridx(true);
+      HdedxSIG->SetStats(kFALSE);
+      HdedxSIG->GetXaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
+      HdedxSIG->GetYaxis()->SetTitle("number of tracks");
+      HdedxSIG->SetAxisRange(0,5,"X");
+      HdedxSIG->Draw("");
+      SaveCanvas(c1, "pictures/", ObjName[i] + "_SIG", true);
+      delete c1;
+
+      c1 = new TCanvas("c1", "c1", 600,600);
+      c1->SetLogy(true);
+      c1->SetGridx(true);
+      TLegend* leg = new TLegend (0.10, 0.80, 0.40, 0.90);
+      leg->SetFillColor(0);
+      leg->SetFillStyle(0);
+      leg->SetBorderSize(0);
+      HdedxSIG->SetStats(kFALSE);
+      HdedxSIG->GetXaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
+      HdedxSIG->GetYaxis()->SetTitle("number of tracks");
+      HdedxSIG->SetAxisRange(0,5,"X");
+      HdedxMIP->SetLineColor (kBlue);
+      HdedxMIP->Scale(1.0/HdedxMIP->Integral());
+      HdedxSIG->Scale(1.0/HdedxSIG->Integral());
+      leg->AddEntry (HdedxMIP, "Background", "L");
+      leg->AddEntry (HdedxSIG, "Signal"    , "L");
+      HdedxSIG->Draw("hist");
+      HdedxMIP->Draw("same");
+      leg->Draw();
+      SaveCanvas(c1, "pictures/", ObjName[i] + "_SIGvsMIP", true);
+      delete leg;
       delete c1;
 
       std::cout << "TESTC\n";
@@ -316,7 +376,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             lineKaon->Draw("same");
             lineProton->Draw("same");
             lineDeuteron->Draw("same");
-            lineTriton->Draw("same");
+//            lineTriton->Draw("same");
             SaveCanvas(c1, "pictures/", ObjName[i] + "_Mass", true);
             delete c1;
       } else continue;
@@ -325,17 +385,32 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
    }
 
-//   getScaleFactor(InputFile, "All_Rescale", "All_SelTrack_Pixel", "All_SelTrack_StripCleaned");
+   getScaleFactor(InputFile, "All_Rescale", "harm2_SO", InputFile2);
+   getScaleFactor(InputFile, "All_Rescale", "harm2_SO_raw", InputFile2);
+//   getScaleFactor(InputFile, "All_Rescale", "harm2_SO", NULL, "harm2_PO");
 }
 
 
 
-void getScaleFactor(TFile* InputFile, string OutName, string ObjName1, string ObjName2){
-   TProfile*   HdedxVsPProfile1 = (TProfile*)GetObjectFromPath(InputFile, (ObjName1 + "_Profile"  ).c_str() );
-   TProfile*   HdedxVsPProfile2 = (TProfile*)GetObjectFromPath(InputFile, (ObjName2 + "_Profile"  ).c_str() );
+void getScaleFactor(TFile* InputFile1, string OutName, string ObjName1, TFile* InputFile2, string ObjName2){
+   TProfile*   HdedxVsPProfile1;
+   TProfile*   HdedxVsPProfile2;
+   TH1D*       HdedxMIP1;
+   TH1D*       HdedxMIP2;
 
-   TH1D*       HdedxMIP1        = (TProfile*)GetObjectFromPath(InputFile, (ObjName1 + "_MIP"  ).c_str() );
-   TH1D*       HdedxMIP2        = (TProfile*)GetObjectFromPath(InputFile, (ObjName2 + "_MIP"  ).c_str() );
+   if (InputFile2){
+      HdedxVsPProfile1 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_Profile"  ).c_str() );
+      HdedxVsPProfile2 = (TProfile*)GetObjectFromPath(InputFile2, (ObjName1 + "_Profile"  ).c_str() );
+
+      HdedxMIP1        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_MIP"  ).c_str() );
+      HdedxMIP2        = (TProfile*)GetObjectFromPath(InputFile2, (ObjName1 + "_MIP"  ).c_str() );
+   } else if (ObjName2 != "EMPTY") {
+      HdedxVsPProfile1 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_Profile"  ).c_str() );
+      HdedxVsPProfile2 = (TProfile*)GetObjectFromPath(InputFile1, (ObjName2 + "_Profile"  ).c_str() );
+
+      HdedxMIP1        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName1 + "_MIP"  ).c_str() );
+      HdedxMIP2        = (TProfile*)GetObjectFromPath(InputFile1, (ObjName2 + "_MIP"  ).c_str() );
+   } else return;
 
    TF1* mygausMIP = new TF1("mygausMIP","gaus", 1, 5);
    HdedxMIP1->Fit("mygausMIP","Q0","");
@@ -583,9 +658,9 @@ void ExtractConstants(TH2D* input){
 
 void DrawComparisons (TFile* InputFile1, TFile* InputFile2, string ObjName1, string ObjName2){
 	TProfile*   HdedxVsEtaProfile1  = (TProfile*)  GetObjectFromPath(InputFile1, (ObjName1 + "_Eta" ).c_str() );
-	TProfile*   HdedxVsEtaProfile2  = (TProfile*)  GetObjectFromPath(InputFile2?InputFile2:InputFile1, (ObjName2 + "_Eta" ).c_str() );
+	TProfile*   HdedxVsEtaProfile2  = (TProfile*)  GetObjectFromPath(InputFile1, (ObjName2 + "_Eta" ).c_str() );
 	
-	TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
+	TCanvas* c1  = new TCanvas("c1", "c1", 600,600);
 	TLegend* leg = new TLegend(0.50, 0.80, 0.80, 0.90);
 	leg->SetFillColor(0);
 	leg->SetFillStyle(0);
@@ -603,4 +678,49 @@ void DrawComparisons (TFile* InputFile1, TFile* InputFile2, string ObjName1, str
 	SaveCanvas(c1, "pictures/", "Comparison_"+ObjName1+"_"+ObjName2+"_HdedxVsEtaProfile");
 	delete leg;
 	delete c1;
+
+	if (InputFile2){
+		TH1D* HdedxSIG1 = (TH1D*) GetObjectFromPath(InputFile1, (ObjName1 + "_SIG").c_str() );
+		TH1D* HdedxSIG2 = (TH1D*) GetObjectFromPath(InputFile2, (ObjName1 + "_SIG").c_str() );
+		TGraph* ROC     = new TGraph(HdedxSIG1->GetNbinsX());
+
+		double fullBkg  = HdedxSIG1->Integral(),
+		       fullSig  = HdedxSIG2->Integral();
+		for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX(); cut_i++)
+			ROC->SetPoint (cut_i-1, HdedxSIG2->Integral(1, cut_i)/fullSig, HdedxSIG1->Integral(1, cut_i)/fullBkg);
+
+		c1  = new TCanvas ("c1", "c1", 600,600); 
+		TH1D h;
+		h.GetXaxis()->SetTitle("signal efficiency");
+		h.GetYaxis()->SetTitle("background efficiency");
+		h.SetStats(0);
+		h.Draw();
+		ROC->SetMarkerStyle (23);
+		ROC->SetLineColor   (kBlue);
+		ROC->SetMarkerColor (kBlue);
+		ROC->Draw("LP");
+		SaveCanvas(c1, "pictures/", "Comparison_" + ObjName1 + "_ROC");
+		delete c1;
+
+		HdedxSIG1->~TH1D(); HdedxSIG2->~TH1D();
+		HdedxSIG1 = (TH1D*) GetObjectFromPath(InputFile1, (ObjName2 + "_SIG").c_str() );
+		HdedxSIG2 = (TH1D*) GetObjectFromPath(InputFile2, (ObjName2 + "_SIG").c_str() );
+
+		fullBkg  = HdedxSIG1->Integral();
+		fullSig  = HdedxSIG2->Integral();
+		for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX(); cut_i++){
+			ROC->SetPoint (cut_i-1, HdedxSIG2->Integral(1, cut_i)/fullSig, HdedxSIG1->Integral(1, cut_i)/fullBkg);
+		}
+
+		c1  = new TCanvas ("c1", "c1", 600,600); 
+		h.Draw();
+		ROC->SetMarkerStyle (23);
+		ROC->SetLineColor   (kBlue);
+		ROC->SetMarkerColor (kBlue);
+		ROC->GetXaxis()->SetTitle ("signal efficiency");
+		ROC->GetYaxis()->SetTitle ("background efficiency");
+		ROC->Draw("LP");
+		SaveCanvas(c1, "pictures/", "Comparison_" + ObjName2 + "_ROC");
+		delete c1;
+	}
 }

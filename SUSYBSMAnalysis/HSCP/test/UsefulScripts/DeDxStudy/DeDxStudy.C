@@ -77,6 +77,7 @@ struct dEdxStudyObj
 
    TH3D* Charge_Vs_Path;
    TH1D* HdedxMIP;
+   TH1D* HdedxSIG;
    TH2D* HdedxVsPHSCP;
    TH2D* HdedxVsP;
    TH2D* HdedxVsQP;
@@ -138,6 +139,7 @@ struct dEdxStudyObj
       //Track Level plots
       if(isEstim || isDiscrim){
          HistoName = Name + "_MIP";               HdedxMIP              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
+         HistoName = Name + "_SIG";               HdedxSIG              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
          HistoName = Name + "_dedxVsPHSCP";       HdedxVsPHSCP          = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 2000,1500,0, isDiscrim?1.0:15);
          HistoName = Name + "_dedxVsP";           HdedxVsP              = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
          HistoName = Name + "_dedxVsQP";          HdedxVsQP             = new TH2D(      HistoName.c_str(), HistoName.c_str(), 6000, -30, 30,1500,0, isDiscrim?1.0:15);
@@ -328,7 +330,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
              if(track->p()>5 && track->p()<40){
                 results[R]->HdedxMIP->Fill(dedxObj->dEdx());
                 results[R]->HP->Fill(track->p());
-             }
+             } else if (track->pt() > 40)
+                results[R]->HdedxSIG->Fill(dedxObj->dEdx());
 
              if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
 
