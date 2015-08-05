@@ -419,7 +419,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          HdedxVsEta2->GetYaxis()->SetTitle("I_{as}");
          HdedxVsEta2->SetAxisRange(-2.1,2.1,"X");
          HdedxVsEta2->Draw("COLZ");
-         SaveCanvas(c1, SaveDir, ObjName[i] + SaveSuffix + "_Eta2D");
+         SaveCanvas(c1, SaveDir, ObjName[i] + SaveName2 + "_Eta2D");
          delete c1;
       }
 
@@ -429,9 +429,9 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
       c1 = new TCanvas("c1", "c1", 600,600);
       TLegend* leg = new TLegend (0.50, 0.80, 0.80, 0.90);
-		leg->SetFillColor(0);
-		leg->SetFillStyle(0);
-		leg->SetBorderSize(0);
+      leg->SetFillColor(0);
+      leg->SetFillStyle(0);
+      leg->SetBorderSize(0);
       HdedxVsPProfile->SetStats(kFALSE);
       HdedxVsPProfile->SetAxisRange(2.5,5,"Y");
       HdedxVsPProfile->GetXaxis()->SetTitle("track momentum (GeV/c)");
@@ -669,9 +669,9 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX(); cut_i++)
             ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxSIG2->Integral(1, cut_i)/fullSig, 1 - HdedxSIG1->Integral(1, cut_i)/fullBkg);
 
-	      ROC[NameIndex]->SetLineColor   (NameIndex);
-	      ROC[NameIndex]->SetLineWidth   (2);
-	      ROC[NameIndex]->Draw("same");
+         ROC[NameIndex]->SetLineColor   (NameIndex+1);
+         ROC[NameIndex]->SetLineWidth   (2);
+         ROC[NameIndex]->Draw("same");
 
          leg->AddEntry (ROC[NameIndex], ObjNames[NameIndex].c_str(), "L");
          HdedxSIG1->~TH1D(); HdedxSIG2->~TH1D();
@@ -949,11 +949,11 @@ void ExtractConstants(TH2D* input, int FileIndex){
 	       SaveCanvas(c1,"./",buffer);              
 	       delete c1;
 
-	       delete line1;
-	       delete line2;
-	       delete myfit;
-	       delete FitResult;
-	       delete inputnew;
+          delete line1;
+          delete line2;
+          delete myfit;
+          delete FitResult;
+          delete inputnew;
        }
 }
 
