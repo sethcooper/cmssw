@@ -95,6 +95,7 @@ struct dEdxStudyObj
    TProfile2D* Charge_Vs_XY[15];
    TH2D* Charge_Vs_XYH[15];
    TProfile2D* Charge_Vs_XYN[15];
+   TProfile2D* Charge_Vs_XYCSize[15];
    TH2D* Charge_Vs_XYHN[15];
    TH2D* Charge_Vs_XYLN[15];
 
@@ -126,12 +127,13 @@ struct dEdxStudyObj
             HistoName = Name + "_ChargeVsPath";      Charge_Vs_Path        = new TH3D(      HistoName.c_str(), HistoName.c_str(), P_NBins, P_Min, P_Max, Path_NBins, Path_Min, Path_Max, Charge_NBins, Charge_Min, Charge_Max);
             for(unsigned int g=0;g<15;g++){
                char Id[255]; sprintf(Id, "%02i", g);
-               HistoName = Name + "_ChargeVsFS"+Id;    Charge_Vs_FS[g]       = new TProfile( HistoName.c_str(), HistoName.c_str(),  769, 0, 769);
-               HistoName = Name + "_ChargeVsXY"+Id;    Charge_Vs_XY[g]       = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
-               HistoName = Name + "_ChargeVsXYH"+Id;   Charge_Vs_XYH[g]      = new TH2D     ( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
-               HistoName = Name + "_ChargeVsXYN"+Id;   Charge_Vs_XYN[g]      = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
-               HistoName = Name + "_ChargeVsXYHN"+Id;  Charge_Vs_XYHN[g]     = new TH2D     ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
-               HistoName = Name + "_ChargeVsXYLN"+Id;  Charge_Vs_XYLN[g]     = new TH2D     ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsFS"+Id;       Charge_Vs_FS[g]       = new TProfile  ( HistoName.c_str(), HistoName.c_str(),  769, 0, 769);
+               HistoName = Name + "_ChargeVsXY"+Id;       Charge_Vs_XY[g]       = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
+               HistoName = Name + "_ChargeVsXYH"+Id;      Charge_Vs_XYH[g]      = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
+               HistoName = Name + "_ChargeVsXYN"+Id;      Charge_Vs_XYN[g]      = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYHN"+Id;     Charge_Vs_XYHN[g]     = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYLN"+Id;     Charge_Vs_XYLN[g]     = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYCSize"+Id;  Charge_Vs_XYCSize[g]  = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
             }
          }
       }
@@ -288,6 +290,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                       if(detid.subdetId()>=3)results[R]->Charge_Vs_FS[moduleGeometry]->Fill(dedxHits->stripCluster(h)->firstStrip(),  dedxHits->charge(h)); 
                       results[R]->Charge_Vs_XY[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(), dedxHits->charge(h)); 
                       results[R]->Charge_Vs_XYH[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y()); 
+
+                      results[R]->Charge_Vs_XYCSize[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(), detid.subdetId() >= 3
+                                                                                                                      ? dedxHits->stripCluster(h)->amplitudes().size()
+                                                                                                                      : dedxHits->pixelCluster(h)->size());
  
                       if(moduleGeometry>=1){
                          double nx, ny;

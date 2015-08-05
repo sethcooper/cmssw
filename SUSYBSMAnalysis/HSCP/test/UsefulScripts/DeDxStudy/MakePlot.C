@@ -292,7 +292,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       HdedxVsP_NS->SetStats(kFALSE);
       HdedxVsP_NS->GetXaxis()->SetTitle("track momentum (GeV/c)");
       HdedxVsP_NS->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
-      HdedxVsP_NS->GetZaxis()->SetTitle("Number of saturated strips");
+      HdedxVsP_NS->GetZaxis()->SetTitle("Average number of clusters with saturated strips");
       HdedxVsP_NS->SetAxisRange(0.0, 5.0, "X");
       HdedxVsP_NS->Draw("COLZ");
       PionLine->Draw("same");
@@ -399,7 +399,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          HdedxVsP_NS2->SetStats(kFALSE);
          HdedxVsP_NS2->GetXaxis()->SetTitle("track momentum (GeV/c)");
          HdedxVsP_NS2->GetYaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
-         HdedxVsP_NS2->GetZaxis()->SetTitle("Number of saturated strips");
+         HdedxVsP_NS2->GetZaxis()->SetTitle("Average number of clusters with saturated strips");
          HdedxVsP_NS2->SetAxisRange(0.0, 5.0, "X");
          HdedxVsP_NS2->Draw("COLZ");
          PionLine2->Draw("same");
@@ -651,10 +651,10 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       leg->SetFillColor(0);
       leg->SetFillStyle(0);
       leg->SetBorderSize(0);
-      c1->SetLogy (true);
+      c1->SetLogx (true);
       TH1D h;
-      h.GetXaxis()->SetTitle("signal efficiency");
-      h.GetYaxis()->SetTitle("background efficiency");
+      h.GetYaxis()->SetTitle(("signal ("+ SaveName +") efficiency").c_str());
+      h.GetXaxis()->SetTitle(("background ("+ SaveName2 +") efficiency").c_str());
       h.SetStats(0);
       h.Draw();
       TGraph** ROC = new TGraph* [ObjNames.size()];
@@ -667,7 +667,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          double fullBkg  = HdedxSIG1->Integral(),
                 fullSig  = HdedxSIG2->Integral();
          for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX(); cut_i++)
-            ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxSIG2->Integral(1, cut_i)/fullSig, 1 - HdedxSIG1->Integral(1, cut_i)/fullBkg);
+            ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxSIG1->Integral(1, cut_i)/fullBkg, 1 - HdedxSIG2->Integral(1, cut_i)/fullSig);
 
          ROC[NameIndex]->SetLineColor   (NameIndex+1);
          ROC[NameIndex]->SetLineWidth   (2);
