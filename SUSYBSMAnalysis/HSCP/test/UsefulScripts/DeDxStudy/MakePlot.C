@@ -949,11 +949,11 @@ void ExtractConstants(TH2D* input, int FileIndex){
 	       SaveCanvas(c1,"./",buffer);              
 	       delete c1;
 
-          delete line1;
-          delete line2;
-          delete myfit;
-          delete FitResult;
-          delete inputnew;
+	       delete line1;
+	       delete line2;
+	       delete myfit;
+	       delete FitResult;
+	       delete inputnew;
        }
 }
 
