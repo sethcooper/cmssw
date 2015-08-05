@@ -677,13 +677,13 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          HdedxSIG1->~TH1D(); HdedxSIG2->~TH1D();
       }
       leg->Draw();
-		SaveCanvas(c1, SaveDir, "Comparison_ROC");
+      SaveCanvas(c1, SaveDir, "Comparison_ROC");
       for (size_t NameIndex = 0; NameIndex < ObjNames.size(); NameIndex++)
          delete ROC[NameIndex];
       delete ROC;
       delete leg;
-		delete c1;
-	}
+      delete c1;
+   }
 
 
 //   getScaleFactor(InputFile, "All_Rescale", "harm2_SO", InputFile2);
