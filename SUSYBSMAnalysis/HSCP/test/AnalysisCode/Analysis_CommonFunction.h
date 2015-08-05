@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor=1.0, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -554,15 +554,24 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
    if(fabs(nx)>1.0)return false;
    if(fabs(ny)>1.0)return false;
 
-        //Remove hits close to the border  //FIXME to be activated in this code
-        //double absDistEdgeXNorm = 1-fabs(hscpHitsInfo.localx[h])/(hscpHitsInfo.modwidth [h]/2.0);
-        //double absDistEdgeYNorm = 1-fabs(hscpHitsInfo.localy[h])/(hscpHitsInfo.modlength[h]/2.0);
-        //if(detid.subdetId()==1 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue;
-        //if(detid.subdetId()==2 && (absDistEdgeXNorm<0.05  || absDistEdgeYNorm<0.01)) continue; 
-        //if(detid.subdetId()==3 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.04)) continue;  
-        //if(detid.subdetId()==4 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02)) continue;  
-        //if(detid.subdetId()==5 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.02 || absDistEdgeYNorm>0.97)) continue;
-        //if(detid.subdetId()==6 && (absDistEdgeXNorm<0.005 || absDistEdgeYNorm<0.03 || absDistEdgeYNorm>0.8)) continue;
+   // "blacklists" for the gaps and edges
+   // FIXME APVs are missing for now!!!
+   switch (detid.subdetId()){
+      case  1: if (ny > 0.96 || ny < -0.96 || nx < -0.98 || 0.98 > nx) return false; break;
+      case  2: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx) return false; break;
+      case  5: if (ny > 0.98 || ny < -0.98 || nx < -0.98 || 0.98 > nx) return false; break;
+      case  6: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx) return false; break;
+      case  7: if (ny > 0.97 || ny < -0.99 || nx < -0.98 || 0.98 > nx) return false; break;
+      case  8: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx) return false; break;
+      case  9: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx) return false; break;
+      case 10: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx) return false; break;
+      case 11: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx) return false; break;
+      case  3: if (ny > 0.98 || ny < -0.98 || nx < -0.98 || 0.98 > nx || (ny <  0.04 && ny > -0.04)) return false; break;
+      case  4: if (ny > 0.98 || ny < -0.98 || nx < -0.98 || 0.98 > nx || (ny <  0.04 && ny > -0.04)) return false; break;
+      case 12: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx || (ny < -0.07 && ny > -0.17)) return false; break;
+      case 13: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx || (ny < -0.01 && ny > -0.10)) return false; break;
+      case 14: if (ny > 0.95 || ny < -0.97 || nx < -0.99 || 0.98 > nx || (ny <  0.12 && ny >  0.01)) return false; break;
+   }
 
    return true;
 }
@@ -570,7 +579,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
 
 
 
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
      if(!dedxHits) return NULL;
      if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -615,6 +624,9 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double scaleFactor, TH3* temp
             } 
             if(isSatCluster)NSat++;
         }
+
+	double scaleFactor = scaleFactors[0];
+	if (detid.subdetId()<3) scaleFactor *= scaleFactors[1];
 
         if(templateHisto){  //save discriminator probability
            double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0);
