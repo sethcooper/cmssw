@@ -923,7 +923,6 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
    TLegend* leg = new TLegend (0.50, 0.75, 0.80, 0.90);
    leg->SetHeader ("Fitting the MIP");
-   leg->SetHeader (SaveName.c_str());
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
@@ -968,7 +967,6 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    c1 = new TCanvas("c1", "c1", 600,600);
    leg = new TLegend (0.50, 0.75, 0.80, 0.90);
    leg->SetHeader ("Fitting the Profile");
-   leg->SetHeader (SaveName.c_str());
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
