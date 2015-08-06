@@ -921,6 +921,12 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    std::cout << "SCALE FACTOR WITH PROFILE = " << AbsGain << endl;
 
    TCanvas* c1 = new TCanvas("c1", "c1", 600,600);
+   TLegend* leg = new TLegend (0.50, 0.75, 0.80, 0.90);
+   leg->SetHeader ("Fitting the MIP");
+   leg->SetHeader (SaveName.c_str());
+   leg->SetFillColor(0);
+   leg->SetFillStyle(0);
+   leg->SetBorderSize(0);
    HdedxMIP2->SetStats(kFALSE);
    HdedxMIP2->SetAxisRange(0,10,"X");
    HdedxMIP2->GetXaxis()->SetNdivisions(516);
@@ -931,7 +937,7 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    TH1D* HdedxMIP3 = (TH1D*)HdedxMIP2->Clone("aaa");
    HdedxMIP3->SetLineColor(8);
    HdedxMIP3->GetXaxis()->Set(HdedxMIP3->GetXaxis()->GetNbins(), HdedxMIP3->GetXaxis()->GetXmin()*2.0, HdedxMIP3->GetXaxis()->GetXmax()*(peakMIP1/peakMIP2) );
-   HdedxMIP3->Draw("same");
+//   HdedxMIP3->Draw("same");
    TH1D* HdedxMIP4 = (TH1D*)HdedxMIP2->Clone("bbb");
    HdedxMIP4->SetLineColor(4);
    HdedxMIP4->GetXaxis()->Set(HdedxMIP4->GetXaxis()->GetNbins(), HdedxMIP4->GetXaxis()->GetXmin()*2.0, HdedxMIP4->GetXaxis()->GetXmax()*(AbsGain) );
@@ -940,6 +946,10 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    HdedxMIP1->Draw("same");
    c1->SetLogy(true);
    c1->SetGridx(true); 
+   leg->AddEntry (HdedxMIP1, "preferred", "L");
+   leg->AddEntry (HdedxMIP2, "unshifted", "L");
+   leg->AddEntry (HdedxMIP4, "shifted",   "L");
+   leg->Draw();
    SaveCanvas(c1, SaveDir, "Rescale"+Prefix+"_"+ObjName1+ObjName2 + "_MIP");
    delete c1;
 
@@ -956,6 +966,12 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    delete c1;
 
    c1 = new TCanvas("c1", "c1", 600,600);
+   leg = new TLegend (0.50, 0.75, 0.80, 0.90);
+   leg->SetHeader ("Fitting the Profile");
+   leg->SetHeader (SaveName.c_str());
+   leg->SetFillColor(0);
+   leg->SetFillStyle(0);
+   leg->SetBorderSize(0);
    HdedxVsPProfile1->SetStats(kFALSE);
    HdedxVsPProfile1->SetAxisRange(5,50,"X");
    HdedxVsPProfile1->SetAxisRange(2.5,3.5,"Y");
@@ -969,11 +985,15 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    TProfile* HdedxVsPProfile3 = (TProfile*)HdedxVsPProfile2->Clone("abc");
    HdedxVsPProfile3->SetMarkerColor(8);
    HdedxVsPProfile3->Scale(peakMIP1/peakMIP2);
-   HdedxVsPProfile3->Draw("same");
+//   HdedxVsPProfile3->Draw("same");
    TProfile* HdedxVsPProfile4 = (TProfile*)HdedxVsPProfile2->Clone("afs");
    HdedxVsPProfile4->SetMarkerColor(4);
    HdedxVsPProfile4->Scale(AbsGain);
    HdedxVsPProfile4->Draw("same");
+   leg->AddEntry (HdedxVsPProfile1, "preferred", "L");
+   leg->AddEntry (HdedxVsPProfile2, "unshifted", "L");
+   leg->AddEntry (HdedxVsPProfile4, "shifted",   "L");
+   leg->Draw();
 
    SaveCanvas(c1, SaveDir, "Rescale"+Prefix+"_"+ObjName1+ObjName2 + "_Profile");
    delete c1;
@@ -1196,7 +1216,11 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
          TLegend* leg = new TLegend (0.50, 0.75, 0.80, 0.90);
          c1->SetLogy (true);
          leg->SetHeader (("Module No. " + string(Id)).c_str());
-	 ProjX1->SetStats(kFALSE);
+         leg->SetHeader (SaveName.c_str());
+      	leg->SetFillColor(0);
+      	leg->SetFillStyle(0);
+      	leg->SetBorderSize(0);
+         ProjX1->SetStats(kFALSE);
          ProjX1->SetLineColor (kBlack);
          ProjX2->SetLineColor (kBlue);
          ProjX1->GetXaxis()->SetTitle("normalized x coordinate");
@@ -1214,7 +1238,11 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
          leg = new TLegend (0.50, 0.75, 0.80, 0.90);
          c1->SetLogy (true);
          leg->SetHeader (("Module No. " + string(Id)).c_str());
-	 ProjY1->SetStats(kFALSE);
+         leg->SetHeader (SaveName.c_str());
+         leg->SetFillColor(0);
+         leg->SetFillStyle(0);
+         leg->SetBorderSize(0);
+         ProjY1->SetStats(kFALSE);
          ProjY1->SetLineColor (kBlack);
          ProjY2->SetLineColor (kBlue);
          ProjY1->GetXaxis()->SetTitle("normalized y coordinate");
