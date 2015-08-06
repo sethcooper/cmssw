@@ -182,7 +182,11 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    gStyle->SetNdivisions(505,"X");
    TH1::AddDirectory(kTRUE);
 
-   bool isData = INPUT.find("MC")!=string::npos ? false : true;
+   bool isData   = !(INPUT.find("MC")      !=string::npos) ,
+        isSignal = (INPUT.find("Gluino")   !=string::npos) ||
+                   (INPUT.find("Stop")     !=string::npos) ||
+                   (INPUT.find("Stau")     !=string::npos) ||
+                   (INPUT.find("DY_13TeV") !=string::npos) ;
    std::vector<string> FileName;
    if(INPUT.find(".root")<std::string::npos){
       char* pch=strtok(&INPUT[0],",");
@@ -195,7 +199,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
       InitBaseDirectory();
       GetSampleDefinition(samples , DIRNAME+"/../../AnalysisCode/Analysis_Samples.txt");
       stSample& sample = samples[JobIdToIndex(SampleId, samples)];
-      isData = (sample.Type==0);
+      isData   = (sample.Type==0);
+      isSignal = (sample.Type==2);
       GetInputFiles(sample, BaseDirectory, FileName, 0);
    }
 
@@ -269,10 +274,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
          if(!dedxHits)continue;
 
-	 // genColl for SIG
+         // genColl for SIG
          std::vector<reco::GenParticle> genColl;
          double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
-         if(!isData){
+         if(isSignal){
             //get the collection of generated Particles
             fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
             genCollHandle.getByLabel(ev, "genParticlesSkimmed");
@@ -282,6 +287,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
             }
 
             genColl = *genCollHandle;
+            if (DistToHSCP (track, genColl)>0.03) continue;
          }
 
          //hit level dEdx information (only done for MIPs)
@@ -333,7 +339,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
              }
           }
 
-          for(unsigned int R=0;R<results.size();R++){ 
+          for(unsigned int R=0;R<results.size();R++){
              if(!results[R]->isEstim and !results[R]->isDiscrim ) continue; //only consider results related to estimator/discriminator variables here
 
              DeDxData* dedxObj = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates,             results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside );
@@ -353,10 +359,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 
              if(fabs(track->eta())>2.1)continue;
              if((int)dedxObj->numberOfMeasurements()<(results[R]->useStrip?10:3))continue;
-             if(track->p()>5 && track->p()<40){
+             if(track->pt()>5 && track->pt()<45){
                 results[R]->HdedxMIP->Fill(dedxObj->dEdx());
                 results[R]->HP->Fill(track->p());
-             } else if (track->pt() > 20 && DistToHSCP (track, genColl)<0.03)
+             } else if (track->pt() > 45)
                 results[R]->HdedxSIG->Fill(dedxObj->dEdx());
 
              if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
@@ -376,14 +382,14 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 }
 
 double DistToHSCP (const reco::TrackRef& track, const std::vector<reco::GenParticle>& genColl){
-   if(track.isNull())return false;
+   if(track.isNull())return false; // FIXME does this make sense? returning false to a double function?
 
    double RMin = 9999;
    for(unsigned int g=0;g<genColl.size();g++){
       if(genColl[g].pt()<5)continue;
       if(genColl[g].status()!=1)continue;
       int AbsPdg=abs(genColl[g].pdgId());
-      if(AbsPdg<1000000 && AbsPdg!=17)continue;    
+      if(AbsPdg<1000000 && AbsPdg!=17)continue;
       double dR = deltaR(track->eta(), track->phi(), genColl[g].eta(), genColl[g].phi());
       if(dR<RMin)RMin=dR;
    }

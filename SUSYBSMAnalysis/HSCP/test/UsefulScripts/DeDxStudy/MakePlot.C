@@ -820,21 +820,21 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       for (size_t NameIndex = 0; NameIndex < ObjNames.size(); NameIndex++)
       {
          int divide = 1;
-         TH1D* HdedxSIG1 = (TH1D*) GetObjectFromPath(InputFile , (ObjNames[NameIndex] + "_SIG").c_str() );
+         TH1D* HdedxMIP1 = (TH1D*) GetObjectFromPath(InputFile , (ObjNames[NameIndex] + "_MIP").c_str() );
          TH1D* HdedxSIG2 = (TH1D*) GetObjectFromPath(InputFile2, (ObjNames[NameIndex] + "_SIG").c_str() );
-         ROC[NameIndex]  = new TGraph(HdedxSIG1->GetNbinsX()/divide);
+         ROC[NameIndex]  = new TGraph(HdedxMIP1->GetNbinsX()/divide);
 
-         double fullBkg  = HdedxSIG1->Integral(),
+         double fullBkg  = HdedxMIP1->Integral(),
                 fullSig  = HdedxSIG2->Integral();
-         for (unsigned int cut_i = 1; cut_i <= HdedxSIG1->GetNbinsX()/divide; cut_i++)
-            ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxSIG1->Integral(1, cut_i*divide)/fullBkg, 1 - HdedxSIG2->Integral(1, cut_i*divide)/fullSig);
+         for (unsigned int cut_i = 1; cut_i <= HdedxMIP1->GetNbinsX()/divide; cut_i++)
+            ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxMIP1->Integral(1, cut_i*divide)/fullBkg, 1 - HdedxSIG2->Integral(1, cut_i*divide)/fullSig);
 
          ROC[NameIndex]->SetLineColor(NameIndex+1);
          ROC[NameIndex]->SetLineWidth(2);
          ROC[NameIndex]->Draw("same");
 
          leg->AddEntry (ROC[NameIndex], ObjNames[NameIndex].c_str(), "L");
-         HdedxSIG1->~TH1D(); HdedxSIG2->~TH1D();
+         HdedxMIP1->~TH1D(); HdedxSIG2->~TH1D();
       }
       leg->Draw();
       SaveCanvas(c1, SaveDir, "Comparison_ROC");
