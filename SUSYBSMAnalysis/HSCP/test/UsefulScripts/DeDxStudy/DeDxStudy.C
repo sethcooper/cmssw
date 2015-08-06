@@ -96,6 +96,7 @@ struct dEdxStudyObj
    TH2D* Charge_Vs_XYH[15];
    TProfile2D* Charge_Vs_XYN[15];
    TProfile2D* Charge_Vs_XYCSize[15];
+   TProfile2D* Charge_Vs_XYNCSize[15];
    TH2D* Charge_Vs_XYHN[15];
    TH2D* Charge_Vs_XYLN[15];
 
@@ -130,10 +131,11 @@ struct dEdxStudyObj
                HistoName = Name + "_ChargeVsFS"+Id;       Charge_Vs_FS[g]       = new TProfile  ( HistoName.c_str(), HistoName.c_str(),  769, 0, 769);
                HistoName = Name + "_ChargeVsXY"+Id;       Charge_Vs_XY[g]       = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
                HistoName = Name + "_ChargeVsXYH"+Id;      Charge_Vs_XYH[g]      = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
+               HistoName = Name + "_ChargeVsXYCSize"+Id;  Charge_Vs_XYCSize[g]  = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
                HistoName = Name + "_ChargeVsXYN"+Id;      Charge_Vs_XYN[g]      = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
                HistoName = Name + "_ChargeVsXYHN"+Id;     Charge_Vs_XYHN[g]     = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
                HistoName = Name + "_ChargeVsXYLN"+Id;     Charge_Vs_XYLN[g]     = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
-               HistoName = Name + "_ChargeVsXYCSize"+Id;  Charge_Vs_XYCSize[g]  = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYNCSize"+Id; Charge_Vs_XYNCSize[g] = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
             }
          }
       }
@@ -200,7 +202,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    TH3F* dEdxTemplatesInc = NULL;
    if(isData){   //FIXME update template on data directory
          dEdxSF [0] = 1.00000;
-         dEdxSF [1] = 1.14985;
+         dEdxSF [1] = 1.21836;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
    }else{
@@ -290,12 +292,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                       if(detid.subdetId()>=3)results[R]->Charge_Vs_FS[moduleGeometry]->Fill(dedxHits->stripCluster(h)->firstStrip(),  dedxHits->charge(h)); 
                       results[R]->Charge_Vs_XY[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(), dedxHits->charge(h)); 
                       results[R]->Charge_Vs_XYH[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y()); 
-
-                      results[R]->Charge_Vs_XYCSize[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(), detid.subdetId() >= 3
-                                                                                                                      ? dedxHits->stripCluster(h)->amplitudes().size()
-                                                                                                                      : dedxHits->pixelCluster(h)->size());
+                      results[R]->Charge_Vs_XYCSize[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(),
+                                      detid.subdetId() >= 3 ? dedxHits->stripCluster(h)->amplitudes().size() : dedxHits->pixelCluster(h)->size());
  
-                      if(moduleGeometry>=1){
+                      if(moduleGeometry>=1){ // FIXME we don't have the geometry information for Pixels yet (TkModGeom* arrays) !!!
                          double nx, ny;
                          if(moduleGeometry<=4){
                             ny = dedxHits->pos(h).y() /  TkModGeomLength[moduleGeometry];
@@ -309,6 +309,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                          //printf("%i - %f - %f --> %f - %f\n", moduleGeometry, dedxHits->pos(h).x(), dedxHits->pos(h).y(), nx, ny);
                          results[R]->Charge_Vs_XYHN[moduleGeometry]->Fill(nx, ny); 
                          results[R]->Charge_Vs_XYN[moduleGeometry]->Fill(nx, ny, dedxHits->charge(h)); 
+                         results[R]->Charge_Vs_XYNCSize[moduleGeometry]->Fill(nx, ny, detid.subdetId() >= 3 ? dedxHits->stripCluster(h)->amplitudes().size() : dedxHits->pixelCluster(h)->size());
                          if(ChargeOverPathlength<1.6)results[R]->Charge_Vs_XYLN[moduleGeometry]->Fill(nx, ny);
                       }
                    }

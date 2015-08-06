@@ -551,26 +551,25 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
       ny = hitPos.y() /  TkModGeomLength[moduleGeometry];
       nx = hitPos.x() / (tan_a*std::abs(hitPos.y()+offset));
    }
-   if(fabs(nx)>1.0)return false;
-   if(fabs(ny)>1.0)return false;
 
    // "blacklists" for the gaps and edges
-   // FIXME APVs are missing for now!!!
-   switch (detid.subdetId()){
-      case  1: if (ny > 0.96 || ny < -0.96 || nx < -0.98 || 0.98 > nx) return false; break;
-      case  2: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx) return false; break;
-      case  5: if (ny > 0.98 || ny < -0.98 || nx < -0.98 || 0.98 > nx) return false; break;
-      case  6: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx) return false; break;
-      case  7: if (ny > 0.97 || ny < -0.99 || nx < -0.98 || 0.98 > nx) return false; break;
-      case  8: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx) return false; break;
-      case  9: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx) return false; break;
-      case 10: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx) return false; break;
-      case 11: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx) return false; break;
-      case  3: if (ny > 0.98 || ny < -0.98 || nx < -0.98 || 0.98 > nx || (ny <  0.04 && ny > -0.04)) return false; break;
-      case  4: if (ny > 0.98 || ny < -0.98 || nx < -0.98 || 0.98 > nx || (ny <  0.04 && ny > -0.04)) return false; break;
-      case 12: if (ny > 0.98 || ny < -0.98 || nx < -0.99 || 0.99 > nx || (ny < -0.07 && ny > -0.17)) return false; break;
-      case 13: if (ny > 0.97 || ny < -0.97 || nx < -0.99 || 0.99 > nx || (ny < -0.01 && ny > -0.10)) return false; break;
-      case 14: if (ny > 0.95 || ny < -0.97 || nx < -0.99 || 0.98 > nx || (ny <  0.12 && ny >  0.01)) return false; break;
+   // FIXME APVs are missing for now, as are pixels!!!
+   switch (moduleGeometry){
+      case  0: return true;
+      case  1: if (fabs(ny) > 0.96 || fabs(nx) > 0.98) return false; break;
+      case  2: if (fabs(ny) > 0.97 || fabs(nx) > 0.99) return false; break;
+      case  3: if (fabs(ny) > 0.98 || fabs(nx) > 0.98 || fabs(ny) <  0.04) return false; break; // gap is in the middle
+      case  4: if (fabs(ny) > 0.98 || fabs(nx) > 0.98 || fabs(ny) <  0.04) return false; break; // gap is in the middle
+      case  5: if (fabs(ny) > 0.98 || fabs(nx) > 0.98) return false; break;
+      case  6: if (fabs(ny) > 0.98 || fabs(nx) > 0.99) return false; break;
+      case  7: if (fabs(ny) > 0.97 || fabs(nx) > 0.98) return false; break;
+      case  8: if (fabs(ny) > 0.98 || fabs(nx) > 0.99) return false; break;
+      case  9: if (fabs(ny) > 0.98 || fabs(nx) > 0.99) return false; break;
+      case 10: if (fabs(ny) > 0.97 || fabs(nx) > 0.99) return false; break;
+      case 11: if (fabs(ny) > 0.97 || fabs(nx) > 0.99) return false; break;
+      case 12: if (fabs(ny) > 0.98 || fabs(nx) > 0.99 || (-0.17 < ny && ny < -0.07)) return false; break; // gap is not in the middle
+      case 13: if (fabs(ny) > 0.97 || fabs(nx) > 0.99 || (-0.10 < ny && ny < -0.01)) return false; break; // gap is not in the middle
+      case 14: if (fabs(ny) > 0.95 || fabs(nx) > 0.98 || ( 0.01 < ny && ny <  0.12)) return false; break; // gap is not in the middle
    }
 
    return true;
