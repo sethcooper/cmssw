@@ -318,7 +318,7 @@ int    HowManyChargedHSCP(const std::vector<reco::GenParticle>& genColl);
 double FastestHSCP       (const fwlite::ChainEvent& ev);
 void   GetGenHSCPBeta    (const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged=true);
 
-// compute the distance between a "reconstructed" HSCP candidate and the closest geenrated HSCP
+// compute the distance between a "reconstructed" HSCP candidate and the closest generated HSCP
 double DistToHSCP (const susybsm::HSCParticle& hscp, const std::vector<reco::GenParticle>& genColl, int& IndexOfClosest){
    reco::TrackRef   track;
    if(TypeMode!=3) track = hscp.trackRef();

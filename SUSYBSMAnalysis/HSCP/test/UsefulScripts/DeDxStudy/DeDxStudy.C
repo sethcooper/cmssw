@@ -51,6 +51,7 @@ using namespace trigger;
 #endif
 
 
+double DistToHSCP (const reco::TrackRef& track, const std::vector<reco::GenParticle>& genColl);
 
 
 const double P_Min               = 1;
@@ -268,6 +269,21 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
          if(!dedxHits)continue;
 
+	 // genColl for SIG
+         std::vector<reco::GenParticle> genColl;
+         double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
+         if(!isData){
+            //get the collection of generated Particles
+            fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
+            genCollHandle.getByLabel(ev, "genParticlesSkimmed");
+            if(!genCollHandle.isValid()){
+               genCollHandle.getByLabel(ev, "genParticles");
+               if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");continue;}
+            }
+
+            genColl = *genCollHandle;
+         }
+
          //hit level dEdx information (only done for MIPs)
          if(track->p() > 5){
             for(unsigned int h=0;h<dedxHits->size();h++){
@@ -340,7 +356,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
              if(track->p()>5 && track->p()<40){
                 results[R]->HdedxMIP->Fill(dedxObj->dEdx());
                 results[R]->HP->Fill(track->p());
-             } else if (track->pt() > 40)
+             } else if (track->pt() > 20 && DistToHSCP (track, genColl)<0.03)
                 results[R]->HdedxSIG->Fill(dedxObj->dEdx());
 
              if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
@@ -358,3 +374,19 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    OutputHisto->Write();
    OutputHisto->Close();  
 }
+
+double DistToHSCP (const reco::TrackRef& track, const std::vector<reco::GenParticle>& genColl){
+   if(track.isNull())return false;
+
+   double RMin = 9999;
+   for(unsigned int g=0;g<genColl.size();g++){
+      if(genColl[g].pt()<5)continue;
+      if(genColl[g].status()!=1)continue;
+      int AbsPdg=abs(genColl[g].pdgId());
+      if(AbsPdg<1000000 && AbsPdg!=17)continue;    
+      double dR = deltaR(track->eta(), track->phi(), genColl[g].eta(), genColl[g].phi());
+      if(dR<RMin)RMin=dR;
+   }
+   return RMin;
+}
+

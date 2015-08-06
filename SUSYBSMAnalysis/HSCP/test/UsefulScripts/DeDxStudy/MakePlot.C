@@ -598,7 +598,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       delete c1;
 
       c1 = new TCanvas("c1", "c1", 600,600);
-      leg = new TLegend (0.50, 0.80, 0.80, 0.90);
+      leg = new TLegend (0.50, 0.70, 0.80, 0.80);
       leg->SetFillColor(0);
       leg->SetFillStyle(0);
       leg->SetBorderSize(0);
@@ -607,7 +607,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       HdedxMIP->SetStats(kFALSE);
       HdedxMIP->GetXaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
       HdedxMIP->GetYaxis()->SetTitle("fraction of tracks");
-      HdedxMIP->GetXaxis()->SetRangeUser(0,15);
+      HdedxMIP->GetXaxis()->SetRangeUser(0,8);
       HdedxMIP->GetYaxis()->SetRangeUser(5e-7,6e-1);
       HdedxMIP->SetLineColor(kBlack);
       HdedxMIP->SetLineWidth(2);
@@ -782,6 +782,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
    }
    CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SO"  , "Ias_SO_inc");
    CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO", "harm2_SO_in");
+   CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO_raw", "harm2_PO_raw");
    CompareDeDx (InputFile, SaveDir, SaveName, "hit_SP"  , "hit_SP_in");
 
    ExtractConstantsReport.close();
@@ -790,6 +791,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
       CompareDeDx (InputFile2, SaveDir, SaveName2, "Ias_SO"  , "Ias_SO_inc");
       CompareDeDx (InputFile2, SaveDir, SaveName2, "harm2_SO", "harm2_SO_in");
+      CompareDeDx (InputFile2, SaveDir, SaveName2, "harm2_SO_raw", "harm2_PO_raw");
       CompareDeDx (InputFile2, SaveDir, SaveName2, "hit_SP"  , "hit_SP_in");
 
       // now produce the ROC curve
@@ -801,7 +803,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       ObjNames.push_back ("harm2_SP");
 
       TCanvas* c1   = new TCanvas ("c1", "c1", 600,600); 
-      TLegend* leg  = new TLegend (0.50, 0.60, 0.80, 0.80);
+      TLegend* leg  = new TLegend (0.50, 0.50, 0.80, 0.70);
       leg->SetFillColor(0);
       leg->SetFillStyle(0);
       leg->SetBorderSize(0);
@@ -812,7 +814,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       h.GetYaxis()->SetTitle("signal efficiency");
       h.GetYaxis()->SetNdivisions(5);
       h.SetAxisRange (0,1,"Y");
-      //h.SetAxisRange (0.00001,1,"X");
       h.SetStats(0);
       h.Draw();
       TGraph** ROC = new TGraph* [ObjNames.size()];
@@ -957,7 +958,7 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    delete c1;
 
    c1 = new TCanvas("c1", "c1", 600,600);
-   leg = new TLegend (0.50, 0.75, 0.80, 0.90);
+   leg = new TLegend (0.30, 0.25, 0.80, 0.55);
    leg->SetHeader ("Fitting the Profile");
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
@@ -980,9 +981,9 @@ void getScaleFactor(TFile* InputFile1, TFile* InputFile2, string ObjName1, strin
    HdedxVsPProfile4->SetMarkerColor(4);
    HdedxVsPProfile4->Scale(AbsGain);
    HdedxVsPProfile4->Draw("same");
-   leg->AddEntry (HdedxVsPProfile1, "preferred", "L");
-   leg->AddEntry (HdedxVsPProfile2, "unshifted", "L");
-   leg->AddEntry (HdedxVsPProfile4, "shifted",   "L");
+   leg->AddEntry (HdedxVsPProfile1, "preferred", "P");
+//   leg->AddEntry (HdedxVsPProfile2, "unshifted", "P");
+   leg->AddEntry (HdedxVsPProfile4, "shifted",   "P");
    leg->Draw();
 
    SaveCanvas(c1, SaveDir, "Rescale"+Prefix+"_"+ObjName1+ObjName2 + "_Profile");
