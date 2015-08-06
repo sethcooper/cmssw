@@ -1196,6 +1196,7 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
          TLegend* leg = new TLegend (0.50, 0.75, 0.80, 0.90);
          c1->SetLogy (true);
          leg->SetHeader (("Module No. " + string(Id)).c_str());
+	 ProjX1->SetStats(kFALSE);
          ProjX1->SetLineColor (kBlack);
          ProjX2->SetLineColor (kBlue);
          ProjX1->GetXaxis()->SetTitle("normalized x coordinate");
@@ -1213,6 +1214,7 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
          leg = new TLegend (0.50, 0.75, 0.80, 0.90);
          c1->SetLogy (true);
          leg->SetHeader (("Module No. " + string(Id)).c_str());
+	 ProjY1->SetStats(kFALSE);
          ProjY1->SetLineColor (kBlack);
          ProjY2->SetLineColor (kBlue);
          ProjY1->GetXaxis()->SetTitle("normalized y coordinate");
