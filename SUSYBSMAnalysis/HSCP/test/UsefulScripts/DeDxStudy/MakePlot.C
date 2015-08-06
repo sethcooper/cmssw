@@ -140,16 +140,16 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
 
 
    std::vector<string> ObjName;
-/*   ObjName.push_back("hit_SP");
+   ObjName.push_back("hit_SP");
    ObjName.push_back("hit_SP_in");
    ObjName.push_back("harm2_SO");
    ObjName.push_back("harm2_SP");
    ObjName.push_back("harm2_SO_in");
-   ObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
-   ObjName.push_back("harm2_SO_raw"); // FIXME does not fit well
-   ObjName.push_back("harm2_SP_raw"); // FIXME does not fit well
+//   ObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
+//   ObjName.push_back("harm2_SO_raw"); // FIXME does not fit well
+//   ObjName.push_back("harm2_SP_raw"); // FIXME does not fit well
    ObjName.push_back("Ias_SO_inc");
-   ObjName.push_back("Ias_SO");*/
+   ObjName.push_back("Ias_SO");
 
    ofstream ExtractConstantsReport, ExtractConstantsReport2;
    ExtractConstantsReport.open ((SaveDir + "ConstantsReport" + SaveName + ".txt").c_str(), ofstream::out);
@@ -206,7 +206,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             TProfile2D* Charge_Vs_XYNCSize = (TProfile2D*) GetObjectFromPath (InputFile, (ObjName[i]+"_ChargeVsXYNCSize" + Id).c_str());
 
             TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
-            c1->SetLogz();
             Charge_Vs_XYH->SetStats(kFALSE);
             Charge_Vs_XYH->GetXaxis()->SetTitle("local x coordinate");
             Charge_Vs_XYH->GetYaxis()->SetTitle("local y coordinate");
@@ -217,7 +216,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             delete c1;
 
             c1 = new TCanvas ("c1", "c1", 600, 600);
-            c1->SetLogz();
             Charge_Vs_XYN->SetStats(kFALSE);
             Charge_Vs_XYN->GetXaxis()->SetTitle("normalized x coordinate");
             Charge_Vs_XYN->GetYaxis()->SetTitle("normalized y coordinate");
@@ -228,18 +226,17 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             delete c1;
 
             c1 = new TCanvas ("c1", "c1", 600, 600);
-            c1->SetLogz();
             Charge_Vs_XYCSize->SetStats(kFALSE);
             Charge_Vs_XYCSize->GetXaxis()->SetTitle("local x coordinate");
             Charge_Vs_XYCSize->GetYaxis()->SetTitle("local y coordinate");
             Charge_Vs_XYCSize->SetAxisRange (-7,7,"X");
             Charge_Vs_XYCSize->SetAxisRange (-15,15,"Y");
+            Charge_Vs_XYCSize->SetMaximum (5);
             Charge_Vs_XYCSize->Draw("COLZ");
             SaveCanvas (c1, SaveDir, ObjName[i]+SaveSuffix+"_ChargeVsXYCSize"+string(Id), true);
             delete c1;
 
             c1 = new TCanvas ("c1", "c1", 600, 600);
-            c1->SetLogz();
             Charge_Vs_XYHN->SetStats(kFALSE);
             Charge_Vs_XYHN->GetXaxis()->SetTitle("normalized x coordinate");
             Charge_Vs_XYHN->GetYaxis()->SetTitle("normalized y coordinate");
@@ -250,7 +247,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             delete c1;
 
             c1 = new TCanvas ("c1", "c1", 600, 600);
-            c1->SetLogz();
             Charge_Vs_XYLN->SetStats(kFALSE);
             Charge_Vs_XYLN->GetXaxis()->SetTitle("normalized x coordinate");
             Charge_Vs_XYLN->GetYaxis()->SetTitle("normalized y coordinate");
@@ -261,12 +257,12 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             delete c1;
 
             c1 = new TCanvas ("c1", "c1", 600, 600);
-            c1->SetLogz();
             Charge_Vs_XYNCSize->SetStats(kFALSE);
             Charge_Vs_XYNCSize->GetXaxis()->SetTitle("normalized x coordinate");
             Charge_Vs_XYNCSize->GetYaxis()->SetTitle("normalized y coordinate");
             Charge_Vs_XYNCSize->SetAxisRange (-1.5,1.5,"X");
             Charge_Vs_XYNCSize->SetAxisRange (-1.5,1.5,"Y");
+            Charge_Vs_XYNCSize->SetMaximum (5);
             Charge_Vs_XYNCSize->Draw("COLZ");
             SaveCanvas (c1, SaveDir, ObjName[i]+SaveSuffix+"_ChargeVsXYNCSize"+string(Id), true);
             delete c1;
@@ -294,7 +290,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
                TProfile2D* Charge_Vs_XYNCSize2 = (TProfile2D*) GetObjectFromPath (InputFile2, (ObjName[i]+"_ChargeVsXYNCSize" + Id).c_str());
 
                TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
-               c1->SetLogz();
                Charge_Vs_XYH2->SetStats(kFALSE);
                Charge_Vs_XYH2->GetXaxis()->SetTitle("local x coordinate");
                Charge_Vs_XYH2->GetYaxis()->SetTitle("local y coordinate");
@@ -305,7 +300,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
                delete c1;
 
                c1 = new TCanvas ("c1", "c1", 600, 600);
-               c1->SetLogz();
                Charge_Vs_XYN2->SetStats(kFALSE);
                Charge_Vs_XYN2->GetXaxis()->SetTitle("normalized x coordinate");
                Charge_Vs_XYN2->GetYaxis()->SetTitle("normalized y coordinate");
@@ -316,18 +310,17 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
                delete c1;
 
                c1 = new TCanvas ("c1", "c1", 600, 600);
-               c1->SetLogz();
                Charge_Vs_XYCSize2->SetStats(kFALSE);
                Charge_Vs_XYCSize2->GetXaxis()->SetTitle("local x coordinate");
                Charge_Vs_XYCSize2->GetYaxis()->SetTitle("local y coordinate");
                Charge_Vs_XYCSize2->SetAxisRange (-7,7,"X");
                Charge_Vs_XYCSize2->SetAxisRange (-15,15,"Y");
+               Charge_Vs_XYCSize2->SetMaximum (5);
                Charge_Vs_XYCSize2->Draw("COLZ");
                SaveCanvas (c1, SaveDir, ObjName[i]+SaveName2+"_ChargeVsXYCSize"+string(Id), true);
                delete c1;
 
                c1 = new TCanvas ("c1", "c1", 600, 600);
-               c1->SetLogz();
                Charge_Vs_XYHN2->SetStats(kFALSE);
                Charge_Vs_XYHN2->GetXaxis()->SetTitle("normalized x coordinate");
                Charge_Vs_XYHN2->GetYaxis()->SetTitle("normalized module y coordinate");
@@ -338,7 +331,6 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
                delete c1;
 
                c1 = new TCanvas ("c1", "c1", 600, 600);
-               c1->SetLogz();
                Charge_Vs_XYLN2->SetStats(kFALSE);
                Charge_Vs_XYLN2->GetXaxis()->SetTitle("normalized x coordinate");
                Charge_Vs_XYLN2->GetYaxis()->SetTitle("normalized y coordinate");
@@ -349,12 +341,12 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
                delete c1;
 
                c1 = new TCanvas ("c1", "c1", 600, 600);
-               c1->SetLogz();
                Charge_Vs_XYNCSize2->SetStats(kFALSE);
                Charge_Vs_XYNCSize2->GetXaxis()->SetTitle("normalized x coordinate");
                Charge_Vs_XYNCSize2->GetYaxis()->SetTitle("normalized y coordinate");
                Charge_Vs_XYNCSize2->SetAxisRange (-1.5,1.5,"X");
                Charge_Vs_XYNCSize2->SetAxisRange (-1.5,1.5,"Y");
+               Charge_Vs_XYNCSize2->SetMaximum (5);
                Charge_Vs_XYNCSize2->Draw("COLZ");
                SaveCanvas (c1, SaveDir, ObjName[i]+SaveName2+"_ChargeVsXYNCSize"+string(Id), true);
              
