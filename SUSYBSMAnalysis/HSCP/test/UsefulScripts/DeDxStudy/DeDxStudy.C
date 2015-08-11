@@ -182,11 +182,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    gStyle->SetNdivisions(505,"X");
    TH1::AddDirectory(kTRUE);
 
-   bool isData   = !(INPUT.find("MC")      !=string::npos) ,
-        isSignal = (INPUT.find("Gluino")   !=string::npos) ||
-                   (INPUT.find("Stop")     !=string::npos) ||
-                   (INPUT.find("Stau")     !=string::npos) ||
-                   (INPUT.find("DY_13TeV") !=string::npos) ;
+   bool isData   = !(INPUT.find("MC")!=string::npos),
+        isSignal = false;
    std::vector<string> FileName;
    if(INPUT.find(".root")<std::string::npos){
       char* pch=strtok(&INPUT[0],",");
@@ -206,44 +203,26 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
 
 //   TH3F* dEdxTemplates    = NULL;
 //   TH3F* dEdxTemplatesInc = NULL;
-   TH3F* dEdxTemplatesPO      = NULL;
-   TH3F* dEdxTemplatesSOInc   = NULL;
-   TH3F* dEdxTemplatesSO      = NULL;
-   TH3F* dEdxTemplatesSOInInc = NULL;
-   TH3F* dEdxTemplatesSOIn    = NULL;
-   TH3F* dEdxTemplatesSPInc   = NULL;
-   TH3F* dEdxTemplatesSP      = NULL;
-   TH3F* dEdxTemplatesSPInInc = NULL;
-   TH3F* dEdxTemplatesSPIn    = NULL;
+   TH3F* dEdxTemplates      = NULL;
+   TH3F* dEdxTemplatesIn    = NULL;
+   TH3F* dEdxTemplatesInc   = NULL;
 
    if(isData){   //FIXME update template on data directory
          dEdxSF [0] = 1.00000;
          dEdxSF [1] = 1.21836;
 //         dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
 //         dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
-         dEdxTemplatesPO      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root"  , false, false, true );
-         dEdxTemplatesSOInc   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root"  , false, true , false);
-         dEdxTemplatesSO      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root"  , true , true , false);
-         dEdxTemplatesSOInInc = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_Run251252.root", false, true , false);
-         dEdxTemplatesSOIn    = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_Run251252.root", true , true , false);
-         dEdxTemplatesSPInc   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root"  , false, true , true );
-         dEdxTemplatesSP      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root"  , true , true , true );
-         dEdxTemplatesSPInInc = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_Run251252.root", false, true , true );
-         dEdxTemplatesSPIn    = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_Run251252.root", true , true , true );
+         dEdxTemplates      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root", true);
+         dEdxTemplatesIn    = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_Run251252.root", true);
+         dEdxTemplatesInc   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_Run251252.root"  , false);
    }else{
          dEdxSF [0] = 1.09708;
          dEdxSF [1] = 1.01875;
 //         dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
 //         dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false); 
-         dEdxTemplatesPO      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , false, false, true );
-         dEdxTemplatesSOInc   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , false, true , false);
-         dEdxTemplatesSO      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , true , true , false);
-         dEdxTemplatesSOInInc = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_MCMinBias.root", false, true , false);
-         dEdxTemplatesSOIn    = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_MCMinBias.root", true , true , false);
-         dEdxTemplatesSPInc   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , false, true , true );
-         dEdxTemplatesSP      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , true , true , true );
-         dEdxTemplatesSPInInc = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_MCMinBias.root", false, true , true );
-         dEdxTemplatesSPIn    = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_MCMinBias.root", true , true , true );
+         dEdxTemplates      = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , true);
+         dEdxTemplatesIn    = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_MCMinBias.root", true);
+         dEdxTemplatesInc   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_MCMinBias.root"  , false);
    }
 
    std::unordered_map<unsigned int,double> TrackerGains;
@@ -265,15 +244,13 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    results.push_back(new dEdxStudyObj("harm2_SO_in" , 1, 2, NULL            , &TrackerGains, true) );
    results.push_back(new dEdxStudyObj("harm2_SP"    , 1, 3, NULL            , &TrackerGains) );
    results.push_back(new dEdxStudyObj("harm2_SP_in" , 1, 3, NULL            , &TrackerGains, true) );
-   results.push_back(new dEdxStudyObj("Ias_PO"       , 2, 1, dEdxTemplatesPO        , NULL) );
-   results.push_back(new dEdxStudyObj("Ias_SO_inc"   , 2, 2, dEdxTemplatesSOInc     , NULL) );
-   results.push_back(new dEdxStudyObj("Ias_SO"       , 2, 2, dEdxTemplatesSO        , NULL) );
-   results.push_back(new dEdxStudyObj("Ias_SO_in"    , 2, 2, dEdxTemplatesSOIn      , NULL, true) );
-   results.push_back(new dEdxStudyObj("Ias_SO_in_inc", 2, 2, dEdxTemplatesSOInInc   , NULL, true) );
-   results.push_back(new dEdxStudyObj("Ias_SP_inc"   , 2, 3, dEdxTemplatesSPInc     , NULL) );
-   results.push_back(new dEdxStudyObj("Ias_SP"       , 2, 3, dEdxTemplatesSP        , NULL) );
-   results.push_back(new dEdxStudyObj("Ias_SP_in"    , 2, 3, dEdxTemplatesSPIn      , NULL, true) );
-   results.push_back(new dEdxStudyObj("Ias_SP_in_inc", 2, 3, dEdxTemplatesSPInInc   , NULL, true) );
+   results.push_back(new dEdxStudyObj("Ias_PO"      , 2, 1, dEdxTemplates   , NULL) );
+   results.push_back(new dEdxStudyObj("Ias_SO"      , 2, 2, dEdxTemplates   , NULL) );
+   results.push_back(new dEdxStudyObj("Ias_SO_in"   , 2, 2, dEdxTemplatesIn , NULL, true) );
+   results.push_back(new dEdxStudyObj("Ias_SO_inc"  , 2, 2, dEdxTemplatesInc, NULL) );
+   results.push_back(new dEdxStudyObj("Ias_SP"      , 2, 3, dEdxTemplates   , NULL) );
+   results.push_back(new dEdxStudyObj("Ias_SP_in"   , 2, 3, dEdxTemplatesIn , NULL, true) );
+   results.push_back(new dEdxStudyObj("Ias_SP_inc"  , 2, 3, dEdxTemplatesInc, NULL) );
 
    fwlite::ChainEvent ev(FileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -379,7 +356,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
           for(unsigned int R=0;R<results.size();R++){
              if(!results[R]->isEstim and !results[R]->isDiscrim ) continue; //only consider results related to estimator/discriminator variables here
 
-             DeDxData* dedxObj = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->usePixel, results[R]->mustBeInside);
+             DeDxData* dedxObj = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside);
 
              results[R]->HdedxVsP    ->Fill(track->p(), dedxObj->dEdx() );
              results[R]->HdedxVsQP   ->Fill(track->p()*track->charge(), dedxObj->dEdx() );

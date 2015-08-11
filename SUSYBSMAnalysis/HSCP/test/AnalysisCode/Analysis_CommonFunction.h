@@ -471,8 +471,8 @@ class DuplicatesClass{
 #ifdef FWLITE
 
 
-TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false, bool useStrip=true, bool usePixel=false);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool usePixel=false, bool mustBeInside=false);
+TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -495,17 +495,12 @@ void LoadDeDxCalibration(std::unordered_map<unsigned int,double>& TrackerGains, 
 
 
 
-TH3F* loadDeDxTemplate(string path, bool splitByModuleType, bool useStrip, bool usePixel){
+TH3F* loadDeDxTemplate(string path, bool splitByModuleType){
    TFile* InputFile = new TFile(path.c_str());
    TH3F* DeDxMap_ = (TH3F*)GetObjectFromPath(InputFile, "Charge_Vs_Path");
    if(!DeDxMap_){printf("dEdx templates in file %s can't be open\n", path.c_str()); exit(0);}
 
-   int P_Min, P_Max, P_NBins;
    TH3F* Prob_ChargePath  = (TH3F*)(DeDxMap_->Clone("Prob_ChargePath")); 
-   if      (!usePixel  &&  useStrip){ P_Min =  1; P_Max = 15; P_NBins = 14;}
-   else if ( usePixel  && !useStrip){ P_Min = 15; P_Max = 16; P_NBins =  1;}
-   else if ( usePixel  &&  useStrip){ P_Min =  1; P_Max = 16; P_NBins = 15;}
-   Prob_ChargePath->GetXaxis()->Set(P_NBins, P_Min, P_Max);
    Prob_ChargePath->Reset();
    Prob_ChargePath->SetDirectory(0); 
 
@@ -513,14 +508,14 @@ TH3F* loadDeDxTemplate(string path, bool splitByModuleType, bool useStrip, bool 
       Prob_ChargePath->RebinX(Prob_ChargePath->GetNbinsX());
    }
 
-   for(int i=1;i<=Prob_ChargePath->GetXaxis()->GetNbins();i++){// do not include under/overflow here
+   for(int i=0;i<=Prob_ChargePath->GetXaxis()->GetNbins()+1;i++){// do not include under/overflow here
       for(int j=0;j<=Prob_ChargePath->GetYaxis()->GetNbins()+1;j++){
          double Ni = 0;
-         for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){Ni+=DeDxMap_->GetBinContent(i+P_Min-1,j,k);} 
+         for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){Ni+=DeDxMap_->GetBinContent(i,j,k);}
 
          for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){
             double tmp = 0;
-            for(int l=0;l<=k;l++){ tmp+=DeDxMap_->GetBinContent(i+P_Min-1,j,l);}
+            for(int l=0;l<=k;l++){ tmp+=DeDxMap_->GetBinContent(i,j,l);}
 
             if(Ni>0){
                Prob_ChargePath->SetBinContent (i, j, k, tmp/Ni);
@@ -536,10 +531,10 @@ TH3F* loadDeDxTemplate(string path, bool splitByModuleType, bool useStrip, bool 
 
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
 
-const double TkModGeomThickness[] = {1, 0.029000, 0.029000, 0.047000, 0.047000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.047000, 0.047000, 0.047000, 1.0};
-const double TkModGeomLength   [] = {1, 5.844250, 5.844250, 9.306700, 9.306700,  5.542900, 4.408000, 5.533000, 4.258000, 4.408000, 5.533000, 5.758000, 7.363125, 9.204400, 10.235775, 1.0};
-const double TkModGeomWidthB   [] = {1, 3.072000, 3.072000, 4.684800, 4.684800, 4.579445, 5.502407, 3.158509, 4.286362, 5.502407, 4.049915, 3.561019, 6.002559, 5.235483, 3.574395, 1.0};
-const double TkModGeomWidthT   [] = {1, 3.072000, 3.072000, 4.684800,  4.684800, 3.095721, 4.322593, 4.049915, 3.146580, 4.322593, 3.158509, 2.898798, 4.824683, 4.177638,  4.398049, 1.0};
+const double TkModGeomThickness[] = {1, 0.029000, 0.029000, 0.047000, 0.047000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.029000, 0.047000, 0.047000, 0.047000};
+const double TkModGeomLength   [] = {1, 5.844250, 5.844250, 9.306700, 9.306700,  5.542900, 4.408000, 5.533000, 4.258000, 4.408000, 5.533000, 5.758000, 7.363125, 9.204400, 10.235775};
+const double TkModGeomWidthB   [] = {1, 3.072000, 3.072000, 4.684800, 4.684800, 4.579445, 5.502407, 3.158509, 4.286362, 5.502407, 4.049915, 3.561019, 6.002559, 5.235483, 3.574395};
+const double TkModGeomWidthT   [] = {1, 3.072000, 3.072000, 4.684800,  4.684800, 3.095721, 4.322593, 4.049915, 3.146580, 4.322593, 3.158509, 2.898798, 4.824683, 4.177638,  4.398049};
 
 bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
    if(detid.subdetId()<3){return true;} //do nothing for pixel modules
@@ -575,7 +570,6 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
       case 12: if (fabs(ny) > 0.98 || fabs(nx) > 0.99 || (-0.17 < ny && ny < -0.07)) return false; break;
       case 13: if (fabs(ny) > 0.97 || fabs(nx) > 0.99 || (-0.10 < ny && ny < -0.01)) return false; break;
       case 14: if (fabs(ny) > 0.95 || fabs(nx) > 0.98 || ( 0.01 < ny && ny <  0.12)) return false; break;
-      case 15: return true; break; // pixel just to make sure, is always in
       default: std::cerr << "Unknown module geometry! Exiting!" << std::endl; exit (EXIT_FAILURE);
    }
 
@@ -585,7 +579,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
 
 
 
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool usePixel, bool mustBeInside){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
      if(!dedxHits) return NULL;
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -602,7 +596,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* te
 
         int ClusterCharge = dedxHits->charge(h);
 
-        if(detid.subdetId()>=3){//for strip only recompute cluster charge (saturation)
+        if(detid.subdetId()>=3){//for strip only
            const SiStripCluster* cluster = dedxHits->stripCluster(h);
            const vector<unsigned char>& amplitutes = cluster->amplitudes();
            int firstStrip = cluster->firstStrip();
@@ -631,8 +625,8 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* te
             if(isSatCluster)NSat++;
         }
 
-	     double scaleFactor = scaleFactors[0];
-	     if (detid.subdetId()<3) scaleFactor *= scaleFactors[1]; // add pixel scaling
+        double scaleFactor = scaleFactors[0];
+        if (detid.subdetId()<3) scaleFactor *= scaleFactors[1]; // add pixel scaling
 
         if(templateHisto){  //save discriminator probability
            double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0);
