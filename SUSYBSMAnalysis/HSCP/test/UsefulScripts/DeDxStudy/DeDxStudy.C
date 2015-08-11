@@ -183,7 +183,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    TH1::AddDirectory(kTRUE);
 
    bool isData   = !(INPUT.find("MC")!=string::npos),
-        isSignal = false;
+        isSignal = false,
+        removeCosmics = false;
    std::vector<string> FileName;
    if(INPUT.find(".root")<std::string::npos){
       char* pch=strtok(&INPUT[0],",");
@@ -280,6 +281,29 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(track.isNull())continue;
          if(track->chi2()/track->ndof()>5 )continue;  //WAS >1
          if(track->found()<8)continue;
+         if(isData && removeCosmics){
+            fwlite::Handle < std::vector<reco::Vertex> > vertexCollHandle;
+            vertexCollHandle.getByLabel(ev, "offlinePrimaryVertices");
+            if(!vertexCollHandle.isValid()){printf("Vertex Collection not found!\n"); continue;}
+            const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
+            if(vertexColl.size()<1){printf("NO VERTICES\n"); continue;}
+
+            double OpenAngle = -1;
+            for (unsigned int c2=0;c2<trackCollHandle->size();c++){
+               if (c2==c) continue;
+               reco::TrackRef track2 = reco::TrackRef(trackCollHandle.product(), c2);
+               if (fabs(track->pt()-track2->pt())<1 && deltaR (track->eta(), track->phi(), track2->eta(), track2->phi())<0.1)
+                  continue;
+               TVector3 v1 = TVector3 (track ->momentum().x(), track ->momentum().y(), track ->momentum().z());
+               TVector3 v2 = TVector3 (track2->momentum().x(), track2->momentum().y(), track2->momentum().z());
+               double dR = v1.Angle(v2);
+               if (dR>OpenAngle) OpenAngle=dR;
+            }
+            bool DXYSB = fabs(track->dxy(vertexColl[0].position())) > 0.5,
+                 DZSB  = fabs(track->dz (vertexColl[0].position())) > 0.5,
+                 OASB  = OpenAngle >= 2.8;
+            if (DXYSB && DZSB && OASB) continue;
+         }
 
          //load dEdx informations
          const DeDxHitInfo* dedxHits = NULL;
