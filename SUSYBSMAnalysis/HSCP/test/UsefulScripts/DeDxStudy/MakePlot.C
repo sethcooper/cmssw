@@ -145,11 +145,19 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
    ObjName.push_back("harm2_SO");
    ObjName.push_back("harm2_SP");
    ObjName.push_back("harm2_SO_in");
+   ObjName.push_back("harm2_SP_in");
 //   ObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
 //   ObjName.push_back("harm2_SO_raw"); // FIXME does not fit well
 //   ObjName.push_back("harm2_SP_raw"); // FIXME does not fit well
    ObjName.push_back("Ias_SO_inc");
    ObjName.push_back("Ias_SO");
+   ObjName.push_back("Ias_SO_in_inc");
+   ObjName.push_back("Ias_SO_in");
+   ObjName.push_back("Ias_PO");
+   ObjName.push_back("Ias_SP_inc");
+   ObjName.push_back("Ias_SP");
+   ObjName.push_back("Ias_SP_in_inc");
+   ObjName.push_back("Ias_SP_in");
 
    ofstream ExtractConstantsReport, ExtractConstantsReport2;
    ExtractConstantsReport.open ((SaveDir + "ConstantsReport" + SaveName + ".txt").c_str(), ofstream::out);
@@ -196,7 +204,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          MakeMapPlots (dEdxTemplate, ObjName[i], SaveDir, "Map" + SaveName);
 
          // all the other graphs -- Charge_Vs_XYNLetc.
-         for (unsigned int g=0;g<15;g++){
+         for (unsigned int g=0;g<16;g++){
             char Id[255]; sprintf (Id, "%02i", g);
             TH2D*            Charge_Vs_XYH = (TH2D*)       GetObjectFromPath (InputFile, (ObjName[i]+"_ChargeVsXYH"      + Id).c_str());
             TH2D*            Charge_Vs_XYN = (TH2D*)       GetObjectFromPath (InputFile, (ObjName[i]+"_ChargeVsXYN"      + Id).c_str());
@@ -280,7 +288,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
             dEdxTemplate2->SaveAs (("dEdxTemplate_" + ObjName[i] + SaveName2 + ".root").c_str());
             MakeMapPlots (dEdxTemplate2, ObjName[i], SaveDir, "Map" + SaveName2);
 
-            for (unsigned int g=0;g<15;g++){
+            for (unsigned int g=0;g<16;g++){
                char Id[255]; sprintf (Id, "%02i", g);
                TH2D*            Charge_Vs_XYH2 = (TH2D*)       GetObjectFromPath (InputFile2, (ObjName[i]+"_ChargeVsXYH"      + Id).c_str());
                TH2D*            Charge_Vs_XYN2 = (TH2D*)       GetObjectFromPath (InputFile2, (ObjName[i]+"_ChargeVsXYN"      + Id).c_str());
@@ -780,7 +788,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       } else continue;
       
    }
-   CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SO"  , "Ias_SO_inc");
+//   CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SO"  , "Ias_SO_inc");
    CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO", "harm2_SO_in");
    CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO_raw", "harm2_PO_raw");
    CompareDeDx (InputFile, SaveDir, SaveName, "hit_SP"  , "hit_SP_in");
@@ -789,7 +797,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
    if (InputFile2) {
       ExtractConstantsReport2.close();
 
-      CompareDeDx (InputFile2, SaveDir, SaveName2, "Ias_SO"  , "Ias_SO_inc");
+//      CompareDeDx (InputFile2, SaveDir, SaveName2, "Ias_SO"  , "Ias_SO_inc");
       CompareDeDx (InputFile2, SaveDir, SaveName2, "harm2_SO", "harm2_SO_in");
       CompareDeDx (InputFile2, SaveDir, SaveName2, "harm2_SO_raw", "harm2_PO_raw");
       CompareDeDx (InputFile2, SaveDir, SaveName2, "hit_SP"  , "hit_SP_in");
@@ -798,6 +806,13 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       vector <string> ObjNames;
       ObjNames.push_back ("Ias_SO");
       ObjNames.push_back ("Ias_SO_inc");
+      ObjNames.push_back ("Ias_SO_in");
+      ObjNames.push_back ("Ias_SO_in_inc");
+      ObjNames.push_back ("Ias_PO");
+      ObjNames.push_back ("Ias_SP");
+      ObjNames.push_back ("Ias_SP_inc");
+      ObjNames.push_back ("Ias_SP_in");
+      ObjNames.push_back ("Ias_SP_in_inc");
       ObjNames.push_back ("harm2_SO");
       ObjNames.push_back ("harm2_SO_in");
       ObjNames.push_back ("harm2_SP");
@@ -808,12 +823,12 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       leg->SetFillStyle(0);
       leg->SetBorderSize(0);
       c1->SetLogx(true);
-      TH1D h ("tmp", "tmp", 1, 1E-4, 1);
+      TH1D h ("tmp", "tmp", 1, 6E-9, 1);
       h.GetXaxis()->SetTitle("background efficiency");
       h.GetXaxis()->SetNdivisions(5);
       h.GetYaxis()->SetTitle("signal efficiency");
       h.GetYaxis()->SetNdivisions(5);
-      h.SetAxisRange (0,1,"Y");
+      h.SetAxisRange (0,1.0,"Y");
       h.SetStats(0);
       h.Draw();
       TGraph** ROC = new TGraph* [ObjNames.size()];
@@ -1194,7 +1209,7 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
    	HdedxVsEtaProfile1->~TProfile(); HdedxVsEtaProfile2->~TProfile();
    	HdedxMIP1->~TH1D();              HdedxMIP2->~TH1D();
    } else if (ObjName1.find("hit")!=string::npos && ObjName2.find("hit")!=string::npos){
-      for (unsigned int g=0;g<15;g++){
+      for (unsigned int g=0;g<16;g++){
          char Id[255]; sprintf (Id, "%02i", g);
          TH2D* Charge_Vs_XYLN1 = (TH2D*) GetObjectFromPath (InputFile, (ObjName1 + "_ChargeVsXYLN" + Id).c_str());
          TH2D* Charge_Vs_XYLN2 = (TH2D*) GetObjectFromPath (InputFile, (ObjName2 + "_ChargeVsXYLN" + Id).c_str());
@@ -1208,9 +1223,9 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
          c1->SetLogy (true);
          leg->SetHeader (("Module No. " + string(Id)).c_str());
          leg->SetHeader (SaveName.c_str());
-      	leg->SetFillColor(0);
-      	leg->SetFillStyle(0);
-      	leg->SetBorderSize(0);
+         leg->SetFillColor(0);
+         leg->SetFillStyle(0);
+         leg->SetBorderSize(0);
          ProjX1->SetStats(kFALSE);
          ProjX1->SetLineColor (kBlack);
          ProjX2->SetLineColor (kBlue);
@@ -1259,11 +1274,17 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
 
 void MakeMapPlots(TH3F* Charge_Vs_Path3D, string ObjName, string SaveDir, string Prefix)
 {
-   for(int x=0;x<15;x++){
+   for(int x=0;x<17;x++){
       char xProjName[255];
       if(x==0){
-         sprintf(xProjName,"%s","inc");
-         Charge_Vs_Path3D->GetXaxis()->SetRange(0,15);
+         sprintf(xProjName,"%s","SO_inc");
+         Charge_Vs_Path3D->GetXaxis()->SetRange(1,14);
+      }else if (x==16){
+         sprintf(xProjName,"%s","SP_inc");
+         Charge_Vs_Path3D->GetXaxis()->SetRange(1,15);
+      }else if (x==15){
+         sprintf(xProjName,"%s", "PO");
+         Charge_Vs_Path3D->GetXaxis()->SetRange(x,x);
       }else{
          sprintf(xProjName,"%02i",x);
          Charge_Vs_Path3D->GetXaxis()->SetRange(x,x);
