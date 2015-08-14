@@ -658,15 +658,13 @@ std::cout<<"TESTA\n";
          }else if(SQRTS==8){
             ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Low,THXSEC8TeV_Gluino_High, PlotMinScale, PlotMaxScale);
-         }else if(SQRTS==13){ //FIXME
-            ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Cen);
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double),THXSEC8TeV_Gluino_Mass,THXSEC8TeV_Gluino_Low,THXSEC8TeV_Gluino_High, PlotMinScale, PlotMaxScale);
-         }
-	 else {
-	   const int NMass=sizeof(THXSEC8TeV_Gluino_Mass)/sizeof(double);
-	   double ones[NMass];
-	   for(int i=0; i<NMass; i++) ones[i]=1;
-	   ThXSec   [k] = new TGraph(NMass,THXSEC8TeV_Gluino_Mass,ones);
+         }else if(SQRTS==13){ 
+            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_Gluino_Mass)/sizeof(double),THXSEC13TeV_Gluino_Mass,THXSEC13TeV_Gluino_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC13TeV_Gluino_Mass)/sizeof(double),THXSEC13TeV_Gluino_Mass,THXSEC13TeV_Gluino_Low,THXSEC13TeV_Gluino_High, PlotMinScale, PlotMaxScale);
+         }else{
+ 	    const int NMass=sizeof(THXSEC13TeV_Gluino_Mass)/sizeof(double);
+	    double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
+	    ThXSec   [k] = new TGraph(NMass,THXSEC13TeV_Gluino_Mass,ones);
 	 }
       }else if(modelVector[k].find("Stop"  )!=string::npos){
          if(SQRTS==7){
@@ -675,15 +673,13 @@ std::cout<<"TESTA\n";
          }else if(SQRTS==8){
             ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Cen);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Low,THXSEC8TeV_Stop_High, PlotMinScale, PlotMaxScale);
-         }else if(SQRTS==13){ //FIXME
-            ThXSec   [k] = new TGraph(sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Cen);
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double),THXSEC8TeV_Stop_Mass,THXSEC8TeV_Stop_Low,THXSEC8TeV_Stop_High, PlotMinScale, PlotMaxScale);
-         }
-         else {
-           const int NMass=sizeof(THXSEC8TeV_Stop_Mass)/sizeof(double);
-           double ones[NMass];
-           for(int i=0; i<NMass; i++) ones[i]=1;
-           ThXSec   [k] = new TGraph(NMass,THXSEC8TeV_Stop_Mass,ones);
+         }else if(SQRTS==13){
+            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_Stop_Mass)/sizeof(double),THXSEC13TeV_Stop_Mass,THXSEC13TeV_Stop_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr",sizeof(THXSEC13TeV_Stop_Mass)/sizeof(double),THXSEC13TeV_Stop_Mass,THXSEC13TeV_Stop_Low,THXSEC13TeV_Stop_High, PlotMinScale, PlotMaxScale);
+         }else{
+            const int NMass=sizeof(THXSEC13TeV_Stop_Mass)/sizeof(double);
+            double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
+            ThXSec   [k] = new TGraph(NMass,THXSEC13TeV_Stop_Mass,ones);
          }
       }else if(modelVector[k].find("GMStau"  )!=string::npos){
          if(SQRTS==7){
@@ -692,15 +688,20 @@ std::cout<<"TESTA\n";
          }else if(SQRTS==8){
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double),THXSEC8TeV_GMStau_Mass,THXSEC8TeV_GMStau_Low,THXSEC8TeV_GMStau_High, PlotMinScale, PlotMaxScale);
-         }else if(SQRTS==13){ //FIXME
+         }else if(SQRTS==13){ 
+//            #Prospino xsection that I get looks very weird, use pythia for the time being
+//            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Cen);
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Low,THXSEC13TeV_GMStau_High, PlotMinScale, PlotMaxScale);
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double),THXSEC8TeV_GMStau_Mass,THXSEC8TeV_GMStau_Low,THXSEC8TeV_GMStau_High, PlotMinScale, PlotMaxScale);
-         }
-         else {
-           const int NMass=sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double);
-           double ones[NMass];
-           for(int i=0; i<NMass; i++) ones[i]=1;
-           ThXSec   [k] = new TGraph(NMass,THXSEC8TeV_GMStau_Mass,ones);
+            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
+            
+         }else{
+            const int NMass=sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double);
+            double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
+            ThXSec   [k] = new TGraph(NMass,THXSEC13TeV_GMStau_Mass,ones);
          }
       }else if(modelVector[k].find("PPStau"  )!=string::npos){
          if(SQRTS==7){
@@ -710,14 +711,18 @@ std::cout<<"TESTA\n";
             ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double),THXSEC8TeV_PPStau_Mass,THXSEC8TeV_PPStau_Low,THXSEC8TeV_PPStau_High, PlotMinScale, PlotMaxScale);
          }else if(SQRTS==13){
-            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double),THXSEC8TeV_PPStau_Mass,THXSEC8TeV_PPStau_Low,THXSEC8TeV_PPStau_High, PlotMinScale, PlotMaxScale);
-         }
-         else {
-           const int NMass=sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double);
-           double ones[NMass];
-           for(int i=0; i<NMass; i++) ones[i]=1;
-           ThXSec   [k] = new TGraph(NMass,THXSEC8TeV_PPStau_Mass,ones);
+//            #Prospino xsection that I get looks very weird, use pythia for the time being
+//            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Cen);
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Low,THXSEC13TeV_PPStau_High, PlotMinScale, PlotMaxScale);
+            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);            
+            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
+         }else{
+           const int NMass=sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double);
+           double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
+           ThXSec   [k] = new TGraph(NMass,THXSEC13TeV_PPStau_Mass,ones);
          }
        }else{
          //if(modelVector[k].find("o3")!=string::npos){
@@ -731,8 +736,8 @@ std::cout<<"TESTA\n";
          double* XSecErrHigh = new double[ThXSec[k]->GetN()];
          //assume 10% error on xsection
          for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale); 
-     }
+         ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale); 
+       }
    }
 
 std::cout<<"TESTB\n";
@@ -867,45 +872,53 @@ std::cout<<"TESTC\n";
    //HQGraphMap["DY_Q8"        ]->SetLineColor(14); HQGraphMap["DY_Q8"        ]->SetMarkerColor(14);  HQGraphMap["DY_Q8"        ]->SetLineWidth(2);   HQGraphMap["DY_Q8"        ]->SetLineStyle(1);  HQGraphMap["DY_Q8"        ]->SetMarkerStyle(24);
 
 std::cout<<"TESTD\n";
-   ThGraphMap["GMStau"     ]->SetMinimum(PlotMinScale);
-
    c1 = new TCanvas("c1", "c1",600,600);
-   TMultiGraph* MGMu = new TMultiGraph();
-   if(!Combine) {
-   MGMu->Add(ThGraphMap["Gluino_f10" ]      ,"L");
-   MGMu->Add(ThGraphMap["Stop"       ]      ,"L");
-   MGMu->Add(ThGraphMap["GMStau"     ]      ,"L");
-   MGMu->Add(ThGraphMap["PPStau"     ]      ,"L");
-   //MGMu->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
-   //MGMu->Add(ThGraphMap["DY_Q1"    ]     ,"L");
-   }   
-   MGMu->Add(MuGraphMap["Gluino_f10" ]      ,"LP");
-   //MGMu->Add(MuGraphMap["Gluino_f50" ]      ,"LP");
-   MGMu->Add(MuGraphMap["Stop"       ]      ,"LP");
-   MGMu->Add(MuGraphMap["GMStau"     ]      ,"LP");
-   MGMu->Add(MuGraphMap["PPStau"     ]      ,"LP");
-   //MGMu->Add(MuGraphMap["DY_Q2o3"    ]     ,"LP");
-   //MGMu->Add(MuGraphMap["DY_Q1"    ]     ,"LP");
-   MGMu->Draw("A");
+   c1->SetLogy(true);
+
+   TH1D* frame = new TH1D("frame", "frame", 1,50, 2650);
+   frame->GetXaxis()->SetNdivisions(505);
+   frame->SetTitle("");
+   frame->SetStats(kFALSE);
+   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+   frame->GetYaxis()->SetTitleOffset(1.40);
+   frame->SetMaximum(PlotMaxScale);
+   frame->SetMinimum(PlotMinScale);
+   frame->Draw("AXIS");
+
+
+//   MGMu->Draw("A");
+
 
    if(!Combine) {
-   ThErrorMap["Gluino_f10"]->Draw("f");
-   ThErrorMap["Stop"      ]->Draw("f");
-   ThErrorMap["GMStau"    ]->Draw("f");
-   ThErrorMap["PPStau"    ]->Draw("f");
-   //ThErrorMap["DY_Q2o3"   ]->Draw("f");
-   //ThErrorMap["DY_Q1"   ]->Draw("f");
+      ThErrorMap["Gluino_f10"]->Draw("F");
+      ThGraphMap["Gluino_f10" ]->Draw("L");
+
+      ThErrorMap["Stop"      ]->Draw("F");
+      ThGraphMap["Stop"       ]->Draw("L");
+
+      ThErrorMap["GMStau"    ]->Draw("F");
+      ThGraphMap["GMStau"     ]->Draw("L");
+
+      ThErrorMap["PPStau"    ]->Draw("F");
+      ThGraphMap["PPStau"     ]->Draw("L");
+
+      //ThErrorMap["DY_Q2o3"   ]->Draw("F");
+      //ThGraphMap["DY_Q2o3"    ]->Draw("L");
+
+      //ThErrorMap["DY_Q1"   ]->Draw("F");
+      //ThGraphMap["DY_Q1"    ]->Draw("L");
    }else{
       TLine* LineAtOne = new TLine(50,1,1550,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
    }
 
-   MGMu->Draw("same");
-   MGMu->SetTitle("");
-   MGMu->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
-   MGMu->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
-   MGMu->GetYaxis()->SetTitleOffset(1.40);
-   MGMu->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-   MGMu->GetXaxis()->SetRangeUser(50,2650);
+   MuGraphMap["Gluino_f10" ]->Draw("LP");
+   //MuGraphMap["Gluino_f50" ]->Draw("LP");
+   MuGraphMap["Stop"       ]->Draw("LP");
+   MuGraphMap["GMStau"     ]->Draw("LP");
+   MuGraphMap["PPStau"     ]->Draw("LP");
+   //MuGraphMap["DY_Q2o3"    ]->Draw("LP");
+   //MuGraphMap["DY_Q1"    ]->Draw("LP");
 
    DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
    TLegend* LEGMu = !Combine ? new TLegend(0.50,0.92-7*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+7*0.043);
@@ -952,49 +965,52 @@ std::cout<<"TESTD\n";
    LEGTh->Draw();
    }
    LEGMu->Draw();
+
    c1->SetLogy(true);
    SaveCanvas(c1, outpath, string("MuExclusionLog"));
+   c1->SaveAs("debug.root");
    delete c1;
 
    c1 = new TCanvas("c1", "c1",600,600);
-   TMultiGraph* MGTk = new TMultiGraph();
-   if(!Combine) {
-   MGTk->Add(ThGraphMap["Gluino_f10" ]     ,"L");
-   MGTk->Add(ThGraphMap["Stop"       ]     ,"L");
-   MGTk->Add(ThGraphMap["GMStau"     ]     ,"L");  
-   MGTk->Add(ThGraphMap["PPStau"     ]     ,"L");
-   //MGTk->Add(ThGraphMap["DY_Q2o3"    ]     ,"L");
-   }
-
-   MGTk->Add(TkGraphMap["Gluino_f10" ]     ,"LP");
-   //MGTk->Add(TkGraphMap["Gluino_f50" ]     ,"LP");
-   MGTk->Add(TkGraphMap["GluinoN_f10"]     ,"LP");
-   MGTk->Add(TkGraphMap["Stop"       ]     ,"LP");
-   MGTk->Add(TkGraphMap["StopN"      ]     ,"LP");
-   MGTk->Add(TkGraphMap["GMStau"     ]     ,"LP");
-   MGTk->Add(TkGraphMap["PPStau"     ]     ,"LP");
-   //MGTk->Add(TkGraphMap["DY_Q2o3"    ]     ,"LP");
-   MGTk->Draw("A");
+   c1->SetLogy(true);
+   frame = new TH1D("frame", "frame", 1,50, 2650);
+   frame->GetXaxis()->SetNdivisions(505);
+   frame->SetTitle("");
+   frame->SetStats(kFALSE);
+   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+   frame->GetYaxis()->SetTitleOffset(1.40);
+   frame->SetMaximum(PlotMaxScale);
+   frame->SetMinimum(PlotMinScale);
+   frame->Draw("AXIS");
 
    if(!Combine) {
-   ThErrorMap["Gluino_f10"]->Draw("f");
-   ThErrorMap["Stop"      ]->Draw("f");
-   ThErrorMap["GMStau"    ]->Draw("f");
-   ThErrorMap["PPStau"    ]->Draw("f");
-   //ThErrorMap["DY_Q2o3"   ]->Draw("f");
+      ThErrorMap["Gluino_f10"]->Draw("F");
+      ThGraphMap["Gluino_f10"]->Draw("L");
+
+      ThErrorMap["Stop"      ]->Draw("F");
+      ThGraphMap["Stop"      ]->Draw("L");
+
+      ThErrorMap["GMStau"    ]->Draw("F");
+      ThGraphMap["GMStau"    ]->Draw("L");
+
+      ThErrorMap["PPStau"    ]->Draw("F");
+      ThGraphMap["PPStau"    ]->Draw("L");
+
+      //ThErrorMap["DY_Q2o3"   ]->Draw("F");
+      //ThGraphMap["DY_Q2o3"   ]->Draw("L");
    }else{
       TLine* LineAtOne = new TLine(50,1,1550,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
    }
 
-   MGTk->Draw("same");
-   MGTk->SetTitle("");
-   MGTk->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
-   MGTk->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
-   MGTk->GetYaxis()->SetTitleOffset(1.40);
-   MGTk->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-   //if(Combine) MGTk->GetYaxis()->SetRangeUser(PlotMinScale,50);
-   //else MGTk->GetYaxis()->SetRangeUser(PlotMinScale,700);
-   MGTk->GetXaxis()->SetRangeUser(50,2650);
+   TkGraphMap["Gluino_f10" ]->Draw("LP");
+   //TkGraphMap["Gluino_f50" ]->Draw("LP");
+   TkGraphMap["GluinoN_f10"]->Draw("LP");
+   TkGraphMap["Stop"       ]->Draw("LP");
+   TkGraphMap["StopN"      ]->Draw("LP");
+   TkGraphMap["GMStau"     ]->Draw("LP");
+   TkGraphMap["PPStau"     ]->Draw("LP");
+   //TkGraphMap["DY_Q2o3"    ]->Draw("LP");
 
    DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
 
@@ -1054,34 +1070,30 @@ std::cout<<"F\n";
 if(Combine){
 
    c1 = new TCanvas("c1", "c1",600,600);
-   MGTk = new TMultiGraph();
+   frame = new TH1D("frame", "frame", 1,90, 570);
+   frame->GetXaxis()->SetNdivisions(505);
+   frame->SetTitle("");
+   frame->SetStats(kFALSE);
+   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
+   frame->GetYaxis()->SetTitleOffset(1.40);
+   frame->SetMaximum(20);
+   frame->SetMinimum(1e-3);
+   frame->Draw("AXIS");
 
    MuGraphMap["GMStau"       ]->SetLineColor(2);  MuGraphMap["GMStau"       ]->SetMarkerColor(2);   MuGraphMap["GMStau"       ]->SetLineWidth(2);   MuGraphMap["GMStau"       ]->SetLineStyle(1);  MuGraphMap["GMStau"       ]->SetMarkerStyle(22);
    TkGraphMap["GMStau"       ]->SetLineColor(1);  TkGraphMap["GMStau"       ]->SetMarkerColor(1);   TkGraphMap["GMStau"       ]->SetLineWidth(2);   TkGraphMap["GMStau"       ]->SetLineStyle(1);  TkGraphMap["GMStau"       ]->SetMarkerStyle(23);
 
-
    MuGraphMap["PPStau"       ]->SetLineColor(2);  MuGraphMap["PPStau"       ]->SetMarkerColor(2);   MuGraphMap["PPStau"       ]->SetLineWidth(2);   MuGraphMap["PPStau"       ]->SetLineStyle(2);  MuGraphMap["PPStau"       ]->SetMarkerStyle(26);
    TkGraphMap["PPStau"       ]->SetLineColor(1);  TkGraphMap["PPStau"       ]->SetMarkerColor(1);   TkGraphMap["PPStau"       ]->SetLineWidth(2);   TkGraphMap["PPStau"       ]->SetLineStyle(2);  TkGraphMap["PPStau"       ]->SetMarkerStyle(32);
 
-   MGTk->Add(MuGraphMap["PPStau"     ]     ,"LP");
-   MGTk->Add(TkGraphMap["PPStau"     ]     ,"LP");
-   MGTk->Add(MuGraphMap["GMStau"     ]     ,"LP");
-   MGTk->Add(TkGraphMap["GMStau"     ]     ,"LP");
-   MGTk->Draw("A");
+   MuGraphMap["PPStau"     ]->Draw("LP");
+   TkGraphMap["PPStau"     ]->Draw("LP");
+   MuGraphMap["GMStau"     ]->Draw("LP");
+   TkGraphMap["GMStau"     ]->Draw("LP");
 
    TLine* LineAtOne = new TLine(90,1,570,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
-//60.6,533.4
 
-   MGTk->Draw("same");
-   MGTk->SetTitle("");
-   MGTk->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
-   MGTk->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
-   MGTk->GetYaxis()->SetTitleOffset(1.40);
-   MGTk->GetYaxis()->SetRangeUser(1e-3,20);
-   //if(Combine) MGTk->GetYaxis()->SetRangeUser(PlotMinScale,50);
-   //else MGTk->GetYaxis()->SetRangeUser(PlotMinScale,700);
-   MGTk->GetXaxis()->SetRangeUser(90,570);
-   
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), false);
 
    LEGTk = !Combine ? new TLegend(0.50,0.92-3*0.043,0.83,0.92) : new TLegend(0.45,0.15+4*0.043,0.80,0.15+7*0.043);

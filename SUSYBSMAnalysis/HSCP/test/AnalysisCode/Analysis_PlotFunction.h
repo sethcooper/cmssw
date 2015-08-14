@@ -403,7 +403,7 @@ void Smart_SetAxisRange(TH2D* histo){
 }
 
 // return a TCUTG corresponding to the uncertainty on a xsection
-TCutG* GetErrorBand(string name, int N, double* Mass, double* Low, double* High, double MinLow, double MaxHigh){
+TCutG* GetErrorBand(string name, int N, const double* Mass, const double* Low, const double* High, double MinLow, double MaxHigh){
    TCutG* cutg = new TCutG(name.c_str(),2*N);
    cutg->SetFillColor(kGreen-7);
    double I=0;
