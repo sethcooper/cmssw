@@ -2153,8 +2153,11 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    //prepare output directory and log file
    string outpath = InputPattern + "/"+SHAPESTRING+EXCLUSIONDIR+"/";
    MakeDirectories(outpath);
-   FILE* pFile = fopen((outpath+"/"+signal+".info").c_str(),"w");
-   if(!pFile)printf("Can't open file : %s\n",(outpath+"/"+signal+".info").c_str());
+   FILE* pFile=NULL;
+   if(OptimCutIndex<0){ //crease the info file only if we need to optimize the cuts
+      fopen((outpath+"/"+signal+".info").c_str(),"w");
+      if(!pFile)printf("Can't open file : %s\n",(outpath+"/"+signal+".info").c_str());
+   }
 
    stAllInfo result;
    stAllInfo toReturn;
@@ -2202,18 +2205,18 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       }
 
       //report the result for this point in the log file
-      fprintf(pFile  ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
+      if(pFile)fprintf(pFile  ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
       fprintf(stdout ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
       if(OptimCutIndex>=0 || (result.XSec_5Sigma>0 && result.XSec_5Sigma<toReturn.XSec_5Sigma)){
          toReturn=result;
-         fprintf(pFile  ," BestSelection\n");fflush(stdout);
+         if(pFile)fprintf(pFile  ," BestSelection\n");fflush(stdout);
          fprintf(stdout ," BestSelection\n");fflush(stdout);
       }else{
-         fprintf(pFile  ,"\n");fflush(stdout);
+         if(pFile)fprintf(pFile  ,"\n");fflush(stdout);
          fprintf(stdout ,"\n");fflush(stdout);
       }
    }//end of selection cut loop
-   fclose(pFile);   
+   if(pFile)fclose(pFile);   
  
    //recompute the limit for the final point and save the output in the final directory (also save some plots for the shape based analysis)
    if(TypeMode<=2){runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
@@ -2412,14 +2415,14 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       //NSign       = MassSign  ->GetBinContent(CutIndex+1) / signalsMeanHSCPPerEvent;
       //NSignErr    = MassSign  ->GetBinError  (CutIndex+1) / signalsMeanHSCPPerEvent;
 
-      MassSignProj      = ((TH2D*)MassSign )->ProjectionY("MassSignPro"  ,CutIndex+1,CutIndex+1);
+      MassSignProj       = ((TH2D*)MassSign )->ProjectionY("MassSignPro"  ,CutIndex+1,CutIndex+1);
       MassSignProjP      = ((TH2D*)MassSignP )->ProjectionY("MassSignProP"  ,CutIndex+1,CutIndex+1);
       MassSignProjI      = ((TH2D*)MassSignI )->ProjectionY("MassSignProI"  ,CutIndex+1,CutIndex+1);
       MassSignProjM      = ((TH2D*)MassSignM )->ProjectionY("MassSignProM"  ,CutIndex+1,CutIndex+1);
       MassSignProjT      = ((TH2D*)MassSignT )->ProjectionY("MassSignProT"  ,CutIndex+1,CutIndex+1);
       MassSignProjPU     = ((TH2D*)MassSignPU)->ProjectionY("MassSignProPU" ,CutIndex+1,CutIndex+1);
 
-      NSign      = MassSignProj ->IntegralAndError(0, MassSignProj ->GetNbinsX()+1, NSignErr)  / signalsMeanHSCPPerEvent;  NSignErr /= signalsMeanHSCPPerEvent;
+      NSign       = MassSignProj  ->IntegralAndError(0, MassSignProj  ->GetNbinsX()+1, NSignErr )  / signalsMeanHSCPPerEvent;  NSignErr  /= signalsMeanHSCPPerEvent;
       NSignP      = MassSignProjP ->IntegralAndError(0, MassSignProjP ->GetNbinsX()+1, NSignPErr)  / signalsMeanHSCPPerEvent;  NSignPErr /= signalsMeanHSCPPerEvent;
       NSignI      = MassSignProjI ->IntegralAndError(0, MassSignProjI ->GetNbinsX()+1, NSignIErr)  / signalsMeanHSCPPerEvent;  NSignIErr /= signalsMeanHSCPPerEvent;
       NSignM      = MassSignProjM ->IntegralAndError(0, MassSignProjM ->GetNbinsX()+1, NSignMErr)  / signalsMeanHSCPPerEvent;  NSignMErr /= signalsMeanHSCPPerEvent;
@@ -2473,20 +2476,22 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    result.NPred     = NPred;
    result.NPredErr  = NPredErr;
    result.NSign     = NSign;
-//   NSign/=(result.XSec_Th*100.0); //normalize xsection to 10fb
-   NSign/=(100.0); //normalize xsection to 10fb
+   NSign /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
+   double SignalScaleFactor = 1.0;
+   for(unsigned int i=0;i<20 && NSign<1e-1; i++){SignalScaleFactor*=10.0;  NSign*=10.0;}  
+
 
    //for shape based analysis we need to save all histograms into a root file
    char CutIndexStr[255];sprintf(CutIndexStr, "SQRTS%02.0fCut%03.0f",SQRTS, result.Index);
    if(Shape){
       //prepare the histograms and variation
       //scale to 10fb xsection and to observed events instead of observed tracks
-      MassSignProj  ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*100));
-      MassSignProjP ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*100));
-      MassSignProjI ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*100));
-      MassSignProjM ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*100));
-      MassSignProjT ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*100));
-      MassSignProjPU->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*100));
+      MassSignProj  ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjP ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjI ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjM ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjT ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjPU->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
 
       //Rebin --> keep CPU time reasonable and error small
       MassDataProj  ->Rebin(2);
@@ -2570,7 +2575,6 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    char TypeStr[255]; sprintf(TypeStr,"Type%i", TypeMode);
    string JobName = TypeStr+signal;
    string datacardPath = "/tmp/shape_"+JobName+".dat";
-
    makeDataCard(datacardPath,string("shape_")+JobName+".root", TypeStr,signal, NData, NPred, 1.0+(Shape?RescaleError:NPredErr/NPred), NSign, 1.0+fabs(EffErr/Eff), SignalUnc, Shape);
 
    char massStr[255]; sprintf(massStr,"%.0f",result.Mass);
@@ -2594,11 +2598,11 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
          //we found the signal strength that lead to a significance close enough to the 5sigma to stop the loop 
          //OR we know that this point is not going to be a good one --> can do a coarse approximation since the begining
 //         if(fabs(SignifValue-5)<0.75 || (fastOptimization && Strength>=previousXSec_5Sigma && SignifValue<5)){
-         if(fabs(SignifValue-5)<1.00 || (fastOptimization && previousXSec_5Sigma>=0 && Strength>=previousXSec_5Sigma/(result.XSec_Th/100.0) && SignifValue<5 && SignifValue>=0)){
+         if(fabs(SignifValue-5)<1.00 || (fastOptimization && previousXSec_5Sigma>=0 && Strength>=previousXSec_5Sigma*(SignalScaleFactor/result.LInt) && SignifValue<5 && SignifValue>=0)){
             if(fabs(SignifValue-5)<1.00){printf("Full Converge\n");
             }else{printf("Fast Converge\n");}
-            result.XSec_5Sigma  = Strength * (5/SignifValue) * (result.XSec_Th/100.0);//xsection in pb
-            printf("XSection for 5sigma discovery = %f = %f * %f * %f\n",result.XSec_5Sigma, Strength,  (5/SignifValue), (result.XSec_Th/100.0));
+            result.XSec_5Sigma  = Strength * (5/SignifValue) * (SignalScaleFactor/result.LInt);//xsection in pb
+            printf("XSection for 5sigma discovery = %f = %f * %f * (%f/%f)\n",result.XSec_5Sigma, Strength,  (5/SignifValue), SignalScaleFactor, result.LInt);
             break;
          }
 
@@ -2624,7 +2628,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "hadd higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
+      CodeToExecute += "hadd -f higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
       system(CodeToExecute.c_str());
 
       //if all went well, the combine tool created a new file containing the result of the limit in the form of a TTree
@@ -2641,13 +2645,13 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       tree->GetBranch("quantileExpected")->SetAddress(&TquantExp);
       for(int ientry=0;ientry<tree->GetEntriesFast();ientry++){
         tree->GetEntry(ientry);
-        printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit);
-        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(result.XSec_Th/100.0);
-        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(result.XSec_Th/100.0);
-        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*(result.XSec_Th/100.0);
-        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(result.XSec_Th/100.0);
-        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(result.XSec_Th/100.0);
-        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(result.XSec_Th/100.0);
+        printf("Quantile=%f --> Limit = %f\n", TquantExp, Tlimit*(SignalScaleFactor/result.LInt));
+        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*(SignalScaleFactor/result.LInt);
+        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*(SignalScaleFactor/result.LInt);
+        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*(SignalScaleFactor/result.LInt);
+        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*(SignalScaleFactor/result.LInt);
+        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*(SignalScaleFactor/result.LInt);
+        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*(SignalScaleFactor/result.LInt);
         }else{printf("Quantil %f unused by the analysis --> check the code\n", TquantExp);
         }
       }
@@ -2845,7 +2849,9 @@ bool Combine(string InputPattern, string signal7, string signal8){
    printf("Combined Significance = %f (%s)\n", result.Significance, (outpath+"shape_"+JobName+".dat").c_str());
 
    double NPred = result.NPred;
-   double NSign = result.NSign / 100.0;
+   double NSign = result.NSign;
+   double SignalScaleFactor = 1.0;
+   for(unsigned int i=0;i<20 && NSign<1e-1; i++){SignalScaleFactor*=10.0;  NSign*=10.0;}
 
    //ALL CODE BELOW IS A BIT DIFFERENT THAN THE ONE USED IN runCombined, BECAUSE HERE WE KEEP THE RESULTS ON LIMIT IN TERMS OF SIGNAL STRENGTH (r=SigmaObs/SigmaTH)
    if(true){
@@ -2862,7 +2868,7 @@ bool Combine(string InputPattern, string signal7, string signal8){
       CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.840 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.025 >> shape_" + JobName + "Exp.log;";
       CodeToExecute += "combine -M HybridNew  -H ProfileLikelihood -n " + JobName + " -m " + massStr + " shape_" + JobName+".dat --expectedFromGrid 0.975 >> shape_" + JobName + "Exp.log;";
-      CodeToExecute += "hadd higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
+      CodeToExecute += "hadd -f higgsCombine"+JobName+".HybridNew.mH"+massStr+".Merged.root higgsCombine"+JobName+".HybridNew.mH"+massStr+"*.root";
       system(CodeToExecute.c_str());
 
       //if all went well, the combine tool created a new file containing the result of the limit in the form of a TTree
@@ -2879,12 +2885,12 @@ bool Combine(string InputPattern, string signal7, string signal8){
       tree->GetBranch("quantileExpected")->SetAddress(&TquantExp);
       for(int ientry=0;ientry<tree->GetEntriesFast();ientry++){
         tree->GetEntry(ientry);
-        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit/100.0;
-        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit/100.0;
-        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit/100.0;
-        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit/100.0;
-        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit/100.0;
-        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit/100.0;
+        if(TquantExp==0.025f){ result.XSec_Exp2Down = Tlimit*SignalScaleFactor;
+        }else if(TquantExp==0.160f){ result.XSec_ExpDown  = Tlimit*SignalScaleFactor;
+        }else if(TquantExp==0.500f){ result.XSec_Exp      = Tlimit*SignalScaleFactor;
+        }else if(TquantExp==0.840f){ result.XSec_ExpUp    = Tlimit*SignalScaleFactor;
+        }else if(TquantExp==0.975f){ result.XSec_Exp2Up   = Tlimit*SignalScaleFactor;
+        }else if(TquantExp==-1    ){ result.XSec_Obs      = Tlimit*SignalScaleFactor;
         }else{printf("Quantil %f unused by the analysis --> check the code\n", TquantExp);
         }
       }
