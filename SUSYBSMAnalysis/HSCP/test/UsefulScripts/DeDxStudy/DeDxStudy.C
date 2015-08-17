@@ -77,6 +77,7 @@ struct dEdxStudyObj
 
    TH3D* Charge_Vs_Path;
    TH1D* HdedxMIP;
+   TH1D* HdedxSIG;
    TH2D* HdedxVsPHSCP;
    TH2D* HdedxVsP;
    TH2D* HdedxVsQP;
@@ -94,12 +95,15 @@ struct dEdxStudyObj
    TProfile2D* Charge_Vs_XY[15];
    TH2D* Charge_Vs_XYH[15];
    TProfile2D* Charge_Vs_XYN[15];
+   TProfile2D* Charge_Vs_XYCSize[15];
    TH2D* Charge_Vs_XYHN[15];
+   TH2D* Charge_Vs_XYLN[15];
+
 
    TH3F* dEdxTemplates = NULL;
    std::unordered_map<unsigned int,double>* TrackerGains = NULL;
 
-   dEdxStudyObj(string Name_, int type_, int subdet_, TH3F* dEdxTemplates_=NULL, std::unordered_map<unsigned int,double>* TrackerGains_=NULL, bool mustBeInside=false){
+   dEdxStudyObj(string Name_, int type_, int subdet_, TH3F* dEdxTemplates_=NULL, std::unordered_map<unsigned int,double>* TrackerGains_=NULL, bool mustBeInside_=false){
       Name = Name_;
 
       if     (type_==0){ isHit=true;  isEstim= false; isDiscrim = false;}
@@ -113,6 +117,7 @@ struct dEdxStudyObj
 
       dEdxTemplates = dEdxTemplates_;
       TrackerGains  = TrackerGains_;
+      mustBeInside = mustBeInside_;
 
       string HistoName;
       //HitLevel plot      
@@ -122,11 +127,13 @@ struct dEdxStudyObj
             HistoName = Name + "_ChargeVsPath";      Charge_Vs_Path        = new TH3D(      HistoName.c_str(), HistoName.c_str(), P_NBins, P_Min, P_Max, Path_NBins, Path_Min, Path_Max, Charge_NBins, Charge_Min, Charge_Max);
             for(unsigned int g=0;g<15;g++){
                char Id[255]; sprintf(Id, "%02i", g);
-               HistoName = Name + "_ChargeVsFS"+Id;    Charge_Vs_FS[g]       = new TProfile( HistoName.c_str(), HistoName.c_str(),  769, 0, 769);
-               HistoName = Name + "_ChargeVsXY"+Id;    Charge_Vs_XY[g]       = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
-               HistoName = Name + "_ChargeVsXYH"+Id;   Charge_Vs_XYH[g]      = new TH2D     ( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
-               HistoName = Name + "_ChargeVsXYN"+Id;   Charge_Vs_XYN[g]      = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
-               HistoName = Name + "_ChargeVsXYHN"+Id;  Charge_Vs_XYHN[g]     = new TH2D     ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsFS"+Id;       Charge_Vs_FS[g]       = new TProfile  ( HistoName.c_str(), HistoName.c_str(),  769, 0, 769);
+               HistoName = Name + "_ChargeVsXY"+Id;       Charge_Vs_XY[g]       = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
+               HistoName = Name + "_ChargeVsXYH"+Id;      Charge_Vs_XYH[g]      = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -15, 15, 250, -15, 15);
+               HistoName = Name + "_ChargeVsXYN"+Id;      Charge_Vs_XYN[g]      = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYHN"+Id;     Charge_Vs_XYHN[g]     = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYLN"+Id;     Charge_Vs_XYLN[g]     = new TH2D      ( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
+               HistoName = Name + "_ChargeVsXYCSize"+Id;  Charge_Vs_XYCSize[g]  = new TProfile2D( HistoName.c_str(), HistoName.c_str(),  250, -1.5, 1.5, 250, -1.5, 1.5);
             }
          }
       }
@@ -134,6 +141,7 @@ struct dEdxStudyObj
       //Track Level plots
       if(isEstim || isDiscrim){
          HistoName = Name + "_MIP";               HdedxMIP              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
+         HistoName = Name + "_SIG";               HdedxSIG              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  200, 0, isDiscrim?1.0:20);
          HistoName = Name + "_dedxVsPHSCP";       HdedxVsPHSCP          = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 2000,1500,0, isDiscrim?1.0:15);
          HistoName = Name + "_dedxVsP";           HdedxVsP              = new TH2D(      HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
          HistoName = Name + "_dedxVsQP";          HdedxVsQP             = new TH2D(      HistoName.c_str(), HistoName.c_str(), 6000, -30, 30,1500,0, isDiscrim?1.0:15);
@@ -191,11 +199,13 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    TH3F* dEdxTemplates    = NULL;
    TH3F* dEdxTemplatesInc = NULL;
    if(isData){   //FIXME update template on data directory
-         dEdxSF           = 1.0;
+         dEdxSF [0] = 1.00000;
+         dEdxSF [1] = 1.14985;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false);
    }else{
-         dEdxSF           = 1.09708;
+         dEdxSF [0] = 1.09708;
+         dEdxSF [1] = 1.01875;
          dEdxTemplates    = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
          dEdxTemplatesInc = loadDeDxTemplate(DIRNAME + "/../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", false); 
    }
@@ -211,6 +221,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    results.push_back(new dEdxStudyObj("hit_SO"      , 0, 2, NULL            , &TrackerGains) );
    results.push_back(new dEdxStudyObj("hit_SP"      , 0, 3, NULL            , &TrackerGains) );
    results.push_back(new dEdxStudyObj("hit_SO_in"   , 0, 2, NULL            , &TrackerGains, true) );
+   results.push_back(new dEdxStudyObj("hit_SP_in"   , 0, 3, NULL            , &TrackerGains, true) );
    results.push_back(new dEdxStudyObj("harm2_PO_raw", 1, 1, NULL            , NULL) );
    results.push_back(new dEdxStudyObj("harm2_SO_raw", 1, 2, NULL            , NULL) );
    results.push_back(new dEdxStudyObj("harm2_SP_raw", 1, 3, NULL            , NULL) );
@@ -259,7 +270,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(track->p() > 5){
             for(unsigned int h=0;h<dedxHits->size();h++){
                 DetId detid(dedxHits->detId(h));
-                double scaleFactor = dEdxSF;
+                double scaleFactor = dEdxSF[0];
+                if (detid.subdetId()<3) scaleFactor *= dEdxSF[1];
                 double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
                 double ChargeOverPathlength = scaleFactor*Norm*dedxHits->charge(h)/dedxHits->pathlength(h);
 
@@ -278,6 +290,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                       if(detid.subdetId()>=3)results[R]->Charge_Vs_FS[moduleGeometry]->Fill(dedxHits->stripCluster(h)->firstStrip(),  dedxHits->charge(h)); 
                       results[R]->Charge_Vs_XY[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(), dedxHits->charge(h)); 
                       results[R]->Charge_Vs_XYH[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y()); 
+
+                      results[R]->Charge_Vs_XYCSize[moduleGeometry]->Fill(dedxHits->pos(h).x(), dedxHits->pos(h).y(), detid.subdetId() >= 3
+                                                                                                                      ? dedxHits->stripCluster(h)->amplitudes().size()
+                                                                                                                      : dedxHits->pixelCluster(h)->size());
  
                       if(moduleGeometry>=1){
                          double nx, ny;
@@ -293,6 +309,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                          //printf("%i - %f - %f --> %f - %f\n", moduleGeometry, dedxHits->pos(h).x(), dedxHits->pos(h).y(), nx, ny);
                          results[R]->Charge_Vs_XYHN[moduleGeometry]->Fill(nx, ny); 
                          results[R]->Charge_Vs_XYN[moduleGeometry]->Fill(nx, ny, dedxHits->charge(h)); 
+                         if(ChargeOverPathlength<1.6)results[R]->Charge_Vs_XYLN[moduleGeometry]->Fill(nx, ny);
                       }
                    }
                 }
@@ -322,7 +339,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
              if(track->p()>5 && track->p()<40){
                 results[R]->HdedxMIP->Fill(dedxObj->dEdx());
                 results[R]->HP->Fill(track->p());
-             }
+             } else if (track->pt() > 40)
+                results[R]->HdedxSIG->Fill(dedxObj->dEdx());
 
              if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
 
