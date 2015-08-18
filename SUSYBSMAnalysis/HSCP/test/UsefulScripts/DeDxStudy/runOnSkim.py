@@ -31,8 +31,8 @@ if len(sys.argv)==1:
 
 
 datasetList = [
-  ["Run251252", "/storage/data/cms/users/jzobec/crab_DeDxSkimmerWithVertexNEW/150811_131054/0000/"],
-  ["MCMinBias", "/storage/data/cms/users/jzobec/FARM_MC_13TeV_MinBias_TuneCUETP8M1_SIMAOD/outputs/"],
+  ["Run251252", "/storage/data/cms/store/user/querten/AAA/HSCP/dedxSkim/Run251252/"],
+  ["MCMinBias", "/storage/data/cms/store/user/querten/AAA/HSCP/dedxSkim/MC13TeVMinBiasTuneCUETP8M1_SIMAOD/"],
 
   ["MCGluino_M1000_f10", "Gluino_13TeV_M1000_f10"],
   ["MCGluino_M1400_f10", "Gluino_13TeV_M1400_f10"],
