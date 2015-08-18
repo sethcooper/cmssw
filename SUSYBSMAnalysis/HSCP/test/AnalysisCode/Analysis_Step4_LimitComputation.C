@@ -968,7 +968,6 @@ std::cout<<"TESTD\n";
 
    c1->SetLogy(true);
    SaveCanvas(c1, outpath, string("MuExclusionLog"));
-   c1->SaveAs("debug.root");
    delete c1;
 
    c1 = new TCanvas("c1", "c1",600,600);
@@ -2154,8 +2153,8 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    string outpath = InputPattern + "/"+SHAPESTRING+EXCLUSIONDIR+"/";
    MakeDirectories(outpath);
    FILE* pFile=NULL;
-   if(OptimCutIndex<0){ //crease the info file only if we need to optimize the cuts
-      fopen((outpath+"/"+signal+".info").c_str(),"w");
+   if(OptimCutIndex<0){ //create the info file only if we need to optimize the cuts
+      pFile = fopen((outpath+"/"+signal+".info").c_str(),"w");
       if(!pFile)printf("Can't open file : %s\n",(outpath+"/"+signal+".info").c_str());
    }
 
@@ -2172,10 +2171,10 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       if(HCuts_Pt ->GetBinContent(CutIndex+1) < 50 && TypeMode!=4){printf("Skip cut=%i because of too lose pT cut\n", CutIndex); continue; }
 
       //make sure we have a reliable prediction of the number of events      
-      if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1) >0 && (H_A->GetBinContent(CutIndex+1)<25 || H_F->GetBinContent(CutIndex+1)<25 || H_G->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (AFG/EE) is not reliable
-      if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1)==0 && H_A->GetBinContent(CutIndex+1)>0 && (H_C->GetBinContent(CutIndex+1)<25 || H_B->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CB/A) is not reliable
-      if(OptimCutIndex<0 && H_F->GetBinContent(CutIndex+1)>0 && H_A->GetBinContent(CutIndex+1)==0 && (H_B->GetBinContent(CutIndex+1)<25 || H_H->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CB/A) is not reliable
-      if(OptimCutIndex<0 && H_G->GetBinContent(CutIndex+1)>0 && H_F->GetBinContent(CutIndex+1)==0 && (H_C->GetBinContent(CutIndex+1)<25 || H_H->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CH/G) is not reliable
+      if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1) >0 &&(H_A->GetBinContent(CutIndex+1)<25 ||  H_F->GetBinContent(CutIndex+1)<25 || H_G->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (AFG/EE) is not reliable
+      if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1)==0 && H_A->GetBinContent(CutIndex+1)<=0 && (H_C->GetBinContent(CutIndex+1)<25 || H_B->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CB/A) is not reliable
+      if(OptimCutIndex<0 && H_F->GetBinContent(CutIndex+1) >0 && H_A->GetBinContent(CutIndex+1)<=0 && (H_B->GetBinContent(CutIndex+1)<25 || H_H->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CB/A) is not reliable
+      if(OptimCutIndex<0 && H_G->GetBinContent(CutIndex+1) >0 && H_F->GetBinContent(CutIndex+1)==0 && (H_C->GetBinContent(CutIndex+1)<25 || H_H->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (CH/G) is not reliable
    
       //make sure we have a reliable prediction of the shape 
       if(TypeMode<=2){
@@ -2205,16 +2204,19 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       }
 
       //report the result for this point in the log file
-      if(pFile)fprintf(pFile  ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
-      fprintf(stdout ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);fflush(stdout);
+      if(pFile)fprintf(pFile  ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);
+      fprintf(stdout ,"%10s: Testing CutIndex=%4i (Pt>%6.2f I>%6.3f TOF>%6.3f) %3.0f<M<inf Ndata=%+6.2E NPred=%6.3E+-%6.3E SignalEff=%6.3f ExpLimit=%6.3E (%6.3E) Reach=%6.3E",signal.c_str(),CutIndex,HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1), MinRange,result.NData,result.NPred, result.NPredErr,result.Eff,result.XSec_Exp, result.XSec_Obs, result.XSec_5Sigma);
       if(OptimCutIndex>=0 || (result.XSec_5Sigma>0 && result.XSec_5Sigma<toReturn.XSec_5Sigma)){
          toReturn=result;
-         if(pFile)fprintf(pFile  ," BestSelection\n");fflush(stdout);
-         fprintf(stdout ," BestSelection\n");fflush(stdout);
+         if(pFile)fprintf(pFile  ," BestSelection\n");
+         fprintf(stdout ," BestSelection\n");
       }else{
-         if(pFile)fprintf(pFile  ,"\n");fflush(stdout);
-         fprintf(stdout ,"\n");fflush(stdout);
+         if(pFile)fprintf(pFile  ,"\n");
+         fprintf(stdout ,"\n");
       }
+ 
+      if(pFile)fflush(pFile);
+      fflush(stdout);
    }//end of selection cut loop
    if(pFile)fclose(pFile);   
  
@@ -2456,9 +2458,6 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    if(Eff==0){printf("SkipThisPoint --> Signal acceptance is null\n"); return false;}
 //   if(Eff<=1E-5)return false; // if Eff<0.001% -> limit will hardly converge and we are probably not interested by this point anyway
 
-   //no way that this point is optimal
-   bool pointMayBeOptimal = (fastOptimization && !getXsection && getSignificance && ((NPred-3*NPredErr)<=result.NPred || Eff>=result.Eff));
-
    //save these info to the result structure
    result.Eff       = Eff;
    result.Eff_SYSTP = EffP;
@@ -2479,6 +2478,11 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    NSign /= (result.XSec_Th*result.LInt); //normalize signal to 1pb
    double SignalScaleFactor = 1.0;
    for(unsigned int i=0;i<20 && NSign<1e-1; i++){SignalScaleFactor*=10.0;  NSign*=10.0;}  
+   if(NPred<0.001) {NPred=0.001; NPredErr=NPred;}
+
+
+   //no way that this point is optimal
+   bool pointMayBeOptimal = (fastOptimization && !getXsection && getSignificance && ((NPred-3*NPredErr)<=result.NPred || Eff>=result.Eff));
 
 
    //for shape based analysis we need to save all histograms into a root file
@@ -2581,7 +2585,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    string test = massStr + signal;
    if(getSignificance && Temporary){
       if(NPred<0.001) NPred=0.001;
-      double SignifValue=0.0; double PrevSignifValue=0; double Strength=0.1*(3*sqrt(NPred)/NSign);  if(result.XSec_5Sigma>0 && result.XSec_5Sigma<1E48)Strength=result.XSec_5Sigma/result.XSec_Th;
+      double SignifValue=0.0; double PrevSignifValue=0; double Strength=0.1*(3*sqrt(NPred)/NSign);  if(result.XSec_5Sigma>0 && result.XSec_5Sigma<1E48)Strength=result.XSec_5Sigma / (SignalScaleFactor/result.LInt);
 //      double SignifValue=0.0;double Strength=0.0005;  if(result.XSec_5Sigma>0 && result.XSec_5Sigma<1E50)Strength=result.XSec_5Sigma/result.XSec_Th;
       double previousXSec_5Sigma=result.XSec_5Sigma; result.XSec_5Sigma = -1;
       //find signal strength needed to get a 5sigma significance
@@ -2593,7 +2597,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
          printf("%i SIGNAL STRENGTH = %E --> SIGNIFICANCE=%E (countDecrease=%f)\n",l, Strength,SignifValue,CountDecrease);fflush(stdout);
 
          if(SignifValue<=PrevSignifValue || SignifValue<=0){CountDecrease++;}else{CountDecrease=0;}
-         if(CountDecrease>=2){result.XSec_5Sigma  = 1E49; break;}
+         if(CountDecrease>=3){result.XSec_5Sigma  = 1E49; break;}
 
          //we found the signal strength that lead to a significance close enough to the 5sigma to stop the loop 
          //OR we know that this point is not going to be a good one --> can do a coarse approximation since the begining

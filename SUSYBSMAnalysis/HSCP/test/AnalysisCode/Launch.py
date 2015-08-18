@@ -8,6 +8,7 @@ import SUSYBSMAnalysis.HSCP.LaunchOnCondor as LaunchOnCondor
 import glob
 import commands
 
+LaunchOnCondor.Jobs_InitCmds       = ['ulimit -c 0;']  #disable production of core dump in case of job crash
 
 #the vector below contains the "TypeMode" of the analyses that should be run
 AnalysesToRun = [0,2,4]#,3,5]
