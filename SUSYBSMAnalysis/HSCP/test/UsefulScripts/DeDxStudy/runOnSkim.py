@@ -75,7 +75,7 @@ if sys.argv[1]=='1':
              
 
            print FILELIST
-           for inFileList in getChunksFromList(FILELIST,max(1,len(FILELIST)/15)): #15 jobs, this is a trade off between hadding time and processing time
+           for inFileList in getChunksFromList(FILELIST,max(1,len(FILELIST)/50)): #50 jobs, this is a trade off between hadding time and processing time
               InputListCSV = ''
   	      for inFile in inFileList:
                  InputListCSV+= inFile + ','

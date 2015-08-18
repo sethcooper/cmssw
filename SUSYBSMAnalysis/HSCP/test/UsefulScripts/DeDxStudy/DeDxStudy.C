@@ -453,8 +453,7 @@ double DistToHSCP (const reco::TrackRef& track, const std::vector<reco::GenParti
 
 bool isCompatibleWithCosmic (const reco::TrackRef& track, const std::vector<reco::Vertex>& vertexColl){
    for (unsigned int vertex_i=0;vertex_i<vertexColl.size();vertex_i++){
-      if (fabs(track->dz (vertexColl[vertex_i].position())) < 0.5) return false;
-      if (fabs(track->dxy(vertexColl[vertex_i].position())) < 0.2) return false;
+      if(fabs(track->dz (vertexColl[vertex_i].position())) < 0.5 && fabs(track->dxy(vertexColl[vertex_i].position())) < 0.2)return false;
    }
    return true;
 }
