@@ -18,7 +18,7 @@
 #include "TTree.h"
 #include "TF1.h"
 #include "TGraphAsymmErrors.h"
-#include "TGraph.h"
+#include "TGraphErrors.h"
 #include "TPaveText.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
@@ -146,18 +146,16 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
    ObjName.push_back("harm2_SP");
    ObjName.push_back("harm2_SO_in");
    ObjName.push_back("harm2_SP_in");
-//   ObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
+   ObjName.push_back("harm2_PO_raw"); // FIXME does not fit well
 //   ObjName.push_back("harm2_SO_raw"); // FIXME does not fit well
 //   ObjName.push_back("harm2_SP_raw"); // FIXME does not fit well
-   ObjName.push_back("Ias_SO_inc");
-   ObjName.push_back("Ias_SO");
-   ObjName.push_back("Ias_SO_in_inc");
-   ObjName.push_back("Ias_SO_in");
    ObjName.push_back("Ias_PO");
-   ObjName.push_back("Ias_SP_inc");
+   ObjName.push_back("Ias_SO");
+   ObjName.push_back("Ias_SO_in");
+   ObjName.push_back("Ias_SO_inc");
    ObjName.push_back("Ias_SP");
-   ObjName.push_back("Ias_SP_in_inc");
    ObjName.push_back("Ias_SP_in");
+   ObjName.push_back("Ias_SP_inc");
 
    ofstream ExtractConstantsReport, ExtractConstantsReport2;
    ExtractConstantsReport.open ((SaveDir + "ConstantsReport" + SaveName + ".txt").c_str(), ofstream::out);
@@ -666,7 +664,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       c1 = new TCanvas("c1", "c1", 600,600);
       c1->SetLogy(true);
       c1->SetGridx(true);
-      leg = new TLegend (0.30, 0.80, 0.60, 0.90);
+      leg = new TLegend (0.30, 0.20, 0.80, 0.40);
       leg->SetFillColor(0);
       leg->SetFillStyle(0);
       leg->SetBorderSize(0);
@@ -678,8 +676,8 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       HdedxSIG->SetLineColor (kBlue);
       HdedxMIP->Scale(1.0/HdedxMIP->Integral());
       HdedxSIG->Scale(1.0/HdedxSIG->Integral());
-      leg->AddEntry (HdedxMIP, "5 < p < 40 GeV", "L");
-      leg->AddEntry (HdedxSIG, "45 GeV < p"    , "L");
+      leg->AddEntry (HdedxMIP, "5 < p_{T} < 45 GeV", "L");
+      leg->AddEntry (HdedxSIG, "45 GeV < p_{T}"    , "L");
       HdedxSIG->Draw("hist");
       HdedxMIP->Draw("same");
       leg->Draw();
@@ -691,7 +689,7 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          c1 = new TCanvas("c1", "c1", 600,600);
          c1->SetLogy(true);
          c1->SetGridx(true);
-         leg = new TLegend (0.30, 0.80, 0.60, 0.90);
+         leg = new TLegend (0.30, 0.20, 0.80, 0.40);
          leg->SetFillColor(0);
          leg->SetFillStyle(0);
          leg->SetBorderSize(0);
@@ -703,12 +701,36 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
          HdedxSIG2->SetLineColor (kBlue);
          HdedxMIP2->Scale(1.0/HdedxMIP2->Integral());
          HdedxSIG2->Scale(1.0/HdedxSIG2->Integral());
-         leg->AddEntry (HdedxMIP2, "5 < p < 40 GeV", "L");
-         leg->AddEntry (HdedxSIG2, "45 GeV < p"    , "L");
+         leg->AddEntry (HdedxMIP2, "5 < p_{T} < 45 GeV", "L");
+         leg->AddEntry (HdedxSIG2, "45 GeV < p_{T}"    , "L");
          HdedxSIG2->Draw("hist");
          HdedxMIP2->Draw("same");
          leg->Draw();
          SaveCanvas(c1, SaveDir, ObjName[i] + SaveName2 + "_SIGvsMIP");
+         delete leg;
+         delete c1;
+
+         c1 = new TCanvas("c1", "c1", 600,600);
+         c1->SetLogy(true);
+         c1->SetGridx(true);
+         leg = new TLegend (0.30, 0.20, 0.80, 0.40);
+         leg->SetFillColor(0);
+         leg->SetFillStyle(0);
+         leg->SetBorderSize(0);
+         HdedxMIP->SetStats(kFALSE);
+         HdedxMIP->GetXaxis()->SetTitle(ObjName[i].find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
+         HdedxMIP->GetYaxis()->SetTitle("fraction of tracks");
+         HdedxMIP->SetAxisRange(0,15,"X");
+         HdedxSIG2->SetLineColor (kBlack);
+         HdedxMIP->SetLineColor (kBlue);
+         HdedxSIG2->Scale(1.0/HdedxSIG2->Integral());
+         HdedxMIP->Scale(1.0/HdedxMIP->Integral());
+         leg->AddEntry (HdedxMIP, (SaveName+"; 5 < p_{T} < 45 GeV").c_str(), "L");
+         leg->AddEntry (HdedxSIG2, (SaveName2+"; 45 GeV < p_{T}").c_str()  , "L");
+         HdedxMIP->Draw("hist");
+         HdedxSIG2->Draw("same");
+         leg->Draw();
+         SaveCanvas(c1, SaveDir, "Comparison_" + ObjName[i] + "_ROC_SIGvsMIP");
          delete leg;
          delete c1;
       }
@@ -789,9 +811,11 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       
    }
 //   CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SO"  , "Ias_SO_inc");
-   CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO", "harm2_SO_in");
+   CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO"    , "harm2_SO_in");
    CompareDeDx (InputFile, SaveDir, SaveName, "harm2_SO_raw", "harm2_PO_raw");
-   CompareDeDx (InputFile, SaveDir, SaveName, "hit_SP"  , "hit_SP_in");
+   CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SO"      , "Ias_SO_in");
+   CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SP"      , "Ias_SP_in");
+   CompareDeDx (InputFile, SaveDir, SaveName, "Ias_SO_in"  , "Ias_SP_in");
 
    ExtractConstantsReport.close();
    if (InputFile2) {
@@ -803,48 +827,54 @@ void MakePlot(string INPUT, string INPUT2="EMPTY")
       CompareDeDx (InputFile2, SaveDir, SaveName2, "hit_SP"  , "hit_SP_in");
 
       // now produce the ROC curve
-      vector <string> ObjNames;
-      ObjNames.push_back ("Ias_SO");
-      ObjNames.push_back ("Ias_SO_inc");
-      ObjNames.push_back ("Ias_SO_in");
-      ObjNames.push_back ("Ias_SO_in_inc");
-      ObjNames.push_back ("Ias_PO");
-      ObjNames.push_back ("Ias_SP");
-      ObjNames.push_back ("Ias_SP_inc");
-      ObjNames.push_back ("Ias_SP_in");
-      ObjNames.push_back ("Ias_SP_in_inc");
-      ObjNames.push_back ("harm2_SO");
-      ObjNames.push_back ("harm2_SO_in");
-      ObjNames.push_back ("harm2_SP");
+      vector <string> ObjNames; vector <Color_t> Colors;
+      ObjNames.push_back ("Ias_PO");      Colors.push_back(kBlue);
+      ObjNames.push_back ("Ias_SO");      Colors.push_back(kGreen);
+      ObjNames.push_back ("Ias_SO_in");   Colors.push_back(kGreen-1);
+      ObjNames.push_back ("Ias_SO_inc");  Colors.push_back(kGreen+2);
+      ObjNames.push_back ("Ias_SP");      Colors.push_back(kRed);
+      ObjNames.push_back ("Ias_SP_in");   Colors.push_back(kRed-1);
+      ObjNames.push_back ("Ias_SP_inc");  Colors.push_back(kRed+2);
+      ObjNames.push_back ("harm2_PO_raw");Colors.push_back(kYellow);
+      ObjNames.push_back ("harm2_SO");    Colors.push_back(kOrange);
+      ObjNames.push_back ("harm2_SO_in"); Colors.push_back(kOrange-1);
+      ObjNames.push_back ("harm2_SP");    Colors.push_back(kViolet);
+      ObjNames.push_back ("harm2_SP_in"); Colors.push_back(kViolet-1);
 
       TCanvas* c1   = new TCanvas ("c1", "c1", 600,600); 
-      TLegend* leg  = new TLegend (0.50, 0.50, 0.80, 0.70);
+      TLegend* leg  = new TLegend (0.50, 0.30, 0.80, 0.80);
       leg->SetFillColor(0);
       leg->SetFillStyle(0);
       leg->SetBorderSize(0);
       c1->SetLogx(true);
-      TH1D h ("tmp", "tmp", 1, 6E-9, 1);
+      TH1D h ("tmp", "tmp", 1, 8E-6, 1);
       h.GetXaxis()->SetTitle("background efficiency");
       h.GetXaxis()->SetNdivisions(5);
       h.GetYaxis()->SetTitle("signal efficiency");
       h.GetYaxis()->SetNdivisions(5);
-      h.SetAxisRange (0,1.0,"Y");
+      h.SetAxisRange (0.8,1.0,"Y");
       h.SetStats(0);
       h.Draw();
-      TGraph** ROC = new TGraph* [ObjNames.size()];
+      TGraphErrors** ROC = new TGraphErrors* [ObjNames.size()];
       for (size_t NameIndex = 0; NameIndex < ObjNames.size(); NameIndex++)
       {
          int divide = 1;
          TH1D* HdedxMIP1 = (TH1D*) GetObjectFromPath(InputFile , (ObjNames[NameIndex] + "_MIP").c_str() );
          TH1D* HdedxSIG2 = (TH1D*) GetObjectFromPath(InputFile2, (ObjNames[NameIndex] + "_SIG").c_str() );
-         ROC[NameIndex]  = new TGraph(HdedxMIP1->GetNbinsX()/divide);
+         ROC[NameIndex]  = new TGraphErrors(HdedxMIP1->GetNbinsX()/divide + 1);
 
-         double fullBkg  = HdedxMIP1->Integral(),
-                fullSig  = HdedxSIG2->Integral();
-         for (unsigned int cut_i = 1; cut_i <= HdedxMIP1->GetNbinsX()/divide; cut_i++)
-            ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxMIP1->Integral(1, cut_i*divide)/fullBkg, 1 - HdedxSIG2->Integral(1, cut_i*divide)/fullSig);
+         double fullBkg  = HdedxMIP1->Integral(0, HdedxMIP1->GetNbinsX()+1),
+                fullSig  = HdedxSIG2->Integral(0, HdedxSIG2->GetNbinsX()+1);
+         for (unsigned int cut_i = 1; cut_i <= HdedxMIP1->GetNbinsX()/divide; cut_i++){
+            double a = HdedxSIG2->Integral(0, cut_i*divide);
+            ROC[NameIndex]->SetPoint (cut_i-1, 1 - HdedxMIP1->Integral(0, cut_i*divide)/fullBkg, 1 - a/fullSig);
+            ROC[NameIndex]->SetPointError (cut_i-1, 0, 0);
+         }
+         double a = HdedxSIG2->Integral(0, HdedxSIG2->GetNbinsX()+1);
+         ROC[NameIndex]->SetPoint (HdedxMIP1->GetNbinsX(), 1 - HdedxMIP1->Integral(0, HdedxMIP1->GetNbinsX()+1)/fullBkg, 1 - a/fullSig);
+         ROC[NameIndex]->SetPointError (HdedxMIP1->GetNbinsX(), 0, 1);
 
-         ROC[NameIndex]->SetLineColor(NameIndex+1);
+         ROC[NameIndex]->SetLineColor(Colors[NameIndex]);
          ROC[NameIndex]->SetLineWidth(2);
          ROC[NameIndex]->Draw("same");
 
@@ -1112,10 +1142,10 @@ void ExtractConstants(TH2D* input, int FileIndex){
 	       TF1* myfit = new TF1("myfit","[0]*pow(0.93827/x,2) + [1]", MinRange, MaxRange);
 	       myfit->SetParName  (0,"K");
 	       myfit->SetParName  (1,"C");
-	       myfit->SetParameter(0, 3.0);
-	       myfit->SetParameter(1, 3.0);
-	       myfit->SetParLimits(0, 1.00,4.0);
-	       myfit->SetParLimits(1, 2.70,4.0);
+	       myfit->SetParameter(0, 3.2);
+	       myfit->SetParameter(1, 3.2);
+	       myfit->SetParLimits(0, 2.00,4.0);
+	       myfit->SetParLimits(1, 2.00,4.0);
 	       myfit->SetLineWidth(2);
 	       myfit->SetLineColor(2);
 	       FitResult->Fit("myfit", "M R E I 0");
@@ -1193,6 +1223,7 @@ void CompareDeDx (TFile* InputFile, string SaveDir, string SaveName, string ObjN
    	HdedxMIP1->GetXaxis()->SetTitle(ObjName1.find("Ias")!=std::string::npos?"I_{as}":"dE/dx (MeV/cm)");
    	HdedxMIP1->GetYaxis()->SetTitle("fraction of tracks");
    	HdedxMIP1->SetAxisRange(0,5,"X");
+   	HdedxMIP1->SetAxisRange(1e-6,1,"Y");
    	HdedxMIP1->SetLineColor (kBlack);
    	HdedxMIP2->SetLineColor (kBlue);
    	HdedxMIP2->Scale(1.0/HdedxMIP2->Integral());

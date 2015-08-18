@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false);
+reco::DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999);
 bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 
@@ -505,10 +505,10 @@ TH3F* loadDeDxTemplate(string path, bool splitByModuleType){
    Prob_ChargePath->SetDirectory(0); 
 
    if(!splitByModuleType){
-      Prob_ChargePath->RebinX(Prob_ChargePath->GetNbinsX());
+      Prob_ChargePath->RebinX(Prob_ChargePath->GetNbinsX()-1); // <-- do not include pixel in the inclusive
    }
 
-   for(int i=0;i<=Prob_ChargePath->GetXaxis()->GetNbins()+1;i++){// do not include under/overflow here
+   for(int i=0;i<=Prob_ChargePath->GetXaxis()->GetNbins()+1;i++){
       for(int j=0;j<=Prob_ChargePath->GetYaxis()->GetNbins()+1;j++){
          double Ni = 0;
          for(int k=0;k<=Prob_ChargePath->GetZaxis()->GetNbins()+1;k++){Ni+=DeDxMap_->GetBinContent(i,j,k);}
@@ -536,10 +536,13 @@ const double TkModGeomLength   [] = {1, 5.844250, 5.844250, 9.306700, 9.306700, 
 const double TkModGeomWidthB   [] = {1, 3.072000, 3.072000, 4.684800, 4.684800, 4.579445, 5.502407, 3.158509, 4.286362, 5.502407, 4.049915, 3.561019, 6.002559, 5.235483, 3.574395};
 const double TkModGeomWidthT   [] = {1, 3.072000, 3.072000, 4.684800,  4.684800, 3.095721, 4.322593, 4.049915, 3.146580, 4.322593, 3.158509, 2.898798, 4.824683, 4.177638,  4.398049};
 
-bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
+bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiStripCluster* cluster=NULL){
    if(detid.subdetId()<3){return true;} //do nothing for pixel modules
    SiStripDetId SSdetId(detid);
    int moduleGeometry = SSdetId.moduleGeometry();
+
+   //clean along the apv lines
+   if(cluster && (cluster->firstStrip()%128 == 0 || (cluster->firstStrip() + cluster->amplitudes().size()%128==127))) return false;
 
    double nx, ny;
    if(moduleGeometry<=4){
@@ -553,7 +556,6 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
    }
 
    // "blacklists" for the gaps and edges
-   // FIXME APVs are missing for now, as are pixels!!!
    switch (moduleGeometry){
       case  0: return true;
       case  1: if (fabs(ny) > 0.96 || fabs(nx) > 0.98) return false; break;
@@ -579,12 +581,13 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid){
 
 
 
-DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside){
+DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM){
      if(!dedxHits) return NULL;
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
      std::vector<double> vect;
      unsigned int NSat=0;
+     unsigned int SiStripNOM = 0;
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
         if(!usePixel && detid.subdetId()<3)continue; // skip pixels
@@ -592,7 +595,8 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* te
 //        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
-        if(mustBeInside && !isHitInsideTkModule(dedxHits->pos(h), detid))continue;
+        if(mustBeInside && !isHitInsideTkModule(dedxHits->pos(h), detid, detid.subdetId()>=3?dedxHits->stripCluster(h):NULL))continue;
+	if(detid.subdetId()>=3 && ++SiStripNOM > MaxStripNOM) continue; // skip remaining strips, but not pixel
 
         int ClusterCharge = dedxHits->charge(h);
 
@@ -629,7 +633,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* te
         if (detid.subdetId()<3) scaleFactor *= scaleFactors[1]; // add pixel scaling
 
         if(templateHisto){  //save discriminator probability
-           double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0);
+           double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0*(detid.subdetId()<3?265:1));
            int moduleGeometry = 0; // underflow for debug
            if (detid.subdetId()<3) moduleGeometry = 15; // 15 == pixel
            else {SiStripDetId SSdetId(detid); moduleGeometry = SSdetId.moduleGeometry();}
@@ -640,7 +644,7 @@ DeDxData* computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* te
            //printf("%i %i %i  %f\n", BinX, BinY, BinZ, Prob);
            if(reverseProb)Prob = 1.0 - Prob;
            vect.push_back(Prob); //save probability
-        }else{              
+        }else{
            double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
            double ChargeOverPathlength = scaleFactor*Norm*ClusterCharge/dedxHits->pathlength(h);
            vect.push_back(ChargeOverPathlength); //save charge
