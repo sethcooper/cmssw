@@ -103,10 +103,15 @@ std::string        dEdxS_Legend    = "I_{as}";
 std::string        dEdxM_Label     = "dedxHarm2";
 double             dEdxM_UpLim     = 30.0;
 std::string        dEdxM_Legend    = "I_{h} (MeV/cm)";
-double             dEdxK_Data      = 2.779;
-double             dEdxC_Data      = 2.879;
-double             dEdxK_MC        = 2.683;
-double             dEdxC_MC        = 2.453;
+//double             dEdxK_Data      = 2.779;
+//double             dEdxC_Data      = 2.879;
+//double             dEdxK_MC        = 2.683;
+//double             dEdxC_MC        = 2.453;
+// below are the new constants computed with harm2_SO_in for both MC and Data
+double             dEdxK_Data      = 2.882;
+double             dEdxC_Data      = 2.704;
+double             dEdxK_MC        = 2.866;
+double             dEdxC_MC        = 2.725;
 
 // TOF object to be used for combined, DT and CSC TOF measurement
 std::string        TOF_Label       = "combined";
@@ -152,9 +157,11 @@ void InitBaseDirectory(){
       BaseDirectory = "root://eoscms//eos/cms/store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/";  //for run2
    }else if(host.find("fnal.gov")!=std::string::npos){
      BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/lpchscp/2012HSCPEDMFiles/"; //for run1
+   }else if(host.find("ingrid-ui")!=std::string::npos){
+      BaseDirectory = "/storage/data/cms/users/quertenmont/HSCP/2015/"; // run2 ingrid
    }else{
       BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/venkat12/2012Data/";  //for run1
-      printf("YOUR MACHINE (%s) IS NOT KNOW --> please add your machine to the 'InitBaseDirectory' function of 'Analysis_Global.h'\n", host.c_str());
+      printf("YOUR MACHINE (%s) IS NOT KNOWN --> please add your machine to the 'InitBaseDirectory' function of 'Analysis_Global.h'\n", host.c_str());
       printf("HOST=%s  USER=%s\n",host.c_str(), analyst.c_str());
       printf("In the mean time, the directory containing the HSCP EDM file is assumed to be %s\n",BaseDirectory.c_str());
    }

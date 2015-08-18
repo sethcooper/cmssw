@@ -105,11 +105,8 @@ TH3F* dEdxTemplates = NULL;
 std::unordered_map<unsigned int,double> TrackerGains;
 double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
-   1.14958    // [1]  Pixel data to SiStrip data
+   1.21836    // [1]  Pixel data to SiStrip data
 };
-
-//dEdxSF [0] = 1.09708;   // [1]  Monte Carlo SiStrip to data SiStrip
-//dEdxSF [1] = 1.01875;   // [3]  Monte Carlo Pixel to Monte Carlo SiStrip !!! MC Pixel to Data SiStrip = [3] * [1] ~ 11
 
 
 bool useClusterCleaning = true;
@@ -967,7 +964,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
       if(isData){ 
          dEdxSF [0] = 1.00000;
-         dEdxSF [1] = 1.14985;
+         dEdxSF [1] = 1.21836;
          dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
       }else{  
          dEdxSF [0] = 1.09708;
