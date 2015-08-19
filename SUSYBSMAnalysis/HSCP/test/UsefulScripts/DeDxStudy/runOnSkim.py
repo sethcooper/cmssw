@@ -44,6 +44,8 @@ datasetList = [
 
 isLocal = False  #allow to access data in Louvain from remote sites
 if(commands.getstatusoutput("hostname -f")[1].find("ucl.ac.be")!=-1): isLocal = True
+os.system('rm ~/x509_user_proxy/x509_proxy')
+
 
 if sys.argv[1]=='1':
         os.system("sh " + os.getcwd() + "/DeDxStudy.sh ") #just compile

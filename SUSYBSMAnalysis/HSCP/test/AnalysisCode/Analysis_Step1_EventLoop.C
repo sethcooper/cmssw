@@ -1190,8 +1190,10 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData* dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL);
-               DeDxData* dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL);
+               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL);
+               DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
+               DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
                //compute systematic uncertainties on signal

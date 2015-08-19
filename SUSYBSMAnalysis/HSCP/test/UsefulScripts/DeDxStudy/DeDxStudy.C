@@ -376,54 +376,48 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                 if(!results[R]->isEstim and !results[R]->isDiscrim) continue; //only consider results related to estimator/discriminator variables here
                 if(results[R]->removeCosmics && isCosmic)continue; //don't consider cosmic tracks
 
-                DeDxData* dedxObj   = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 99, results[R]->correctFEDSat);
+                DeDxData dedxObj   = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 99, results[R]->correctFEDSat);
 
-                results[R]->HdedxVsP    ->Fill(track->p(), dedxObj->dEdx() );
-   //             results[R]->HdedxVsQP   ->Fill(track->p()*track->charge(), dedxObj->dEdx() );
-   //             results[R]->HdedxVsP_NS ->Fill(track->p(), dedxObj->dEdx(), dedxObj->numberOfSaturatedMeasurements() );
+                results[R]->HdedxVsP    ->Fill(track->p(), dedxObj.dEdx() );
+   //             results[R]->HdedxVsQP   ->Fill(track->p()*track->charge(), dedxObj.dEdx() );
+   //             results[R]->HdedxVsP_NS ->Fill(track->p(), dedxObj.dEdx(), dedxObj.numberOfSaturatedMeasurements() );
 
-                if(track->pt()>10 && track->pt()<45 && dedxObj->numberOfMeasurements()>=(results[R]->useStrip?7:3) ){
-                  results[R]->HdedxVsEtaProfile->Fill(track->eta(), dedxObj->dEdx() );
-                  results[R]->HdedxVsEta->Fill(track->eta(), dedxObj->dEdx() );
-                  results[R]->HNOMVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() );
-                  results[R]->HNOSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfSaturatedMeasurements() );
-                  results[R]->HNOMSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() - dedxObj->numberOfSaturatedMeasurements() );
+                if(track->pt()>10 && track->pt()<45 && dedxObj.numberOfMeasurements()>=(results[R]->useStrip?7:3) ){
+                  results[R]->HdedxVsEtaProfile->Fill(track->eta(), dedxObj.dEdx() );
+                  results[R]->HdedxVsEta->Fill(track->eta(), dedxObj.dEdx() );
+                  results[R]->HNOMVsEtaProfile->Fill(track->eta(),dedxObj.numberOfMeasurements() );
+                  results[R]->HNOSVsEtaProfile->Fill(track->eta(),dedxObj.numberOfSaturatedMeasurements() );
+                  results[R]->HNOMSVsEtaProfile->Fill(track->eta(),dedxObj.numberOfMeasurements() - dedxObj.numberOfSaturatedMeasurements() );
                 }
 
-                if(fabs(track->eta())>2.1){delete dedxObj; continue;}
-                if((int)dedxObj->numberOfMeasurements()<(results[R]->useStrip?10:3)){delete dedxObj; continue;}
+                if(fabs(track->eta())>2.1) continue;
+                if((int)dedxObj.numberOfMeasurements()<(results[R]->useStrip?10:3))continue;
 
 
                 if(track->pt()>5){
-                   results[R]->HdedxVsNOH->Fill(track->found(), dedxObj->dEdx());
-                   results[R]->HdedxMIP  ->Fill(dedxObj  ->dEdx());
+                   results[R]->HdedxVsNOH->Fill(track->found(), dedxObj.dEdx());
+                   results[R]->HdedxMIP  ->Fill(dedxObj.dEdx());
                    results[R]->HP->Fill(track->p());
 
-                   DeDxData* dedxObj_U = computedEdx(dedxHits, dEdx_U, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,99, results[R]->correctFEDSat);
-                   DeDxData* dedxObj4  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 4, results[R]->correctFEDSat);
-                   DeDxData* dedxObj8  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 8, results[R]->correctFEDSat);
-                   DeDxData* dedxObj12 = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,12, results[R]->correctFEDSat);
+                   DeDxData dedxObj_U = computedEdx(dedxHits, dEdx_U, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,99, results[R]->correctFEDSat);
+                   DeDxData dedxObj4  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 4, results[R]->correctFEDSat);
+                   DeDxData dedxObj8  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 8, results[R]->correctFEDSat);
+                   DeDxData dedxObj12 = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,12, results[R]->correctFEDSat);
 
-                   results[R]->HdedxMIP_U->Fill(dedxObj_U->dEdx());
-                   results[R]->HdedxMIP4 ->Fill(dedxObj4 ->dEdx());
-                   results[R]->HdedxMIP8 ->Fill(dedxObj8 ->dEdx());
-                   results[R]->HdedxMIP12->Fill(dedxObj12->dEdx());
-
-                   delete dedxObj_U;
-                   delete dedxObj4;
-                   delete dedxObj8;
-                   delete dedxObj12;
+                   results[R]->HdedxMIP_U->Fill(dedxObj_U.dEdx());
+                   results[R]->HdedxMIP4 ->Fill(dedxObj4 .dEdx());
+                   results[R]->HdedxMIP8 ->Fill(dedxObj8 .dEdx());
+                   results[R]->HdedxMIP12->Fill(dedxObj12.dEdx());
                 }
-                if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
+                if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj.dEdx() );
 
-                if(results[R]->isEstim && dedxObj->dEdx()>4.0){  //mass can only be computed for dEdx estimators
-                   double Mass = GetMass(track->p(),dedxObj->dEdx(), false);
+                if(results[R]->isEstim && dedxObj.dEdx()>4.0){  //mass can only be computed for dEdx estimators
+                   double Mass = GetMass(track->p(),dedxObj.dEdx(), false);
 
                    if(track->p()<3.0){      results[R]->HMass->Fill(Mass);
                    }else{                   results[R]->HMassHSCP->Fill(Mass);
                    }
                 }
-                delete dedxObj;
              }
          }
       }printf("\n");
