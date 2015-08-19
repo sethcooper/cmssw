@@ -77,6 +77,7 @@ struct dEdxStudyObj
 
    bool mustBeInside;
    bool removeCosmics;
+   bool correctFEDSat;
 
    TH3D* Charge_Vs_Path;
    TH1D* HdedxMIP;
@@ -95,6 +96,7 @@ struct dEdxStudyObj
    TProfile* HNOMVsEtaProfile;
    TProfile* HNOMSVsEtaProfile;
    TH1D* HMass;
+   TH1D* HMassHSCP;
    TH1D* HP;
    TH1D* HHit; 
    TProfile* Charge_Vs_FS[16];
@@ -107,7 +109,7 @@ struct dEdxStudyObj
    TH3F* dEdxTemplates = NULL;
    std::unordered_map<unsigned int,double>* TrackerGains = NULL;
 
-   dEdxStudyObj(string Name_, int type_, int subdet_, TH3F* dEdxTemplates_=NULL, std::unordered_map<unsigned int,double>* TrackerGains_=NULL, bool mustBeInside_=false, bool removeCosmics_=false){
+   dEdxStudyObj(string Name_, int type_, int subdet_, TH3F* dEdxTemplates_=NULL, std::unordered_map<unsigned int,double>* TrackerGains_=NULL, bool mustBeInside_=false, bool removeCosmics_=false, bool correctFEDSat_=false){
       Name = Name_;
 
       if     (type_==0){ isHit=true;  isEstim= false; isDiscrim = false;}
@@ -122,7 +124,8 @@ struct dEdxStudyObj
       dEdxTemplates = dEdxTemplates_;
       TrackerGains  = TrackerGains_;
       mustBeInside  = mustBeInside_;
-      removeCosmics = removeCosmics_;
+      removeCosmics = removeCosmics_; 
+      correctFEDSat = correctFEDSat_;
 
       string HistoName;
       //HitLevel plot      
@@ -143,11 +146,11 @@ struct dEdxStudyObj
 
       //Track Level plots
       if(isEstim || isDiscrim){
-         HistoName = Name + "_MIP";               HdedxMIP              = new TH1D(      HistoName.c_str(), HistoName.c_str(),  100, 0, isDiscrim?1.0:10);
-         HistoName = Name + "_MIP_U";             HdedxMIP_U            = new TH1D(      HistoName.c_str(), HistoName.c_str(),  100, 0, isDiscrim?1.0:10);
-         HistoName = Name + "_MIP4";              HdedxMIP4             = new TH1D(      HistoName.c_str(), HistoName.c_str(),  100, 0, isDiscrim?1.0:10);
-         HistoName = Name + "_MIP8";              HdedxMIP8             = new TH1D(      HistoName.c_str(), HistoName.c_str(),  100, 0, isDiscrim?1.0:10);
-         HistoName = Name + "_MIP12";             HdedxMIP12            = new TH1D(      HistoName.c_str(), HistoName.c_str(),  100, 0, isDiscrim?1.0:10);
+         HistoName = Name + "_MIP";               HdedxMIP              = new TH1D(      HistoName.c_str(), HistoName.c_str(), 1000, 0, isDiscrim?1.0:25);
+         HistoName = Name + "_MIP_U";             HdedxMIP_U            = new TH1D(      HistoName.c_str(), HistoName.c_str(), 1000, 0, isDiscrim?1.0:25);
+         HistoName = Name + "_MIP4";              HdedxMIP4             = new TH1D(      HistoName.c_str(), HistoName.c_str(), 1000, 0, isDiscrim?1.0:25);
+         HistoName = Name + "_MIP8";              HdedxMIP8             = new TH1D(      HistoName.c_str(), HistoName.c_str(), 1000, 0, isDiscrim?1.0:25);
+         HistoName = Name + "_MIP12";             HdedxMIP12            = new TH1D(      HistoName.c_str(), HistoName.c_str(), 1000, 0, isDiscrim?1.0:25);
          HistoName = Name + "_dedxVsP";           HdedxVsP              = new TH2D(      HistoName.c_str(), HistoName.c_str(),  500, 0, 10,1000,0, isDiscrim?1.0:15);
 //       HistoName = Name + "_dedxVsQP";          HdedxVsQP             = new TH2D(      HistoName.c_str(), HistoName.c_str(), 6000, -30, 30,1500,0, isDiscrim?1.0:15);
 //       HistoName = Name + "_dedxVsP_NS";        HdedxVsP_NS           = new TProfile2D(HistoName.c_str(), HistoName.c_str(), 3000, 0, 30,1500,0, isDiscrim?1.0:15);
@@ -164,6 +167,7 @@ struct dEdxStudyObj
       //estimator plot only
       if(isEstim){
          HistoName = Name + "_Mass";              HMass                 = new TH1D(      HistoName.c_str(), HistoName.c_str(),  250, 0, 10);
+         HistoName = Name + "_MassHSCP";          HMassHSCP             = new TH1D(      HistoName.c_str(), HistoName.c_str(),  300, 0, 3000);
       }
 
    }
@@ -242,6 +246,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    results.push_back(new dEdxStudyObj("hit_SP_in"   , 0, 3, NULL            , &TrackerGains, true) );
    results.push_back(new dEdxStudyObj("harm2_PO_raw", 1, 1, NULL            , NULL) );
    results.push_back(new dEdxStudyObj("harm2_SO"    , 1, 2, NULL            , &TrackerGains) );
+   results.push_back(new dEdxStudyObj("harm2_SO_FS" , 1, 2, NULL            , &TrackerGains, false, false, true) );
    results.push_back(new dEdxStudyObj("harm2_SO_in" , 1, 2, NULL            , &TrackerGains, true) );
    results.push_back(new dEdxStudyObj("harm2_SO_in_noC"       , 1, 2, NULL  , &TrackerGains, true, true) );
    results.push_back(new dEdxStudyObj("harm2_SP"    , 1, 3, NULL            , &TrackerGains) );
@@ -302,16 +307,7 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
             //basic track quality cuts
             reco::TrackRef track = reco::TrackRef( trackCollHandle.product(), c );
             if(track.isNull())continue;
-            if(track->chi2()/track->ndof()>5 )continue;  //WAS >1
-            for(unsigned int R=0;R<results.size();R++){ // fill the NOH plot
-               if(results[R]->isHit) continue;
-               const DeDxHitInfo* dedxHits = NULL;
-               DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());
-               if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
-               if(!dedxHits)continue;
-               DeDxData* dedxObj = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside);
-               dedxObj->~DeDxData();
-            }
+            if(track->chi2()/track->ndof()>5 )continue;
             if(track->found()<8)continue;
 
             if(isSignal){
@@ -375,11 +371,12 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                 }
              }
 
+             bool isCosmic = isCompatibleWithCosmic(track, vertexColl);
              for(unsigned int R=0;R<results.size();R++){
-                if(!results[R]->isEstim and !results[R]->isDiscrim ) continue; //only consider results related to estimator/discriminator variables here
-                if(results[R]->removeCosmics){if (isCompatibleWithCosmic(track, vertexColl))continue;} //don't consider cosmic tracks
+                if(!results[R]->isEstim and !results[R]->isDiscrim) continue; //only consider results related to estimator/discriminator variables here
+                if(results[R]->removeCosmics && isCosmic)continue; //don't consider cosmic tracks
 
-                DeDxData* dedxObj   = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside);
+                DeDxData* dedxObj   = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 99, results[R]->correctFEDSat);
 
                 results[R]->HdedxVsP    ->Fill(track->p(), dedxObj->dEdx() );
    //             results[R]->HdedxVsQP   ->Fill(track->p()*track->charge(), dedxObj->dEdx() );
@@ -393,8 +390,8 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                   results[R]->HNOMSVsEtaProfile->Fill(track->eta(),dedxObj->numberOfMeasurements() - dedxObj->numberOfSaturatedMeasurements() );
                 }
 
-                if(fabs(track->eta())>2.1)continue;
-                if((int)dedxObj->numberOfMeasurements()<(results[R]->useStrip?10:3))continue;
+                if(fabs(track->eta())>2.1){delete dedxObj; continue;}
+                if((int)dedxObj->numberOfMeasurements()<(results[R]->useStrip?10:3)){delete dedxObj; continue;}
 
 
                 if(track->pt()>5){
@@ -402,10 +399,10 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                    results[R]->HdedxMIP  ->Fill(dedxObj  ->dEdx());
                    results[R]->HP->Fill(track->p());
 
-                   DeDxData* dedxObj_U = computedEdx(dedxHits, dEdx_U, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside);
-                   DeDxData* dedxObj4  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 4);
-                   DeDxData* dedxObj8  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 8);
-                   DeDxData* dedxObj12 = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,12);
+                   DeDxData* dedxObj_U = computedEdx(dedxHits, dEdx_U, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,99, results[R]->correctFEDSat);
+                   DeDxData* dedxObj4  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 4, results[R]->correctFEDSat);
+                   DeDxData* dedxObj8  = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside, 8, results[R]->correctFEDSat);
+                   DeDxData* dedxObj12 = computedEdx(dedxHits, dEdxSF, results[R]->dEdxTemplates, results[R]->usePixel, useClusterCleaning, false, false, results[R]->TrackerGains, results[R]->useStrip, results[R]->mustBeInside,12, results[R]->correctFEDSat);
 
                    results[R]->HdedxMIP_U->Fill(dedxObj_U->dEdx());
                    results[R]->HdedxMIP4 ->Fill(dedxObj4 ->dEdx());
@@ -419,10 +416,11 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
                 }
                 if(fabs(track->eta())<0.4)results[R]->HdedxVsPProfile->Fill(track->p(), dedxObj->dEdx() );
 
-                if(results[R]->isEstim){  //mass can only be computed for dEdx estimators
+                if(results[R]->isEstim && dedxObj->dEdx()>4.0){  //mass can only be computed for dEdx estimators
                    double Mass = GetMass(track->p(),dedxObj->dEdx(), false);
-                   if(dedxObj->dEdx()>4.0 && track->p()<3.0){
-                      results[R]->HMass->Fill(Mass);
+
+                   if(track->p()<3.0){      results[R]->HMass->Fill(Mass);
+                   }else{                   results[R]->HMassHSCP->Fill(Mass);
                    }
                 }
                 delete dedxObj;

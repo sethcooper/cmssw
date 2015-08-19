@@ -38,7 +38,8 @@ datasetList = [
   ["MCGluino_M1400_f10", "Gluino_13TeV_M1400_f10"],
   ["MCGluino_M1800_f10", "Gluino_13TeV_M1800_f10"],
   ["MCGMStau_M494", "GMStau_13TeV_M494"],
-  ["MCStop_M1000", "Stop_13TeV_M1000_f10"],
+  ["MCStop_M1000", "Stop_13TeV_M1000"],
+  ["MCDYM2600Q2", "DY_13TeV_M2600_Q2"],
 ]
 
 isLocal = False  #allow to access data in Louvain from remote sites
@@ -87,13 +88,10 @@ elif sys.argv[1]=='2':
         for DATASET in datasetList :#+signalList :
            indir =  os.getcwd() + "/Histos/"+DATASET[0]+'/'
            os.system('rm -f Histos_'+DATASET[0]+'.root')
-           os.system('hadd -f Histos_'+DATASET[0]+'.root ' + indir + '*.root')
-	for DATASET in signalList:
-	   indir =  os.getcwd() + "/Histos/"+DATASET[0]+'/'
-	   os.system('cp ' + indir + 'dEdx*.root ' + 'Histos_'+DATASET[0]+'.root')
+           os.system('find ' + indir + '*.root  -type f -size +1024c | xargs hadd -f Histos_'+DATASET[0]+'.root  &> Histos_'+DATASET[0]+'.log &')
 
 elif sys.argv[1]=='3':
-        for DATASET in datasetList+signalList :
+        for DATASET in datasetList :
            os.system('sh MakePlot.sh Histos_'+DATASET[0]+'.root')
 
 else:
