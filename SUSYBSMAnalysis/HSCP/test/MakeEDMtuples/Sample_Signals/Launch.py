@@ -9,7 +9,8 @@ import glob
 import commands
 
 LOCALTIER   = 'T2_BE_UCL'
-DATASETMASK = '/*HSCP*/RunIISpring15DR74-Asympt25ns*/AODSIM'
+#DATASETMASK = '/*HSCP*/RunIISpring15DR74-Asympt25ns*/AODSIM'
+DATASETMASK = '/*HSCP*/RunIISpring15DR74-Asympt25ns*/GEN-SIM-RECO'
 ISLOCAL     = False
 
 def initProxy():
