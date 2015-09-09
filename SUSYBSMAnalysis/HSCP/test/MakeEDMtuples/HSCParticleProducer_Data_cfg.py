@@ -11,7 +11,7 @@ OUTPUTFILE = 'HSCP.root'
 #debug input files 
 #this list is overwritten by CRAB
 InputFileList = cms.untracked.vstring(
-   'root://cms-xrd-global.cern.ch//store/data/Run2015B/ZeroBias/RECO/PromptReco-v1/000/251/252/00000/2E803A6D-8C27-E511-B186-02163E012073.root',
+   'root://eoscms//eos/cms/store/data/Run2015B/DoubleMuon/RECO/PromptReco-v1/000/251/521/00000/5E8B4110-6429-E511-A64C-02163E0127DF.root',
 )
 
 #main EDM tuple cfg that depends on the above parameters
