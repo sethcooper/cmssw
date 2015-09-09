@@ -1,3 +1,6 @@
+# Original Author:  Loic Quertenmont
+
+
 #!/bin/bash
 executable=`echo $0 | sed 's/.sh/.C/'` #assume the .sh and .C file have the same name
 arguments=''
