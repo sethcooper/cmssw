@@ -24,7 +24,7 @@
 #include "TCutG.h"
 #include "TGaxis.h"
 
-#include " ../../AnalysisCode/tdrstyle.C"
+#include "../../AnalysisCode/tdrstyle.C"
 
 TObject* GetObjectFromPath(TDirectory* File, std::string Path, bool GetACopy=false);  //defined below
 

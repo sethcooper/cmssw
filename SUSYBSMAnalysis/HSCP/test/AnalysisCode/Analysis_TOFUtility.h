@@ -184,7 +184,8 @@ class muonTimingCalculator{
             if(it->first>currentRun){t0OffsetMap = &(itPrev->second); return;}//runs are ordered, so the previous iterator correspond to our run
             itPrev=it;
          }
-         t0OffsetMap = &(it->second); //just in case we go beyond the list of run for which we have a correciton
+         t0OffsetMap = &(itPrev->second); //just in case we go beyond the list of run for which we have a correciton
+         printf("use run %u for %u\n",itPrev->first, currentRun);
       }
 
       double t0Offset(unsigned int detId){ return (*t0OffsetMap)[moduleGeom::getStationName(detId)]; } //stupid to save the information in a map of string key

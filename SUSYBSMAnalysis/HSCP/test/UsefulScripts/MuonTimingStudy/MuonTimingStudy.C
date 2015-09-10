@@ -225,10 +225,8 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
             reco::MuonTimeExtra tof2 = tofCalculator.fillTimeFromMeasurements();
             H_iBetaFLY2->Fill(tof2.inverseBeta());
  
-            printf("%f vs %f  (%i vs %i\n", tof->inverseBeta(), tof2.inverseBeta(), tof->nDof(), tof2.nDof());
-            for (unsigned int i=0;i<tofCalculator.tmSeq.size();i++){
-               printf("%6.2E ", tofCalculator.tmSeq[i].weightInvBeta);
-            }printf("\n");
+//            printf("%f vs %f  (%i vs %i\n", tof->inverseBeta(), tof2.inverseBeta(), tof->nDof(), tof2.nDof());
+//            for (unsigned int i=0;i<tofCalculator.tmSeq.size();i++){printf("%6.2E ", tofCalculator.tmSeq[i].weightInvBeta); }printf("\n");
 
 
          }//muon
