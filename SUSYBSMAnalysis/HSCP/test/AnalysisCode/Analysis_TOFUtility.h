@@ -22,7 +22,7 @@ class moduleGeom{
             moduleGeom::static_geomMap.clear(); //reset the geometry map
 
             TChain* t = new TChain("GeomDumper/geom");
-            t->Add((path.c_str());
+            t->Add(path.c_str());
 
             unsigned int rawId;                 t->SetBranchAddress("rawId", &rawId);
             float trapezeParam;                 t->SetBranchAddress("trapezeParam", &trapezeParam);
