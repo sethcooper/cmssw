@@ -111,7 +111,7 @@ if sys.argv[1]=='1':
    JobName = "CSCTimeStudy"
    FarmDirectory = "FARM_TEMP"
    LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
-   LaunchOnCondor.Jobs_Queue = '1nh'
+   LaunchOnCondor.Jobs_Queue = '8nh'
 
    os.system("mkdir -p out");
    for DATASET in datasetList :
@@ -137,7 +137,7 @@ if sys.argv[1]=='1':
 
 
 if sys.argv[1]=='2':
-   os.system('find out/Histos_*.root  -type f -size +1024c | xargs hadd -f  Histos.root &> Histos.log &')
+   os.system('find out/Histos_*.root  -type f -size +1024c | xargs hadd -f  Histos.root')
 
 if sys.argv[1]=='3':
    os.system('sh MakePlot.sh')

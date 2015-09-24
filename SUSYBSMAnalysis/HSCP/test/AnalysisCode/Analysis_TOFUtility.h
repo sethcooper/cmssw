@@ -16,6 +16,19 @@ class moduleGeom{
         TVector3 toGlobal(TVector3 local ){ return (pos + local.x()*width.Unit() + local.y()*length.Unit() + local.z()*thick.Unit());}
         TVector3 toLocal (TVector3 global){ TVector3 o = global-pos;  return TVector3((o*width.Unit()), (o*length.Unit()), (o*thick.Unit()));}
 
+        bool propagateParametersOnPlane(TVector3& pos, TVector3& momentum, TVector3& localPosOnPlane){
+           TVector3 x = toLocal(pos);
+           TVector3 p = toLocal(momentum);
+           double s = -x.z(); // sp.z() - x.z(); local z of plane always 0
+
+           if ((p.x() != 0 || p.y() != 0) && p.z() == 0 && s!= 0) return false;
+ 
+           localPosOnPlane = TVector3(x.x() + (p.x()/p.z())*s,
+                                      x.y() + (p.y()/p.z())*s,
+                                      x.z() + s);    
+           return true;
+        }
+
         static moduleGeom* get(unsigned int detId){return static_geomMap[detId]; }
 
         static void loadGeometry(string path){
@@ -44,56 +57,28 @@ class moduleGeom{
             }
             delete t;
         }
-
-
-
-        static string getStationName(unsigned int detId){
-            char stationName[255]; 
-            DetId    geomDetId(detId);
-            if(geomDetId.subdetId()==1){
-               DTChamberId dtId(detId);
-               sprintf(stationName,"DT%i%i",dtId.wheel(),dtId.station() );
-            }else if(geomDetId.subdetId()==2){
-               CSCDetId cscId(detId);
-               CSCDetId cscchamberId = cscId.chamberId();
-               sprintf(stationName,"ME%c%i%i",cscchamberId.zendcap()>0?'+':'-',cscchamberId.station(), cscchamberId.ring() );
-            }
-            return stationName;
-        }
-
-        static string getChamberName(unsigned int detId){
-            char chamberName[255]; 
-            DetId    geomDetId(detId);
-            if(geomDetId.subdetId()==1){
-               DTChamberId dtId(detId);
-               sprintf(chamberName,"%s_%02i" ,getStationName(detId).c_str(), dtId.sector() );
-            }else if(geomDetId.subdetId()==2){
-               CSCDetId cscId(detId);
-               CSCDetId cscchamberId = cscId.chamberId();
-               sprintf(chamberName,"%s_%02i" ,getStationName(detId).c_str(), cscchamberId.chamber() );
-            }
-            return chamberName;
-        }
-
 };
 std::unordered_map<unsigned int, moduleGeom*> moduleGeom::static_geomMap; //need to define this here to reference the object
 
 
 class muonTimingCalculator{
    private:
-      std::unordered_map<string, float>* t0OffsetMap; 
-      std::map<unsigned int, std::unordered_map<string, float> > t0OffsetMapPerRuns;
+      std::unordered_map<unsigned int, float>* t0OffsetMap; 
+      std::map<unsigned int, std::unordered_map<unsigned int, float> > t0OffsetMapPerRuns;
 
    public:
-      struct TimeMeasurementCSC {float distIP;float timeCorr; int station; float weightVertex; float weightInvbeta; };
+      enum TimeMeasurementType { DT=1, CSCW=2, CSCS=4, CSC=6, ECAL=8};
+      struct TimeMeasurementCSC {float distIP;float timeCorr; int station; float weightVertex; float weightInvbeta; unsigned char type; };
       struct TimeMeasurementDT  {float distIP;float timeCorr; int station; bool isLeft; bool isPhi; float posInLayer; DetId driftCell;};
-      struct TimeMeasurement    {double distIP; double localt0; double weightVertex; double weightInvBeta;
-         TimeMeasurement(double distIP_, double localt0_, double weightVertex_, double weightInvBeta_){distIP = distIP_; localt0=localt0_; weightVertex=weightVertex_; weightInvBeta=weightInvBeta_;}
+      struct TimeMeasurement    {double distIP; double localt0; double weightVertex; double weightInvBeta; unsigned char type;
+         TimeMeasurement(double distIP_, double localt0_, double weightVertex_, double weightInvBeta_, unsigned char type_){distIP = distIP_; localt0=localt0_; weightVertex=weightVertex_; weightInvBeta=weightInvBeta_; type=type_;}
       };
       
       vector<const CSCSegment*> cscSegs;
       vector<const DTRecSegment4D*> dtSegs;
       vector<TimeMeasurement> tmSeq;
+
+      reco::MuonTimeExtra dtTOF, cscTOF, combinedTOF;
 
       //////////Global variables for Segment matcher
       double DTradius;
@@ -155,20 +140,20 @@ class muonTimingCalculator{
          t0OffsetMap = NULL;
          t0OffsetMapPerRuns.clear();
 
-         std::vector<string> chambers;
+         std::vector<unsigned int> chambers;
 
          FILE* pFile = fopen(path.c_str(), "r");
          char line[16384];
          while(fgets(line, 16384, pFile)){
-            unsigned int run; char chamber[128];  float correction;
+            unsigned int run; unsigned int chamber;  float correction;
             char* pch=strtok(line,",");
             if(string(pch).find("runs")!=std::string::npos){  //get the list of runs
-               while((pch=strtok(NULL,","))){sscanf(pch, "%u", &run); t0OffsetMapPerRuns[run] = std::unordered_map<string, float>(); }         
+               while((pch=strtok(NULL,","))){sscanf(pch, "%u", &run); t0OffsetMapPerRuns[run] = std::unordered_map<unsigned int, float>(); }         
             }else if(string(pch).find("chambers")!=std::string::npos){  //get the list of chambers
-               while((pch=strtok(NULL,","))){sscanf(pch, "%s", chamber); chambers.push_back(chamber);}         
+               while((pch=strtok(NULL,","))){sscanf(pch, "%d", &chamber); chambers.push_back(chamber);}         
             }else if(string(pch).find("run")!=std::string::npos){
                sscanf(pch, "run %u", &run);
-               std::unordered_map<string, float>& t0OffsetMap =  t0OffsetMapPerRuns[run];
+               std::unordered_map<unsigned int, float>& t0OffsetMap =  t0OffsetMapPerRuns[run];
                int Index=0;
                while((pch=strtok(NULL,","))){sscanf(pch, "%f", &correction); t0OffsetMap[chambers[Index]] = correction; Index++;}
             }else{
@@ -179,17 +164,28 @@ class muonTimingCalculator{
       }
 
       void setRun(unsigned int currentRun){
-         std::map<unsigned int, std::unordered_map<string, float> >::iterator it, itPrev=t0OffsetMapPerRuns.begin();
+         std::map<unsigned int, std::unordered_map<unsigned int, float> >::iterator it, itPrev=t0OffsetMapPerRuns.begin();
          for(it=t0OffsetMapPerRuns.begin(); it!=t0OffsetMapPerRuns.end(); it++){
             if(it->first>currentRun){t0OffsetMap = &(itPrev->second); return;}//runs are ordered, so the previous iterator correspond to our run
             itPrev=it;
          }
          t0OffsetMap = &(itPrev->second); //just in case we go beyond the list of run for which we have a correciton
-         printf("use run %u for %u\n",itPrev->first, currentRun);
       }
 
-      double t0Offset(unsigned int detId){ return (*t0OffsetMap)[moduleGeom::getStationName(detId)]; } //stupid to save the information in a map of string key
-      double t0OffsetChamber(unsigned int detId){  return (*t0OffsetMap)[moduleGeom::getChamberName(detId)]; } //stupid to save the information in a map of string key
+      double t0Offset(unsigned int detId, bool debug=false){ 
+         if(debug){
+            DetId geomDetId(detId);
+            if(geomDetId.subdetId()==1) printf("dt  %i --> t0=%f\n", detId, (*t0OffsetMap)[detId&0xFFC3FFFF]);  //dt stations
+            if(geomDetId.subdetId()==2) printf("csc %i --> t0=%f\n", detId, (*t0OffsetMap)[detId&0xFFFFFE07]);  //csc stations
+         }
+
+         DetId geomDetId(detId); 
+         if(geomDetId.subdetId()==1) return (*t0OffsetMap)[detId&0xFFC3FFFF];  //dt stations
+         if(geomDetId.subdetId()==2) return (*t0OffsetMap)[detId&0xFFFFFE07];  //csc stations
+         printf("ERROR getting t0Offset for DetId=%u\n", detId);
+         return 0.0; //should never happens
+      }
+      double t0OffsetChamber(unsigned int detId){  return (*t0OffsetMap)[detId]; }
 
 
       ////////////////////////////////////////////
@@ -485,368 +481,6 @@ class muonTimingCalculator{
 
 
 
-         double iBetaFromCSC(reco::MuonRef& muon, int CORRECTION_LEVEL){
-                        //try to compute 1/beta for csc
-                        std::vector<muonTimingCalculator::TimeMeasurementCSC> tms;
-                        for(unsigned int ic=0;ic<cscSegs.size();ic++){ 
-                           if(cscSegs[ic]->specificRecHits().size()<=0)continue;  
-
-                           const std::vector<CSCRecHit2D> hits2d = cscSegs[ic]->specificRecHits();
-                           for (std::vector<CSCRecHit2D>::const_iterator hiti=hits2d.begin(); hiti!=hits2d.end(); hiti++) {
-                               muonTimingCalculator::TimeMeasurementCSC thisHit;
-
-            //                  std::pair< TrajectoryStateOnSurface, double> tsos;
-            //                  tsos=propag->propagateWithPath(muonFTS,cscDet->surface());
-
-            //                  if (tsos.first.isValid()) thisHit.distIP = tsos.second+posp.mag(); 
-            //                    else thisHit.distIP = cscDet->toGlobal(hiti->localPosition()).mag();
-                               thisHit.distIP = moduleGeom::get(hiti->geographicalId())->pos.Mag();
-
-                              if(UseStripTime_){
-                                  thisHit.weightInvbeta = thisHit.distIP*thisHit.distIP/(theStripError_*theStripError_*30.*30.);
-                                  thisHit.weightVertex = 1./(theStripError_*theStripError_);
-                                  thisHit.timeCorr = hiti->tpeak();
-                                  if(CORRECTION_LEVEL==1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
-                                  if(CORRECTION_LEVEL==2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
-
-                                  tms.push_back(thisHit);
-                              }
-
-                              if(UseWireTime_){
-                                  thisHit.weightInvbeta = thisHit.distIP*thisHit.distIP/(theWireError_*theWireError_*30.*30.);
-                                  thisHit.weightVertex = 1./(theWireError_*theWireError_);
-                                  thisHit.timeCorr = hiti->wireTime();
-                                  if(CORRECTION_LEVEL==1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
-                                  if(CORRECTION_LEVEL==2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
-                                  tms.push_back(thisHit);
-                              }
-                          } // rechit
-                        }//csc segment
-
-
-
-                          // Now loop over the measurements, calculate 1/beta and cut away outliers
-                          double invbeta=0;
-                          double invbetaerr=0;
-                          double totalWeightInvbeta=0;
-                          double totalWeightVertex=0;
-                          bool modified = false;
-                          std::vector <double> dstnc, dsegm, dtraj, hitWeightInvbeta, hitWeightVertex;
-                          do {    
-                            modified = false;
-                            dstnc.clear();
-                            dsegm.clear();
-                            dtraj.clear();
-                            hitWeightInvbeta.clear();
-                            hitWeightVertex.clear();
-                              
-                            totalWeightInvbeta=0;
-                            totalWeightVertex=0;
-                              
-                                for (std::vector<muonTimingCalculator::TimeMeasurementCSC>::iterator tm=tms.begin(); tm!=tms.end(); ++tm) {
-                                  dstnc.push_back(tm->distIP);
-                                  dsegm.push_back(tm->timeCorr);
-                                  hitWeightInvbeta.push_back(tm->weightInvbeta);
-                                  hitWeightVertex.push_back(tm->weightVertex);
-                                  totalWeightInvbeta+=tm->weightInvbeta;
-                                  totalWeightVertex+=tm->weightVertex;
-                                }
-                                  
-                            if (totalWeightInvbeta==0) break;        
-
-                            // calculate the value and error of 1/beta from the complete set of 1D hits
-                            // inverse beta - weighted average of the contributions from individual hits
-                            invbeta=0;
-                            for (unsigned int i=0;i<dstnc.size();i++) 
-                              invbeta+=(1.+dsegm.at(i)/dstnc.at(i)*30.)*hitWeightInvbeta.at(i)/totalWeightInvbeta;
-
-                            double chimax=0.;
-                            std::vector<muonTimingCalculator::TimeMeasurementCSC>::iterator tmmax;
-                            
-                            // the dispersion of inverse beta
-                            double diff;
-                            for (unsigned int i=0;i<dstnc.size();i++) {
-                              diff=(1.+dsegm.at(i)/dstnc.at(i)*30.)-invbeta;
-                              diff=diff*diff*hitWeightInvbeta.at(i);
-                              invbetaerr+=diff;
-                              if (diff>chimax) { 
-                                tmmax=tms.begin()+i;
-                                chimax=diff;
-                              }
-                            }
-                            
-                            invbetaerr=sqrt(invbetaerr/totalWeightInvbeta); 
-                         
-                            // cut away the outliers
-                            if (chimax>thePruneCut_) {
-                              tms.erase(tmmax);
-                              modified=true;
-                            }    
-
-                          }while (modified);
-
-                    
-
-                          // std::cout << " *** FINAL Measured 1/beta: " << invbeta << " +/- " << invbetaerr << std::endl;
-
-                          //save hit info to the keeping vector
-                          for (unsigned int i=0;i<dstnc.size();i++) {
-                             tmSeq.push_back(muonTimingCalculator::TimeMeasurement(dstnc[i], dsegm[i], hitWeightInvbeta[i], hitWeightVertex[i]));
-                          }
-
-                          return invbeta;
-         }
-
-
-         double iBetaFromDT(reco::MuonRef& muon, int CORRECTION_LEVEL){
-         //                 printf("\n#Muon pT= %f Eta=%f Phi = %f\n", muon->pt(), muon->eta(), muon->phi());
-
-                          std::vector<muonTimingCalculator::TimeMeasurementDT> tms;
-                          // create a collection on TimeMeasurements for the track        
-                          for (std::vector<const DTRecSegment4D*>::iterator rechit = dtSegs.begin(); rechit!=dtSegs.end();++rechit) {
-
-                            // Create the ChamberId
-                            DetId id = (*rechit)->geographicalId();
-                            DTChamberId chamberId(id.rawId());
-                            int station = chamberId.station();
-         //                   if (debug) std::cout << "Matched DT segment in station " << station << std::endl;
-
-                            // use only segments with both phi and theta projections present (optional)
-                            bool bothProjections = ( ((*rechit)->hasPhi()) && ((*rechit)->hasZed()) );
-                            
-                            if (requireBothProjections_ && !bothProjections) continue;
-
-                            // loop over (theta, phi) segments
-                            for (int phi=0; phi<2; phi++) {
-
-                              if (dropTheta_ && !phi) continue;
-
-                              const DTRecSegment2D* segm;
-                              if (phi) segm = dynamic_cast<const DTRecSegment2D*>((*rechit)->phiSegment()); 
-                                  else segm = dynamic_cast<const DTRecSegment2D*>((*rechit)->zSegment());
-
-                              if(segm == 0) continue;
-                              if (!segm->specificRecHits().size()) continue;
-
-                              moduleGeom* geomDet = moduleGeom::get(segm->geographicalId());
-                              const std::vector<DTRecHit1D> hits1d = segm->specificRecHits();
-
-
-                              // store all the hits from the segment
-                              for (std::vector<DTRecHit1D>::const_iterator hiti=hits1d.begin(); hiti!=hits1d.end(); hiti++) {
-
-                                moduleGeom* dtcell = moduleGeom::get(hiti->geographicalId());
-                                muonTimingCalculator::TimeMeasurementDT thisHit;
-
-         //                       std::pair< TrajectoryStateOnSurface, double> tsos;
-         //                       tsos=propag->propagateWithPath(muonFTS,dtcell->surface());
-
-                                double dist;            
-                                double dist_straight = dtcell->toGlobal(TVector3(hiti->localPosition().x(), hiti->localPosition().y(), hiti->localPosition().z()) ).Mag(); 
-         //                       if (tsos.first.isValid()) { 
-         //                         dist = tsos.second+posp.mag(); 
-         //               //        std::cout << "Propagate distance: " << dist << " ( innermost: " << posp.mag() << ")" << std::endl; 
-         //                       } else { 
-                                  dist = dist_straight;
-         //               //        std::cout << "Geom distance: " << dist << std::endl; 
-         //                       }
-
-                                thisHit.driftCell = hiti->geographicalId();
-                                if (hiti->lrSide()==DTEnums::Left) thisHit.isLeft=true; else thisHit.isLeft=false;
-                                thisHit.isPhi = phi;
-                                thisHit.posInLayer = geomDet->toLocal(dtcell->toGlobal(TVector3(hiti->localPosition().x(), hiti->localPosition().y(), hiti->localPosition().z()) )).x();
-
-                                
-                                thisHit.distIP = dist;
-                                thisHit.station = station;
-                                if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr=segm->t0();
-                                else thisHit.timeCorr=0.;
-         //                       thisHit.timeCorr += theTimeOffset_;
-                                if(CORRECTION_LEVEL==1)thisHit.timeCorr -= t0Offset       (hiti->geographicalId());
-                                if(CORRECTION_LEVEL==2)thisHit.timeCorr -= t0OffsetChamber(hiti->geographicalId());
-
-                                  
-                                // signal propagation along the wire correction for unmached theta or phi segment hits
-         //                       if (doWireCorr_ && !bothProjections && tsos.first.isValid()) {
-         //                         const DTLayer* layer = theDTGeom->layer(hiti->wireId());
-         //                         float propgL = layer->toLocal( tsos.first.globalPosition() ).y();
-         //                         float wirePropCorr = propgL/24.4*0.00543; // signal propagation speed along the wire
-         //                         if (thisHit.isLeft) wirePropCorr=-wirePropCorr;
-         //                         thisHit.posInLayer += wirePropCorr;
-         //                         const DTSuperLayer *sl = layer->superLayer();
-         //                         float tofCorr = sl->surface().position().mag()-tsos.first.globalPosition().mag();
-         //                         tofCorr = (tofCorr/29.979)*0.00543;
-         //                         if (thisHit.isLeft) tofCorr=-tofCorr;
-         //                         thisHit.posInLayer += tofCorr;
-         //                       } else {
-                                  // non straight-line path correction
-                                  float slCorr = (dist_straight-dist)/29.979*0.00543;
-                                  if (thisHit.isLeft) slCorr=-slCorr;
-                                  thisHit.posInLayer += slCorr;
-         //                       }
-
-         //                         printf("##Hit dist=%f   time=%f  posInLayer=%f\n", thisHit.distIP, thisHit.timeCorr, thisHit.posInLayer);
-
-
-         //                       if (debug) std::cout << " dist: " << dist << "  t0: " << thisHit.posInLayer << std::endl;
-                         
-                                tms.push_back(thisHit);
-                              }
-                            } // phi = (0,1)            
-                          } // rechit
-
-                             
-                          double invbeta=0;
-                          double invbetaerr=0;
-                          double totalWeightInvbeta=0;
-                          double totalWeightVertex=0;
-                          bool modified = false;
-                          std::vector <double> dstnc, dsegm, dtraj, hitWeightVertex, hitWeightInvbeta, left;
-                            
-                          // Now loop over the measurements, calculate 1/beta and cut away outliers
-                          do {    
-
-                            modified = false;
-                            dstnc.clear();
-                            dsegm.clear();
-                            dtraj.clear();
-                            hitWeightVertex.clear();
-                            hitWeightInvbeta.clear();
-                            left.clear();
-                              
-                            std::vector <int> hit_idx;
-                            totalWeightInvbeta=0;
-                            totalWeightVertex=0;
-                              
-                            // Rebuild segments
-                            for (int sta=1;sta<5;sta++)
-                              for (int phi=0;phi<2;phi++) {
-                                std::vector <muonTimingCalculator::TimeMeasurementDT> seg;
-                                std::vector <int> seg_idx;
-                                int tmpos=0;
-                                for (std::vector<muonTimingCalculator::TimeMeasurementDT>::iterator tm=tms.begin(); tm!=tms.end(); ++tm) {
-                                  if ((tm->station==sta) && (tm->isPhi==phi)) {
-                                    seg.push_back(*tm);
-                                    seg_idx.push_back(tmpos);
-                                  }
-                                  tmpos++;  
-                                }
-
-                                unsigned int segsize = seg.size();
-                                if (segsize<theHitsMin_) continue;
-
-                                double a=0, b=0;
-                                std::vector <double> hitxl,hitxr,hityl,hityr;
-
-                                for (std::vector<muonTimingCalculator::TimeMeasurementDT>::iterator tm=seg.begin(); tm!=seg.end(); ++tm) {
-
-                                  DetId id = tm->driftCell;
-                                  moduleGeom* dtcell = moduleGeom::get(id.rawId());
-         //                         const GeomDet* dtcell = theTrackingGeometry->idToDet(id);
-                                  DTChamberId chamberId(id.rawId());
-         //                         const GeomDet* dtcham = theTrackingGeometry->idToDet(chamberId);
-                                  moduleGeom* dtcham = moduleGeom::get(chamberId.rawId());
-
-                                  double celly=dtcham->toLocal(dtcell->pos).z();
-                                    
-                                  if (tm->isLeft) {
-                                    hitxl.push_back(celly);
-                                    hityl.push_back(tm->posInLayer);
-                                  } else {
-                                    hitxr.push_back(celly);
-                                    hityr.push_back(tm->posInLayer);
-                                  }    
-                                }
-
-                                if (!fitT0(a,b,hitxl,hityl,hitxr,hityr)) {
-                                  continue;
-                                }
-
-                                // a segment must have at least one left and one right hit
-                                if ((!hitxl.size()) || (!hityl.size())) continue;
-
-                                int segidx=0;
-                                for (std::vector<muonTimingCalculator::TimeMeasurementDT>::const_iterator tm=seg.begin(); tm!=seg.end(); ++tm) {
-                                  DetId id = tm->driftCell;
-                                  moduleGeom* dtcell = moduleGeom::get(id.rawId());
-         //                         const GeomDet* dtcell = theTrackingGeometry->idToDet(id);
-                                  DTChamberId chamberId(id.rawId());
-         //                         const GeomDet* dtcham = theTrackingGeometry->idToDet(chamberId);
-                                  moduleGeom* dtcham = moduleGeom::get(chamberId.rawId());                       
-
-                                  double layerZ  = dtcham->toLocal(dtcell->pos).z();
-                                  double segmLocalPos = b+layerZ*a;
-                                  double hitLocalPos = tm->posInLayer;
-                                  int hitSide = -tm->isLeft*2+1;
-                                  double t0_segm = (-(hitSide*segmLocalPos)+(hitSide*hitLocalPos))/0.00543+tm->timeCorr;
-                                  
-         //                         if (debug) std::cout << "   Segm hit.  dstnc: " << tm->distIP << "   t0: " << t0_segm << std::endl;
-                                    
-                                  dstnc.push_back(tm->distIP);
-                                  dsegm.push_back(t0_segm);
-                                  left.push_back(hitSide);
-                                  hitWeightInvbeta.push_back(((double)seg.size()-2.)*tm->distIP*tm->distIP/((double)seg.size()*30.*30.*theError_*theError_));
-                                  hitWeightVertex.push_back(((double)seg.size()-2.)/((double)seg.size()*theError_*theError_));
-                                  hit_idx.push_back(seg_idx.at(segidx));
-                                  segidx++;
-                                  totalWeightInvbeta+=((double)seg.size()-2.)*tm->distIP*tm->distIP/((double)seg.size()*30.*30.*theError_*theError_);
-                                  totalWeightVertex+=((double)seg.size()-2.)/((double)seg.size()*theError_*theError_);
-                                }
-                              }
-
-                            if (totalWeightInvbeta==0) break;        
-
-                            // calculate the value and error of 1/beta from the complete set of 1D hits
-         //                   if (debug)
-         //                     std::cout << " Points for global fit: " << dstnc.size() << std::endl;
-
-                            // inverse beta - weighted average of the contributions from individual hits
-                            invbeta=0;
-                            for (unsigned int i=0;i<dstnc.size();i++){
-                              invbeta+=(1.+dsegm.at(i)/dstnc.at(i)*30.)*hitWeightInvbeta.at(i)/totalWeightInvbeta;
-                            }
-
-                            double chimax=0.;
-                            std::vector<muonTimingCalculator::TimeMeasurementDT>::iterator tmmax;
-                            
-                            // the dispersion of inverse beta
-                            double diff;
-                            for (unsigned int i=0;i<dstnc.size();i++) {
-                              diff=(1.+dsegm.at(i)/dstnc.at(i)*30.)-invbeta;
-                              diff=diff*diff*hitWeightInvbeta.at(i);
-                              invbetaerr+=diff;
-                              if (diff>chimax) { 
-                                tmmax=tms.begin()+hit_idx.at(i);
-                                chimax=diff;
-                              }
-                            }
-                            
-                            invbetaerr=sqrt(invbetaerr/totalWeightInvbeta); 
-                         
-                            // cut away the outliers
-                            if (chimax>thePruneCutDT_) {
-                              tms.erase(tmmax);
-                              modified=true;
-                            }    
-
-         //                   if (debug)
-         //                     std::cout << " Measured 1/beta: " << invbeta << " +/- " << invbetaerr << std::endl;
-
-                          } while (modified);
-
-         //                 printf("iBeta %f (fly) vs %f (aod)\n", invbeta, dttof->inverseBeta());
-
-
-                          //save hit info to the keeping vector
-                          for (unsigned int i=0;i<dstnc.size();i++) {
-                             tmSeq.push_back(muonTimingCalculator::TimeMeasurement(dstnc[i], dsegm[i], hitWeightInvbeta[i], hitWeightVertex[i]));
-                          }
-
-                          return invbeta;
-         }
-
-
-
          void rawFit(double &a, double &da, double &b, double &db, const std::vector<double>& hitsx, const std::vector<double>& hitsy) {
            double s=0,sx=0,sy=0,x,y;
            double sxx=0,sxy=0;
@@ -876,7 +510,229 @@ class muonTimingCalculator{
 
 
 
-         reco::MuonTimeExtra fillTimeFromMeasurements(){
+         void addCSCMeasurements(reco::MuonRef& muon, int CORRECTION_LEVEL){
+              TrackRef muonTrack = muon->standAloneMuon();
+              math::XYZPoint  pos=muonTrack->innerPosition();
+              math::XYZVector mom=muonTrack->innerMomentum();
+
+              if (sqrt(muonTrack->innerPosition().mag2()) > sqrt(muonTrack->outerPosition().mag2())){
+                 pos=muonTrack->outerPosition();
+                 mom=-1*muonTrack->outerMomentum();
+              }
+
+              TVector3  posp(pos.x(), pos.y(), pos.z());
+              TVector3  momv(mom.x(), mom.y(), mom.z());
+
+               //try to compute 1/beta for csc
+               std::vector<muonTimingCalculator::TimeMeasurementCSC> tms;
+               for(unsigned int ic=0;ic<cscSegs.size();ic++){ 
+                  const std::vector<CSCRecHit2D> hits2d = cscSegs[ic]->specificRecHits();
+                  for (std::vector<CSCRecHit2D>::const_iterator hiti=hits2d.begin(); hiti!=hits2d.end(); hiti++) {
+                      muonTimingCalculator::TimeMeasurementCSC thisHit;
+
+                     TVector3 localPointOnModule; 
+                     moduleGeom* mod = moduleGeom::get(hiti->geographicalId());
+                     if(mod->propagateParametersOnPlane(posp, momv, localPointOnModule)){
+                        thisHit.distIP = mod->toGlobal(localPointOnModule).Mag();
+                     }else{
+                        thisHit.distIP = mod->pos.Mag();                            
+                     }
+
+                     if(UseStripTime_){
+                         thisHit.type = TimeMeasurementType::CSCS;
+                         thisHit.weightInvbeta = thisHit.distIP*thisHit.distIP/(theStripError_*theStripError_*30.*30.);
+                         thisHit.weightVertex = 1./(theStripError_*theStripError_);
+                         thisHit.timeCorr = hiti->tpeak();
+                         if(CORRECTION_LEVEL==1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
+                         if(CORRECTION_LEVEL==2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
+                         tms.push_back(thisHit);
+                     }
+
+                     if(UseWireTime_){
+                         thisHit.type = TimeMeasurementType::CSCW;
+                         thisHit.weightInvbeta = thisHit.distIP*thisHit.distIP/(theWireError_*theWireError_*30.*30.);
+                         thisHit.weightVertex = 1./(theWireError_*theWireError_);
+                         thisHit.timeCorr = hiti->wireTime();
+                         if(CORRECTION_LEVEL==1)thisHit.timeCorr -= t0Offset       (cscSegs[ic]->cscDetId().rawId());
+                         if(CORRECTION_LEVEL==2)thisHit.timeCorr -= t0OffsetChamber(cscSegs[ic]->cscDetId().rawId());
+                         tms.push_back(thisHit);
+                     }
+                 } // rechit
+               }//csc segment
+
+                     
+               for (std::vector<muonTimingCalculator::TimeMeasurementCSC>::iterator tm=tms.begin(); tm!=tms.end(); ++tm) {
+                 tmSeq.push_back(muonTimingCalculator::TimeMeasurement(tm->distIP, tm->timeCorr, tm->weightVertex, tm->weightInvbeta,  tm->type));
+               }
+         }
+
+
+         void addDTMeasurements(reco::MuonRef& muon, int CORRECTION_LEVEL){
+                 TrackRef muonTrack = muon->standAloneMuon();
+                 math::XYZPoint  pos=muonTrack->innerPosition();
+                 math::XYZVector mom=muonTrack->innerMomentum();
+
+                 if (sqrt(muonTrack->innerPosition().mag2()) > sqrt(muonTrack->outerPosition().mag2())){
+                    pos=muonTrack->outerPosition();
+                    mom=-1*muonTrack->outerMomentum();
+                 }
+
+                 TVector3  posp(pos.x(), pos.y(), pos.z());
+                 TVector3  momv(mom.x(), mom.y(), mom.z());
+
+                 std::vector<muonTimingCalculator::TimeMeasurementDT> tms;
+                 // create a collection on TimeMeasurements for the track        
+                 for (std::vector<const DTRecSegment4D*>::iterator rechit = dtSegs.begin(); rechit!=dtSegs.end();++rechit) {
+
+                   // Create the ChamberId
+                   DetId id = (*rechit)->geographicalId();
+                   DTChamberId chamberId(id.rawId());
+                   int station = chamberId.station();
+
+                   // use only segments with both phi and theta projections present (optional)
+                   bool bothProjections = ( ((*rechit)->hasPhi()) && ((*rechit)->hasZed()) );
+                   
+                   if (requireBothProjections_ && !bothProjections) continue;
+
+                   // loop over (theta, phi) segments
+                   for (int phi=0; phi<2; phi++) {
+
+                     if (dropTheta_ && !phi) continue;
+
+                     const DTRecSegment2D* segm;
+                     if (phi) segm = dynamic_cast<const DTRecSegment2D*>((*rechit)->phiSegment()); 
+                         else segm = dynamic_cast<const DTRecSegment2D*>((*rechit)->zSegment());
+
+                     if(segm == 0) continue;
+                     if (!segm->specificRecHits().size()) continue;
+
+                     moduleGeom* geomDet = moduleGeom::get(segm->geographicalId());
+                     const std::vector<DTRecHit1D> hits1d = segm->specificRecHits();
+
+
+                     // store all the hits from the segment
+                     for (std::vector<DTRecHit1D>::const_iterator hiti=hits1d.begin(); hiti!=hits1d.end(); hiti++) {
+                       moduleGeom* dtcell = moduleGeom::get(hiti->geographicalId());
+                       muonTimingCalculator::TimeMeasurementDT thisHit;
+
+                       double dist;            
+                       double dist_straight = dtcell->toGlobal(TVector3(hiti->localPosition().x(), hiti->localPosition().y(), hiti->localPosition().z()) ).Mag(); 
+
+                        TVector3 localPointOnModule; 
+                        if(dtcell->propagateParametersOnPlane(posp, momv, localPointOnModule)){
+                           dist = dtcell->toGlobal(localPointOnModule).Mag();
+                        }else{
+                           dist = dist_straight;
+                        }
+
+                       thisHit.driftCell = hiti->geographicalId();
+                       if (hiti->lrSide()==DTEnums::Left) thisHit.isLeft=true; else thisHit.isLeft=false;
+                       thisHit.isPhi = phi;
+                       thisHit.posInLayer = geomDet->toLocal(dtcell->toGlobal(TVector3(hiti->localPosition().x(), hiti->localPosition().y(), hiti->localPosition().z()) )).x();
+                       
+                       thisHit.distIP = dist;
+                       thisHit.station = station;
+                       if (useSegmentT0_ && segm->ist0Valid()) thisHit.timeCorr=segm->t0();
+                       else thisHit.timeCorr=0.;
+                       if(CORRECTION_LEVEL==1)thisHit.timeCorr -= t0Offset       (DTChamberId(hiti->geographicalId()).rawId());
+                       if(CORRECTION_LEVEL==2)thisHit.timeCorr -= t0OffsetChamber(DTChamberId(hiti->geographicalId()).rawId());
+
+                       TVector3 localPointOnCell;
+                       if (doWireCorr_ && !bothProjections && dtcell->propagateParametersOnPlane(posp, momv, localPointOnCell)) {
+                         moduleGeom* dtlayer = moduleGeom::get(hiti->wireId().layerId().rawId());
+                         float propgL = dtlayer->toLocal(dtcell->toGlobal(localPointOnCell)).y();
+                         float wirePropCorr = propgL/24.4*0.00543; // signal propagation speed along the wire
+                         if (thisHit.isLeft) wirePropCorr=-wirePropCorr;
+                         thisHit.posInLayer += wirePropCorr;
+                         moduleGeom* sl = moduleGeom::get(hiti->wireId().layerId().superlayerId().rawId());
+                         float tofCorr = sl->pos.Mag()-dtcell->toGlobal(localPointOnCell).Mag();
+                         tofCorr = (tofCorr/29.979)*0.00543;
+                         if (thisHit.isLeft) tofCorr=-tofCorr;
+                         thisHit.posInLayer += tofCorr;
+                       } else {
+                         // non straight-line path correction
+                         float slCorr = (dist_straight-dist)/29.979*0.00543;
+                         if (thisHit.isLeft) slCorr=-slCorr;
+                         thisHit.posInLayer += slCorr;                               
+                       }
+                       tms.push_back(thisHit);
+                     }
+                   } // phi = (0,1)            
+                 } // rechit
+
+                    
+                  
+                // Rebuild segments
+                for (int sta=1;sta<5;sta++){
+                  for (int phi=0;phi<2;phi++) {
+                    std::vector <muonTimingCalculator::TimeMeasurementDT> seg;
+                    std::vector <int> seg_idx;
+                    int tmpos=0;
+                    for (std::vector<muonTimingCalculator::TimeMeasurementDT>::iterator tm=tms.begin(); tm!=tms.end(); ++tm) {
+                      if ((tm->station==sta) && (tm->isPhi==phi)) {
+                        seg.push_back(*tm);
+                        seg_idx.push_back(tmpos);
+                      }
+                      tmpos++;  
+                    }
+
+                    unsigned int segsize = seg.size();
+                    if (segsize<theHitsMin_) continue;
+
+                    double a=0, b=0;
+                    std::vector <double> hitxl,hitxr,hityl,hityr;
+
+                    for (std::vector<muonTimingCalculator::TimeMeasurementDT>::iterator tm=seg.begin(); tm!=seg.end(); ++tm) {
+
+                      DetId id = tm->driftCell;
+                      moduleGeom* dtcell = moduleGeom::get(id.rawId());
+                      DTChamberId chamberId(id.rawId());
+                      moduleGeom* dtcham = moduleGeom::get(chamberId.rawId());
+
+                      double celly=dtcham->toLocal(dtcell->pos).z();
+                        
+                      if (tm->isLeft) {
+                        hitxl.push_back(celly);
+                        hityl.push_back(tm->posInLayer);
+                      } else {
+                        hitxr.push_back(celly);
+                        hityr.push_back(tm->posInLayer);
+                      }    
+                    }
+
+                    if (!fitT0(a,b,hitxl,hityl,hitxr,hityr)) {
+                      continue;
+                    }
+
+                    // a segment must have at least one left and one right hit
+                    if ((!hitxl.size()) || (!hityl.size())) continue;
+
+                    int segidx=0;
+                    for (std::vector<muonTimingCalculator::TimeMeasurementDT>::const_iterator tm=seg.begin(); tm!=seg.end(); ++tm) {
+                      DetId id = tm->driftCell;
+                      moduleGeom* dtcell = moduleGeom::get(id.rawId());
+                      DTChamberId chamberId(id.rawId());
+                      moduleGeom* dtcham = moduleGeom::get(chamberId.rawId());                       
+
+                      double layerZ  = dtcham->toLocal(dtcell->pos).z();
+                      double segmLocalPos = b+layerZ*a;
+                      double hitLocalPos = tm->posInLayer;
+                      int hitSide = -tm->isLeft*2+1;
+                      double t0_segm = (-(hitSide*segmLocalPos)+(hitSide*hitLocalPos))/0.00543+tm->timeCorr;
+
+                      double hitWeightInvbeta_ = ((double)seg.size()-2.)*tm->distIP*tm->distIP/((double)seg.size()*30.*30.*theError_*theError_);
+                      double hitWeightVertex_ = ((double)seg.size()-2.)/((double)seg.size()*theError_*theError_);
+                      tmSeq.push_back(muonTimingCalculator::TimeMeasurement(tm->distIP, t0_segm,  hitWeightVertex_, hitWeightInvbeta_, TimeMeasurementType::DT));
+                    }
+                  }
+
+            }
+
+         }
+
+
+
+         reco::MuonTimeExtra getTimeExtra(float thePruneCut, unsigned char TypeMask=255){
               reco::MuonTimeExtra muTime;
 
               std::vector <double> x,y;
@@ -884,15 +740,32 @@ class muonTimingCalculator{
               double vertexTime=0, vertexTimeErr=0, vertexTimeR=0, vertexTimeRErr=0;
               double freeBeta, freeBetaErr, freeTime, freeTimeErr;
 
-              if(tmSeq.size()>1){
-                 float totalWeightInvBeta = 0;
-                 float totalWeightVertex  = 0;
+              float totalWeightInvBeta = 0;
+              float totalWeightVertex  = 0;
+
+              vector<TimeMeasurement> tmSeqSave = tmSeq;
+
+              bool modified;
+               do{    
+                  modified = false;
+
+                 invbeta=0; invbetaerr=0;
+                 vertexTime=0; vertexTimeErr=0; vertexTimeR=0; vertexTimeRErr=0;
+                 freeBeta=0; freeBetaErr=0; freeTime=0; freeTimeErr=0;
+
+
+                 totalWeightInvBeta = 0;
+                 totalWeightVertex  = 0;
                  for (unsigned int i=0;i<tmSeq.size();i++){
+                    if((tmSeq[i].type & TypeMask)==0)continue;
                     totalWeightInvBeta += tmSeq[i].weightInvBeta;
                     totalWeightVertex += tmSeq[i].weightVertex;
                  }
+                 if(totalWeightInvBeta==0) break;
 
                  for (unsigned int i=0;i<tmSeq.size();i++) {
+                    if((tmSeq[i].type & TypeMask)==0)continue;
+
                    invbeta+=(1.+tmSeq[i].localt0/tmSeq[i].distIP*30.)*tmSeq[i].weightInvBeta/totalWeightInvBeta;
                    x.push_back(tmSeq[i].distIP/30.);
                    y.push_back(tmSeq[i].localt0+tmSeq[i].distIP/30.);
@@ -900,21 +773,34 @@ class muonTimingCalculator{
                    vertexTimeR+=(tmSeq[i].localt0+2*tmSeq[i].distIP/30.)*tmSeq[i].weightVertex/totalWeightVertex;
                  }
 
-                 double diff;
+                 double diff=0, chimax=0;  unsigned int chimax_index=0;
                  for (unsigned int i=0;i<tmSeq.size();i++) {
+                    if((tmSeq[i].type & TypeMask)==0)continue;
+
                    diff=(1.+tmSeq[i].localt0/tmSeq[i].distIP*30.)-invbeta;
-                   invbetaerr+=diff*diff*tmSeq[i].weightInvBeta;
+                   diff=diff*diff*tmSeq[i].weightInvBeta;
+                   invbetaerr+=diff;
+
+                   if(diff>chimax){chimax=diff; chimax_index=i;}
+
                    diff=tmSeq[i].localt0-vertexTime;
                    vertexTimeErr+=diff*diff*tmSeq[i].weightVertex;
                    diff=tmSeq[i].localt0+2*tmSeq[i].distIP/30.-vertexTimeR;
                    vertexTimeRErr+=diff*diff*tmSeq[i].weightVertex;
                  }
                  
-                 double cf = 1./(tmSeq.size()-1);
-                 invbetaerr=sqrt(invbetaerr/totalWeightInvBeta*cf);
-                 vertexTimeErr=sqrt(vertexTimeErr/totalWeightVertex*cf);
-                 vertexTimeRErr=sqrt(vertexTimeRErr/totalWeightVertex*cf);
-              }
+                 // cut away the outliers
+                 if(chimax>thePruneCut){
+                   tmSeq.erase(tmSeq.begin() + chimax_index);
+                   modified=true;
+                 }
+              }while(modified);
+
+              double cf = 1./(tmSeq.size()-1);
+              invbetaerr=sqrt(invbetaerr/totalWeightInvBeta*cf);
+              vertexTimeErr=sqrt(vertexTimeErr/totalWeightVertex*cf);
+              vertexTimeRErr=sqrt(vertexTimeRErr/totalWeightVertex*cf);
+
 
               muTime.setInverseBeta(invbeta);
               muTime.setInverseBetaErr(invbetaerr);
@@ -930,9 +816,32 @@ class muonTimingCalculator{
                 
               muTime.setNDof(tmSeq.size());
 
+              tmSeq = tmSeqSave;
+
               return muTime;
             }
 
+
+            void computeTOF(reco::MuonRef& muon, const CSCSegmentCollection& CSCSegmentColl, const DTRecSegment4DCollection& DTCSegmentColl,  int CORRECTION_LEVEL){
+//std::cout<<"TOF A\n";
+                  tmSeq.clear();
+//std::cout<<"TOF Abis "<< muon->isStandAloneMuon() << "\n";
+
+//std::cout<<"TOF B\n";
+                  matchCSC(*muon->standAloneMuon(), CSCSegmentColl);
+//std::cout<<"TOF C\n";
+                  matchDT(*muon->standAloneMuon(), DTCSegmentColl);
+//std::cout<<"TOF D\n";
+                  addDTMeasurements(muon, CORRECTION_LEVEL);
+//std::cout<<"TOF E\n";
+                  addCSCMeasurements(muon, CORRECTION_LEVEL);
+//std::cout<<"TOF F\n";
+
+                  dtTOF       = getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT);
+                  cscTOF      = getTimeExtra(9.0, muonTimingCalculator::TimeMeasurementType::CSC);
+                  combinedTOF = getTimeExtra(9.0);
+//std::cout<<"TOF G\n";
+            }
 
 };
 

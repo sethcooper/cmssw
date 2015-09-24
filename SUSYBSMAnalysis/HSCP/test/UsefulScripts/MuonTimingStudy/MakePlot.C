@@ -26,10 +26,52 @@
 
 #include "../../AnalysisCode/tdrstyle.C"
 
+
+
+//#include "DataFormats/MuonReco/interface/Muon.h"
+//#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/MuonDetId/interface/CSCDetId.h"
+#include "DataFormats/MuonDetId/interface/DTWireId.h"
+//#include "DataFormats/CSCRecHit/interface/CSCSegmentCollection.h"
+//#include "DataFormats/MuonDetId/interface/CSCIndexer.h"
+//#include "DataFormats/DTRecHit/interface/DTRecSegment4DCollection.h"
+//#include "DataFormats/DTRecHit/interface/DTRecHitCollection.h"
+
+
 TObject* GetObjectFromPath(TDirectory* File, std::string Path, bool GetACopy=false);  //defined below
 
 
+std::map<string, unsigned int> nameToDetId;
 std::map<string, TGraphErrors*> graphMap;
+
+
+string getStationName(unsigned int detId){
+   char stationName[255]; 
+   DetId    geomDetId(detId);
+   if(geomDetId.subdetId()==1){
+      DTChamberId dtId(detId);
+      sprintf(stationName,"DT%i%i",dtId.wheel(),dtId.station() );
+   }else if(geomDetId.subdetId()==2){
+      CSCDetId cscId(detId);
+      CSCDetId cscchamberId = cscId.chamberId();
+      sprintf(stationName,"ME%c%i%i",cscchamberId.zendcap()>0?'+':'-',cscchamberId.station(), cscchamberId.ring() );
+   }
+   return stationName;
+}
+
+string getChamberName(unsigned int detId){
+   char chamberName[255]; 
+   DetId    geomDetId(detId);
+   if(geomDetId.subdetId()==1){
+      DTChamberId dtId(detId);
+      sprintf(chamberName,"%s_%02i" ,getStationName(detId).c_str(), dtId.sector() );
+   }else if(geomDetId.subdetId()==2){
+      CSCDetId cscId(detId);
+      CSCDetId cscchamberId = cscId.chamberId();
+      sprintf(chamberName,"%s_%02i" ,getStationName(detId).c_str(), cscchamberId.chamber() );
+   }
+   return chamberName;
+}
 
 
 void GetMeanAndRMS(TFile* InputFile, string path, double& mean, double& rms){
@@ -179,8 +221,6 @@ void MakePlot()
       "DT22_01","DT22_02","DT22_03","DT22_04","DT22_05","DT22_06","DT22_07","DT22_08","DT22_09","DT22_10","DT22_11","DT22_12",
       "DT23_01","DT23_02","DT23_03","DT23_04","DT23_05","DT23_06","DT23_07","DT23_08","DT23_09","DT23_10","DT23_11","DT23_12",
       "DT24_01","DT24_02","DT24_03","DT24_04","DT24_05","DT24_06","DT24_07","DT24_08","DT24_09","DT24_10","DT24_11","DT24_12", "DT24_13","DT24_14",
-
-
    };
 
    unsigned int NChambers = sizeof(chambers)/sizeof(string);
@@ -191,6 +231,23 @@ void MakePlot()
       if(tmp->InheritsFrom("TDirectory")){
          runList.push_back(ObjList->At(i)->GetName());
          printf("Add a new run: %s\n", ObjList->At(i)->GetName() );
+
+         //list all histo (done for each run to avoid empty=missing histograms)
+         if(runList.size()==1)nameToDetId.clear();      
+         TDirectory* runDir = (TDirectory*)InputFile->Get(ObjList->At(i)->GetName());
+         TList* HistoList = runDir->GetListOfKeys();
+         for(int j=0;j<HistoList->GetSize();j++){
+            unsigned int detId;
+            if(sscanf(HistoList->At(j)->GetName(), "%u", &detId)>0){
+               DetId geomDetId(detId);  string detName;
+                     if(geomDetId.subdetId()==1 && (detId&0x003C0000)==0){ detName = getStationName(detId);  //dt stations
+               }else if(geomDetId.subdetId()==2 && (detId&0x000001F8)==0){ detName = getStationName(detId);  //csc stations
+               }else{                                                      detName = getChamberName(detId);  //dt or csc chambers
+               }
+               //printf("%i (--> %s --> 0x%x --> 0x%x\n", detId, detName.c_str(), detId, detId&0x003C0000);
+               nameToDetId[detName] = detId;
+            }
+         }         
       }
       delete tmp;
    }
@@ -216,22 +273,27 @@ void MakePlot()
 
 
    FILE* pFile = fopen("MuonTimeOffset.txt", "w");  //used to dump all the corrections per stations
+   for(unsigned int c=0;c<NChambers;c++){if(nameToDetId[chambers[c]]==0) printf("BUG with %s -->%i\n", chambers[c].c_str(),  nameToDetId[chambers[c]]); }
+
+
+
    fprintf(pFile, "%10s", "runs");    for(unsigned int r=0;r<N        ;r++){fprintf(pFile, ", %8s", runList[r] .c_str());}fprintf(pFile, "\n");
-   fprintf(pFile, "%10s", "chambers");for(unsigned int c=0;c<NChambers;c++){fprintf(pFile, ", %8s", chambers[c].c_str());}fprintf(pFile, "\n");
+   fprintf(pFile, "%10s", "chambers");for(unsigned int c=0;c<NChambers;c++){fprintf(pFile, ", %-6i", nameToDetId[chambers[c]]);}fprintf(pFile, "\n");
 
    double mean, rms;
    for(unsigned int r=0;r<N;r++){
       fprintf(pFile, "run %6s", runList[r].c_str());
       for(unsigned int c=0;c<NChambers;c++){
          TGraphErrors* graph = graphMap[chambers[c]];
-         GetMeanAndRMS(InputFile, runList[r]+"/"+chambers[c], mean, rms); graph->SetPoint(r, r+0.5, mean);   graph->SetPointError(r, 0, rms);
+         char histoName [256]; sprintf(histoName, "%s/%i", runList[r].c_str(), nameToDetId[chambers[c]]);
+         GetMeanAndRMS(InputFile, histoName, mean, rms); graph->SetPoint(r, r+0.5, mean);   graph->SetPointError(r, 0, rms);
          fprintf(pFile, ", %+08.4f", mean>-999?mean:0.0);
       }
       fprintf(pFile, "\n");
    }
    fclose(pFile);
 
-
+/*
 
    makeFigure("pictures/CSC_StationsP.png", frame, "ME+11;ME+12;ME+13;ME+14;ME+21;ME+22;ME+31;ME+32;ME+41;ME+42");
    makeFigure("pictures/CSC_StationsM.png", frame, "ME-11;ME-12;ME-13;ME-14;ME-21;ME-22;ME-31;ME-32;ME-41;ME-42");
@@ -281,10 +343,7 @@ void MakePlot()
    makeFigure("pictures/DT_ChambersP22.png", frame, "DT22_01;DT22_02;DT22_03;DT22_04;DT22_05;DT22_06;DT22_07;DT22_08;DT22_09;DT22_10;DT22_11;DT22_12");
    makeFigure("pictures/DT_ChambersP23.png", frame, "DT23_01;DT23_02;DT23_03;DT23_04;DT23_05;DT23_06;DT23_07;DT23_08;DT23_09;DT23_10;DT23_11;DT23_12");
    makeFigure("pictures/DT_ChambersP24.png", frame, "DT24_01;DT24_02;DT24_03;DT24_04;DT24_05;DT24_06;DT24_07;DT24_08;DT24_09;DT24_10;DT24_11;DT24_12;DT24_13;DT24_14");
-
-
-
-
+*/
    for(unsigned int L=0;L<3;L++){
       TGaxis::SetMaxDigits(2); 
       TCanvas* c1 = new TCanvas("c1","c1,",600,600);
@@ -315,19 +374,22 @@ void MakePlot()
          TH1D* HiBetaFLY0 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY0",false);  HiBetaFLY0->SetLineColor(4);  HiBetaFLY0->SetLineWidth(2);  HiBetaFLY0->Draw("same"); LEG->AddEntry(HiBetaFLY0, "FWlite: no t0 corr.", "L");
          TH1D* HiBetaFLY1 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY1",false);  HiBetaFLY1->SetLineColor(2);  HiBetaFLY1->SetLineWidth(2);  HiBetaFLY1->Draw("same"); LEG->AddEntry(HiBetaFLY1, "FWlite: station t0 corr.", "L");
          TH1D* HiBetaFLY2 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY2",false);  HiBetaFLY2->SetLineColor(8);  HiBetaFLY2->SetLineWidth(2);  HiBetaFLY2->Draw("same"); LEG->AddEntry(HiBetaFLY2, "FWlite: chamber t0 corr.", "L");
-         frame->SetMaximum(HiBetaFLY2->GetMaximum()*1.1);
+         TH1D* HiBetaFLY3 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY3",false);  HiBetaFLY3->SetLineColor(9);  HiBetaFLY3->SetLineWidth(2);  HiBetaFLY3->Draw("same"); LEG->AddEntry(HiBetaFLY3, "same with tighter pruning", "L");
+         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.1);
       }else if(L==1){
          TH1D* HiBetaAOD  = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_AOD" ,false);  HiBetaAOD ->SetLineColor(1);  HiBetaAOD ->SetLineWidth(2);  HiBetaAOD ->Draw("same"); LEG->AddEntry(HiBetaAOD , "AOD default", "L");
          TH1D* HiBetaFLY0 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY0",false);  HiBetaFLY0->SetLineColor(4);  HiBetaFLY0->SetLineWidth(2);  HiBetaFLY0->Draw("same"); LEG->AddEntry(HiBetaFLY0, "FWlite: no t0 corr.", "L");
          TH1D* HiBetaFLY1 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY1",false);  HiBetaFLY1->SetLineColor(2);  HiBetaFLY1->SetLineWidth(2);  HiBetaFLY1->Draw("same"); LEG->AddEntry(HiBetaFLY1, "FWlite: station t0 corr.", "L");
          TH1D* HiBetaFLY2 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY2",false);  HiBetaFLY2->SetLineColor(8);  HiBetaFLY2->SetLineWidth(2);  HiBetaFLY2->Draw("same"); LEG->AddEntry(HiBetaFLY2, "FWlite: chamber t0 corr.", "L");
-         frame->SetMaximum(HiBetaFLY2->GetMaximum()*1.1);
+         TH1D* HiBetaFLY3 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY3",false);  HiBetaFLY3->SetLineColor(9);  HiBetaFLY3->SetLineWidth(2);  HiBetaFLY3->Draw("same"); LEG->AddEntry(HiBetaFLY3, "same with tighter pruning", "L");
+         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.1);
       }else{
          TH1D* HiBetaAOD  = (TH1D*)GetObjectFromPath(InputFile,"iBeta_AOD" ,false);  HiBetaAOD ->SetLineColor(1);  HiBetaAOD ->SetLineWidth(2);  HiBetaAOD ->Draw("same"); LEG->AddEntry(HiBetaAOD , "AOD default", "L");
          TH1D* HiBetaFLY0 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY0",false);  HiBetaFLY0->SetLineColor(4);  HiBetaFLY0->SetLineWidth(2);  HiBetaFLY0->Draw("same"); LEG->AddEntry(HiBetaFLY0, "FWlite: no t0 corr.", "L");
          TH1D* HiBetaFLY1 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY1",false);  HiBetaFLY1->SetLineColor(2);  HiBetaFLY1->SetLineWidth(2);  HiBetaFLY1->Draw("same"); LEG->AddEntry(HiBetaFLY1, "FWlite: station t0 corr.", "L");
          TH1D* HiBetaFLY2 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY2",false);  HiBetaFLY2->SetLineColor(8);  HiBetaFLY2->SetLineWidth(2);  HiBetaFLY2->Draw("same"); LEG->AddEntry(HiBetaFLY2, "FWlite: chamber t0 corr.", "L");
-         frame->SetMaximum(HiBetaFLY2->GetMaximum()*1.1);
+         TH1D* HiBetaFLY3 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY3",false);  HiBetaFLY3->SetLineColor(9);  HiBetaFLY3->SetLineWidth(2);  HiBetaFLY3->Draw("same"); LEG->AddEntry(HiBetaFLY3, "same with tighter pruning", "L");
+         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.1);
       }
 
       TLine line(1.0, frame->GetMinimum(), 1.0, frame->GetMaximum());

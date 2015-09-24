@@ -33,6 +33,7 @@ namespace reweight{ class PoissonMeanShifter;}
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
+
 using namespace fwlite;
 using namespace reco;
 using namespace susybsm;
@@ -51,6 +52,7 @@ using namespace reweight;
 #include "Analysis_PlotFunction.h"
 #include "Analysis_PlotStructure.h"
 #include "Analysis_Samples.h"
+#include "Analysis_TOFUtility.h"
 #include "tdrstyle.C"
 
 /////////////////////////// FUNCTION DECLARATION /////////////////////////////
@@ -1017,6 +1019,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
       double* MaxMass_SystM = new double[CutPt.size()];
       double* MaxMass_SystPU= new double[CutPt.size()];
 
+      moduleGeom::loadGeometry("../../data/CMS_GeomTree.root");
+      muonTimingCalculator tofCalculator;
+      tofCalculator.loadTimeOffset("../../data/MuonTimeOffset.txt");
+      unsigned int CurrentRun = 0;
+
+
       //do two loops through signal for samples with and without trigger changes.
       for (int period=0; period<(samples[s].Type>=2?RunningPeriods:1); period++){
          //load the files corresponding to this sample
@@ -1058,6 +1066,14 @@ void Analysis_Step1_EventLoop(char* SavePath)
             if(MaxEntry>0 && ientry>MaxEntry)break;
             if(ientry%TreeStep==0){printf(".");fflush(stdout);}
             if(checkDuplicates && duplicateChecker.isDuplicate(ev.eventAuxiliary().run(), ev.eventAuxiliary().event()))continue;
+
+            //if run change, update conditions
+            if(CurrentRun != ev.eventAuxiliary().run()){
+               CurrentRun = ev.eventAuxiliary().run();
+               tofCalculator.setRun(CurrentRun);
+            }
+
+
 
             //compute event weight
             if(samples[s].Type>0){Event_Weight = SampleWeight * GetPUWeight(ev, samples[s].Pileup, PUSystFactor, LumiWeightsMC, LumiWeightsMCSyst);}else{Event_Weight = 1;}
@@ -1138,6 +1154,16 @@ void Analysis_Step1_EventLoop(char* SavePath)
             TOFCSCCollH.getByLabel(ev, "muons",TOFcsc_Label.c_str());
             if(!TOFCSCCollH.isValid()){printf("Invalid CSC TOF collection\n");return;}
 
+            fwlite::Handle<CSCSegmentCollection> CSCSegmentCollHandle;
+            fwlite::Handle<DTRecSegment4DCollection> DTSegmentCollHandle;            
+            if(!isMC){ //do not reocmpute TOF on MC background
+               CSCSegmentCollHandle.getByLabel(ev, "cscSegments");
+               if(!CSCSegmentCollHandle.isValid()){printf("CSC Segment Collection not found!\n"); continue;}
+
+               DTSegmentCollHandle.getByLabel(ev, "dt4DSegments");
+               if(!DTSegmentCollHandle.isValid()){printf("DT Segment Collection not found!\n"); continue;}
+            }
+
             //reinitialize the bookeeping array for each event
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk        [CutIndex] = false;   }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystP  [CutIndex] = false;   }
@@ -1169,6 +1195,9 @@ void Analysis_Step1_EventLoop(char* SavePath)
                //skip events without track
 	       if(track.isNull())continue;
 
+               //require a track segment in the muon system
+               if(TypeMode>1 && TypeMode!=5 && (muon.isNull() || !muon->isStandAloneMuon()))continue; 
+
 	       //Apply a scale factor to muon only analysis to account for differences seen in data/MC preselection efficiency
 	       //For eta regions where Data > MC no correction to be conservative
 	       if(!isData && TypeMode==3 && scaleFactor(track->eta())<RNG->Uniform(0, 1)) continue;
@@ -1186,7 +1215,19 @@ void Analysis_Step1_EventLoop(char* SavePath)
                const reco::MuonTimeExtra* tof = NULL;
                const reco::MuonTimeExtra* dttof = NULL;
                const reco::MuonTimeExtra* csctof = NULL;
-              if(TypeMode>1 && !hscp.muonRef().isNull()){ tof  = &TOFCollH->get(hscp.muonRef().key()); dttof = &TOFDTCollH->get(hscp.muonRef().key());  csctof = &TOFCSCCollH->get(hscp.muonRef().key());}
+               if(TypeMode>1 && TypeMode!=5 && !hscp.muonRef().isNull()){
+                  if(isMC){
+                     tof  = &TOFCollH->get(hscp.muonRef().key()); dttof = &TOFDTCollH->get(hscp.muonRef().key());  csctof = &TOFCSCCollH->get(hscp.muonRef().key());
+                  }else{
+                     const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+                     const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+//std::cout<<"TESTA\n";
+                     tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?2:0 ); //apply T0 correction on data but not on signal MC
+//std::cout<<"TESTB\n";
+                     tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
+//std::cout<<"TESTC\n";
+                  }
+               }
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)

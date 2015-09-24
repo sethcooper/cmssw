@@ -58,10 +58,13 @@ using namespace edm;
 bool isCompatibleWithCosmic (const reco::TrackRef& track, const std::vector<reco::Vertex>& vertexColl);
 
 
-std::map<string, TH1D*> HChamber_Timing;
-TH1D* getHisto(string name){
-   if(HChamber_Timing.find(name) == HChamber_Timing.end()){  HChamber_Timing[name.c_str()] = new TH1D(name.c_str(), name.c_str(), 800, -100, 100);   }
-   return HChamber_Timing[name];
+std::unordered_map<unsigned int, TH1D*> HChamber_Timing;
+TH1D* getHisto(unsigned int detId){    
+   if(HChamber_Timing.find(detId) == HChamber_Timing.end()){ 
+      char name[256]; sprintf(name, "%u", detId);
+      HChamber_Timing[detId] = new TH1D(name, name, 800, -100, 100);
+   }
+   return HChamber_Timing[detId];
 }
 
 void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT="out.root", string DIRECTORY="")
@@ -91,17 +94,30 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
    HistoName = "CSC_iBeta_FLY0"; TH1D* HCSC_iBetaFLY0  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "CSC_iBeta_FLY1"; TH1D* HCSC_iBetaFLY1  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "CSC_iBeta_FLY2"; TH1D* HCSC_iBetaFLY2  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
+   HistoName = "CSC_iBeta_FLY3"; TH1D* HCSC_iBetaFLY3  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
+
 
    HistoName = "DT_iBeta_AOD";  TH1D* HDT_iBetaAOD   = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "DT_iBeta_FLY0"; TH1D* HDT_iBetaFLY0  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "DT_iBeta_FLY1"; TH1D* HDT_iBetaFLY1  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "DT_iBeta_FLY2"; TH1D* HDT_iBetaFLY2  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
+   HistoName = "DT_iBeta_FLY3"; TH1D* HDT_iBetaFLY3  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
 
    HistoName = "iBeta_AOD";  TH1D* H_iBetaAOD   = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "iBeta_FLY0"; TH1D* H_iBetaFLY0  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "iBeta_FLY1"; TH1D* H_iBetaFLY1  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "iBeta_FLY2"; TH1D* H_iBetaFLY2  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
+   HistoName = "iBeta_FLY3"; TH1D* H_iBetaFLY3  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
 
+   HistoName = "DT_Timing";    TH1D* HDT_Timing    = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+   HistoName = "CSC_Timing";   TH1D* HCSC_Timing   = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+   HistoName = "CSCW_Timing";  TH1D* HCSCW_Timing  = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+   HistoName = "CSCS_Timing";  TH1D* HCSCS_Timing  = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+
+   HistoName = "DT_TimingCorr";    TH1D* HDT_TimingCorr    = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+   HistoName = "CSC_TimingCorr";   TH1D* HCSC_TimingCorr   = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+   HistoName = "CSCW_TimingCorr";  TH1D* HCSCW_TimingCorr  = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+   HistoName = "CSCS_TimingCorr";  TH1D* HCSCS_TimingCorr  = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
 
    TDirectory* dir = OutputHisto;
    if(DIRECTORY!=""){
@@ -111,8 +127,7 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
       dir->cd();
    }
 
-   HistoName = "CSC_Timing";  TH1D* HCSC_Timing   = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
-   HistoName = "DT_Timing";   TH1D* HDT_Timing    = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
+
 
    unsigned int CurrentRun = 0;
    printf("Progressing Bar           :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -179,9 +194,20 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
             vector<const CSCSegment*>& cscSegs = tofCalculator.matchCSC(*muon->standAloneMuon(), CSCSegmentColl);
 
             for(unsigned int ic=0;ic<cscSegs.size();ic++){  
-               HCSC_Timing->Fill(cscSegs[ic]->time());
-               getHisto(moduleGeom::getChamberName(cscSegs[ic]->cscDetId().rawId()))->Fill(cscSegs[ic]->time());
-               getHisto(moduleGeom::getStationName(cscSegs[ic]->cscDetId().rawId()))->Fill(cscSegs[ic]->time());
+               double timeOffset = tofCalculator.t0Offset(cscSegs[ic]->cscDetId().rawId());
+
+               getHisto(cscSegs[ic]->cscDetId().chamberId().rawId()           )->Fill(cscSegs[ic]->time());
+               getHisto(cscSegs[ic]->cscDetId().chamberId().rawId()&0xFFFFFE07)->Fill(cscSegs[ic]->time()); //0xFFFFFE07 --> set chamber Id to 0
+               HCSC_Timing    ->Fill(cscSegs[ic]->time());
+               HCSC_TimingCorr->Fill(cscSegs[ic]->time() - timeOffset);
+
+               const std::vector<CSCRecHit2D> hits2d = cscSegs[ic]->specificRecHits();
+               for(std::vector<CSCRecHit2D>::const_iterator hiti=hits2d.begin(); hiti!=hits2d.end(); hiti++){
+                  HCSCS_Timing    ->Fill(hiti->tpeak());
+                  HCSCS_TimingCorr->Fill(hiti->tpeak() - timeOffset);
+                  HCSCW_Timing    ->Fill(hiti->wireTime());
+                  HCSCW_TimingCorr->Fill(hiti->wireTime() - timeOffset);
+               }
             }
 
             vector<const DTRecSegment4D*>& dtSegs = tofCalculator.matchDT(*muon->standAloneMuon(), DTCSegmentColl);
@@ -191,10 +217,14 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
                   if(phi) segm = dynamic_cast<const DTRecSegment2D*>(dtSegs[id]->phiSegment()); 
                   else segm = dynamic_cast<const DTRecSegment2D*>(dtSegs[id]->zSegment());
                   if(!segm)continue;
- 
-                  HDT_Timing->Fill(segm->t0());
-                  getHisto(moduleGeom::getChamberName(segm->geographicalId()))->Fill(segm->t0());
-                  getHisto(moduleGeom::getStationName(segm->geographicalId()))->Fill(segm->t0());
+
+                  double timeOffset = tofCalculator.t0Offset(segm->geographicalId());
+
+                  getHisto(DTChamberId(segm->geographicalId()).rawId()           )->Fill(segm->t0());
+                  getHisto(DTChamberId(segm->geographicalId()).rawId()&0xFFC3FFFF)->Fill(segm->t0()); //0xFFC3FFFF --> set sector Id to 0
+
+                  HDT_Timing    ->Fill(segm->t0());
+                  HDT_TimingCorr->Fill(segm->t0() - timeOffset);
                }
             }
 
@@ -208,25 +238,33 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
             H_iBetaAOD->Fill(tof->inverseBeta());
 
             tofCalculator.tmSeq.clear();
-            HDT_iBetaFLY0 ->Fill(tofCalculator.iBetaFromDT (muon, 0));
-            HCSC_iBetaFLY0->Fill(tofCalculator.iBetaFromCSC(muon, 0));
-            reco::MuonTimeExtra tof0 = tofCalculator.fillTimeFromMeasurements();
-            H_iBetaFLY0->Fill(tof0.inverseBeta());
+            tofCalculator.addDTMeasurements(muon, 0);
+            tofCalculator.addCSCMeasurements(muon, 0);
+            HDT_iBetaFLY0 ->Fill(tofCalculator.getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT ).inverseBeta());
+            HCSC_iBetaFLY0->Fill(tofCalculator.getTimeExtra(9.0    , muonTimingCalculator::TimeMeasurementType::CSC).inverseBeta());
+            H_iBetaFLY0->Fill(tofCalculator.getTimeExtra(9.0).inverseBeta());
 
             tofCalculator.tmSeq.clear();
-            HDT_iBetaFLY1 ->Fill(tofCalculator.iBetaFromDT (muon, 1));
-            HCSC_iBetaFLY1->Fill(tofCalculator.iBetaFromCSC(muon, 1));
-            reco::MuonTimeExtra tof1 = tofCalculator.fillTimeFromMeasurements();
-            H_iBetaFLY1->Fill(tof1.inverseBeta());
+            tofCalculator.addDTMeasurements(muon, 1);
+            tofCalculator.addCSCMeasurements(muon, 1);
+            HDT_iBetaFLY1 ->Fill(tofCalculator.getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT ).inverseBeta());
+            HCSC_iBetaFLY1->Fill(tofCalculator.getTimeExtra(9.0    , muonTimingCalculator::TimeMeasurementType::CSC).inverseBeta());
+            H_iBetaFLY1->Fill(tofCalculator.getTimeExtra(9.0).inverseBeta());
 
             tofCalculator.tmSeq.clear();
-            HDT_iBetaFLY2 ->Fill(tofCalculator.iBetaFromDT (muon, 2));
-            HCSC_iBetaFLY2->Fill(tofCalculator.iBetaFromCSC(muon, 2));
-            reco::MuonTimeExtra tof2 = tofCalculator.fillTimeFromMeasurements();
-            H_iBetaFLY2->Fill(tof2.inverseBeta());
- 
-//            printf("%f vs %f  (%i vs %i\n", tof->inverseBeta(), tof2.inverseBeta(), tof->nDof(), tof2.nDof());
-//            for (unsigned int i=0;i<tofCalculator.tmSeq.size();i++){printf("%6.2E ", tofCalculator.tmSeq[i].weightInvBeta); }printf("\n");
+            tofCalculator.addDTMeasurements(muon, 2);
+            tofCalculator.addCSCMeasurements(muon, 2);
+            HDT_iBetaFLY2 ->Fill(tofCalculator.getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT ).inverseBeta());
+            HCSC_iBetaFLY2->Fill(tofCalculator.getTimeExtra(9.0    , muonTimingCalculator::TimeMeasurementType::CSC).inverseBeta());
+            H_iBetaFLY2->Fill(tofCalculator.getTimeExtra(9.0).inverseBeta());
+
+            tofCalculator.tmSeq.clear();
+            tofCalculator.addDTMeasurements(muon, 2);
+            tofCalculator.addCSCMeasurements(muon, 2);
+            HDT_iBetaFLY3 ->Fill(tofCalculator.getTimeExtra(5.0, muonTimingCalculator::TimeMeasurementType::DT ).inverseBeta());
+            HCSC_iBetaFLY3->Fill(tofCalculator.getTimeExtra(5.0    , muonTimingCalculator::TimeMeasurementType::CSC).inverseBeta());
+            H_iBetaFLY3->Fill(tofCalculator.getTimeExtra(5.0).inverseBeta());
+
 
 
          }//muon
