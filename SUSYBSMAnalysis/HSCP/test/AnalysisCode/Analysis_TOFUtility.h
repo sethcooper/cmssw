@@ -16,16 +16,28 @@ class moduleGeom{
         TVector3 toGlobal(TVector3 local ){ return (pos + local.x()*width.Unit() + local.y()*length.Unit() + local.z()*thick.Unit());}
         TVector3 toLocal (TVector3 global){ TVector3 o = global-pos;  return TVector3((o*width.Unit()), (o*length.Unit()), (o*thick.Unit()));}
 
-        bool propagateParametersOnPlane(TVector3& pos, TVector3& momentum, TVector3& localPosOnPlane){
-           TVector3 x = toLocal(pos);
-           TVector3 p = toLocal(momentum);
-           double s = -x.z(); // sp.z() - x.z(); local z of plane always 0
+        bool propagateParametersOnPlane(TVector3& pos, TVector3& momentum, TVector3& localPosOnPlane, bool debug=false){
+           if(debug){printf("PPOP pos=(%f,%f,%f) width=(%f,%f,%f) length=(%f,%f,%f) thick=(%f,%f,%f)\n", pos.x(), pos.y(), pos.z(), width.x(), width.y(), width.z(), length.x(), length.y(), length.z(), thick.x(), thick.y(), thick.z()); }
 
-           if ((p.x() != 0 || p.y() != 0) && p.z() == 0 && s!= 0) return false;
+           TVector3 x = toLocal(pos);
+           TVector3 p = TVector3((momentum*width.Unit()), (momentum*length.Unit()), (momentum*thick.Unit())).Unit();
+
+           if(debug)printf("PPOP pos global=(%f,%f,%f) --> local (%f,%f,%f)\n", pos.x(), pos.y(), pos.z(), x.x(), x.y(), x.z());           
+           if(debug)printf("PPOP mom global=(%f,%f,%f) --> local (%f,%f,%f)\n", momentum.x(), momentum.y(), momentum.z(), p.x(), p.y(), p.z());           
+
+
+           double s = -x.z()/p.z(); // sp.z() - x.z(); local z of plane always 0
+           if(debug)printf("PPOP s=%f  --> can compute = %i\n", s, (p.z()==0 || (((p.x() != 0 || p.y() != 0) && p.z() == 0 && s!= 0)))==true?0:1);
+
+
+           if (p.z()==0 || ((p.x() != 0 || p.y() != 0) && p.z() == 0 && s!= 0)) return false;
  
-           localPosOnPlane = TVector3(x.x() + (p.x()/p.z())*s,
-                                      x.y() + (p.y()/p.z())*s,
-                                      x.z() + s);    
+           localPosOnPlane = TVector3(x.x() + p.x()*s,
+                                      x.y() + p.y()*s,
+                                      x.z() + p.z()*s);    
+
+           if(debug)printf("PPOS LPOP = (%f,%f,%f) --> mag=%f\n", x.x() + p.x()*s, x.y() + p.y()*s, x.z() + p.z()*s, localPosOnPlane.Mag());
+
            return true;
         }
 
@@ -567,7 +579,7 @@ class muonTimingCalculator{
          }
 
 
-         void addDTMeasurements(reco::MuonRef& muon, int CORRECTION_LEVEL){
+         void addDTMeasurements(reco::MuonRef& muon, int CORRECTION_LEVEL, bool debug=false){
                  TrackRef muonTrack = muon->standAloneMuon();
                  math::XYZPoint  pos=muonTrack->innerPosition();
                  math::XYZVector mom=muonTrack->innerMomentum();
@@ -624,6 +636,8 @@ class muonTimingCalculator{
                         }else{
                            dist = dist_straight;
                         }
+                      if(debug){printf("hit %i dist = %f (%f) --> %f,%f,%f vs %f,%f,%f on mod pos %f,%f,%f\n", (int)hiti->geographicalId(), dist, dist_straight, hiti->localPosition().x(), hiti->localPosition().y(), hiti->localPosition().z(), localPointOnModule.x(), localPointOnModule.y(), localPointOnModule.z(), dtcell->pos.x(), dtcell->pos.y(), dtcell->pos.z());}
+                      if(debug)dtcell->propagateParametersOnPlane(posp, momv, localPointOnModule, debug);
 
                        thisHit.driftCell = hiti->geographicalId();
                        if (hiti->lrSide()==DTEnums::Left) thisHit.isLeft=true; else thisHit.isLeft=false;
@@ -719,6 +733,7 @@ class muonTimingCalculator{
                       double hitLocalPos = tm->posInLayer;
                       int hitSide = -tm->isLeft*2+1;
                       double t0_segm = (-(hitSide*segmLocalPos)+(hitSide*hitLocalPos))/0.00543+tm->timeCorr;
+                      if(debug){printf("t0 = %f (%f+%f)  --> dist=%f\n", t0_segm, segmLocalPos, hitLocalPos, tm->distIP);}
 
                       double hitWeightInvbeta_ = ((double)seg.size()-2.)*tm->distIP*tm->distIP/((double)seg.size()*30.*30.*theError_*theError_);
                       double hitWeightVertex_ = ((double)seg.size()-2.)/((double)seg.size()*theError_*theError_);
@@ -732,7 +747,7 @@ class muonTimingCalculator{
 
 
 
-         reco::MuonTimeExtra getTimeExtra(float thePruneCut, unsigned char TypeMask=255){
+         reco::MuonTimeExtra getTimeExtra(float thePruneCut, unsigned char TypeMask=255, bool debug=false){
               reco::MuonTimeExtra muTime;
 
               std::vector <double> x,y;
@@ -744,6 +759,7 @@ class muonTimingCalculator{
               float totalWeightVertex  = 0;
 
               vector<TimeMeasurement> tmSeqSave = tmSeq;
+              unsigned int nDOF=0;
 
               bool modified;
                do{    
@@ -758,6 +774,7 @@ class muonTimingCalculator{
                  totalWeightVertex  = 0;
                  for (unsigned int i=0;i<tmSeq.size();i++){
                     if((tmSeq[i].type & TypeMask)==0)continue;
+                    nDOF++;
                     totalWeightInvBeta += tmSeq[i].weightInvBeta;
                     totalWeightVertex += tmSeq[i].weightVertex;
                  }
@@ -767,6 +784,9 @@ class muonTimingCalculator{
                     if((tmSeq[i].type & TypeMask)==0)continue;
 
                    invbeta+=(1.+tmSeq[i].localt0/tmSeq[i].distIP*30.)*tmSeq[i].weightInvBeta/totalWeightInvBeta;
+                   if(debug && TypeMask==muonTimingCalculator::TimeMeasurementType::DT){printf("%i %f*%f --> %f   from 1+%f/%f*30\n", i, 1.+tmSeq[i].localt0/tmSeq[i].distIP*30.,tmSeq[i].weightInvBeta/totalWeightInvBeta, invbeta, tmSeq[i].localt0, tmSeq[i].distIP*30.);}
+
+
                    x.push_back(tmSeq[i].distIP/30.);
                    y.push_back(tmSeq[i].localt0+tmSeq[i].distIP/30.);
                    vertexTime+=tmSeq[i].localt0*tmSeq[i].weightVertex/totalWeightVertex;
@@ -796,7 +816,7 @@ class muonTimingCalculator{
                  }
               }while(modified);
 
-              double cf = 1./(tmSeq.size()-1);
+              double cf = 1./(nDOF-1);
               invbetaerr=sqrt(invbetaerr/totalWeightInvBeta*cf);
               vertexTimeErr=sqrt(vertexTimeErr/totalWeightVertex*cf);
               vertexTimeRErr=sqrt(vertexTimeRErr/totalWeightVertex*cf);
@@ -814,7 +834,7 @@ class muonTimingCalculator{
               muTime.setFreeInverseBeta(freeBeta);
               muTime.setFreeInverseBetaErr(freeBetaErr);
                 
-              muTime.setNDof(tmSeq.size());
+              muTime.setNDof(nDOF);
 
               tmSeq = tmSeqSave;
 
@@ -822,7 +842,7 @@ class muonTimingCalculator{
             }
 
 
-            void computeTOF(reco::MuonRef& muon, const CSCSegmentCollection& CSCSegmentColl, const DTRecSegment4DCollection& DTCSegmentColl,  int CORRECTION_LEVEL){
+            void computeTOF(reco::MuonRef& muon, const CSCSegmentCollection& CSCSegmentColl, const DTRecSegment4DCollection& DTCSegmentColl,  int CORRECTION_LEVEL, bool debug=false){
 //std::cout<<"TOF A\n";
                   tmSeq.clear();
 //std::cout<<"TOF Abis "<< muon->isStandAloneMuon() << "\n";
@@ -832,12 +852,12 @@ class muonTimingCalculator{
 //std::cout<<"TOF C\n";
                   matchDT(*muon->standAloneMuon(), DTCSegmentColl);
 //std::cout<<"TOF D\n";
-                  addDTMeasurements(muon, CORRECTION_LEVEL);
+                  addDTMeasurements(muon, CORRECTION_LEVEL, debug);
 //std::cout<<"TOF E\n";
                   addCSCMeasurements(muon, CORRECTION_LEVEL);
 //std::cout<<"TOF F\n";
 
-                  dtTOF       = getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT);
+                  dtTOF       = getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT, debug);
                   cscTOF      = getTimeExtra(9.0, muonTimingCalculator::TimeMeasurementType::CSC);
                   combinedTOF = getTimeExtra(9.0);
 //std::cout<<"TOF G\n";

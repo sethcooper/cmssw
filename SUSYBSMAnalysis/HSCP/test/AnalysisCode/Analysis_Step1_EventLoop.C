@@ -1222,7 +1222,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
                      const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
                      const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
 //std::cout<<"TESTA\n";
-                     tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?2:0 ); //apply T0 correction on data but not on signal MC
+                     tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0 ); //apply T0 correction on data but not on signal MC
 //std::cout<<"TESTB\n";
                      tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
 //std::cout<<"TESTC\n";
@@ -1259,6 +1259,27 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		  }
                   if (genpT>0) {  SamplePlots->genrecopT->Fill(genpT, track->pt()); }
 		  
+
+                  //DEBUG TOF
+/*                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
+                     const reco::MuonTimeExtra* dttofaod = &TOFDTCollH->get(hscp.muonRef().key());
+                     if((dttof->inverseBeta()>0 && dttof->inverseBeta()<0.8 && fabs( dttof->inverseBeta()-dttofaod->inverseBeta())>0.2) ){
+                        printf("event = %i\n", (int) ientry);
+                        printf("OTF %f +- %f with %i NDOF\n", dttof->inverseBeta(), dttof->inverseBetaErr(), dttof->nDof());
+                        printf("AOD %f +- %f with %i NDOF\n", dttofaod->inverseBeta(), dttofaod->inverseBetaErr(), dttofaod->nDof());
+
+
+
+                        const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+                        const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+                        tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, isData?1:0, true ); //apply T0 correction on data but not on signal MC
+
+                        exit(0);
+                     }
+                  }
+*/
+
+
                   // compute systematic due to momentum scale
                   if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
                      if(TypeMode==5 && isSemiCosmicSB)continue;
