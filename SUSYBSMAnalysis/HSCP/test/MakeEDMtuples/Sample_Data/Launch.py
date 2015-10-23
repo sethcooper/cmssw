@@ -13,11 +13,10 @@ import json
 import collections # kind of map
 
 #script parameters #feel free to edit those
-JSON = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-258750_13TeV_PromptReco_Collisions15_25ns_JSON.txt'   
-LOCALTIER   = 'T2_CH_CERN'
-DATASETMASK = ['/DoubleMuon/Run2015*-PromptReco-v*/AOD']
+JSON = 'lumiToProcess.txt' #'/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-258750_13TeV_PromptReco_Collisions15_25ns_JSON.txt'   
+LOCALTIER   = 'T2_BE_UCL'
+DATASETMASKS = ['/DoubleMuon/Run2015*-PromptReco-v*/AOD', '/SingleMuon/Run2015*-PromptReco-v*/AOD', '/MET/Run2015*-PromptReco-v*/AOD']
 ISLOCAL     = False #automatically assigned
-STORAGEDIR = 'quertenmont@server02.fynu.ucl.ac.be:/home/quertenmont/public_html/TEMP/Run2MuonTimingStudy/.'  #scp final dir
 
 
 goodLumis = {}
@@ -76,11 +75,9 @@ def filesFromDataset(dataset):
 if len(sys.argv)==1:
         print "Please pass in argument a number between 0 and 3"
         print "  0  - cleanup the workspace (all results are erased)        --> interactive processing" 
-        print "  1  - Run MuonTimingStudy on RECO files from a DAS dataset  --> submitting 1job per file"
-        print "  2  - Hadd root files containing the histograms (1file/run) --> interactive processing" 
-        print "  3  - run the plotter on the hadded root files              --> interactive processing" 
+        print "  1  - Make EDM files for the considered datasets            --> submitting several jobs"
+        print "  2  - Merge the EDM files from several dataset              --> one job per run" 
         sys.exit()
-
 
 
 LoadJson(JSON)
@@ -100,16 +97,18 @@ if sys.argv[1]=='1':
    print("compile the MuonTimingStudy code")
    os.system("sh " + os.getcwd() + "/MuonTimingStudy.sh ") #just compile
 
+   datasetList = []
 
-   command_out = commands.getstatusoutput('das_client.py --limit=0 --query "dataset='+DATASETMASK+'"')
-   print 'das_client.py --limit=0 --query "dataset='+DATASETMASK+'"'
-   print command_out
-   datasetList = command_out[1].split()
+   for DATASETMASK in DATASETMASKS:
+      command_out = commands.getstatusoutput('das_client.py --limit=0 --query "dataset='+DATASETMASK+'"')
+      print 'das_client.py --limit=0 --query "dataset='+DATASETMASK+'"'
+      print command_out
+      datasetList += command_out[1].split()
 
    #get the list of samples to process from a local file
    #datasetList= open('DatasetList','r')
-   JobName = "CSCTimeStudy"
-   FarmDirectory = "FARM_TEMP"
+   JobName = "HSCPEdmProd"
+   FarmDirectory = "FARM"
    LaunchOnCondor.SendCluster_Create(FarmDirectory, JobName)
    LaunchOnCondor.Jobs_Queue = '8nh'
 
@@ -122,14 +121,31 @@ if sys.argv[1]=='1':
 
       print DATASET + " : " 
       for RUN in FILELIST:
+         os.system("mkdir -p out/"+str(RUN));
          print str(RUN) + " --> %i files to process"  % len(FILELIST[RUN])
          INDEX=0
          for inFileList in getChunksFromList(FILELIST[RUN],5):
-            InputListCSV = ''
-            for inFile in inFileList:
-               InputListCSV+= inFile + ','
-            InputListCSV = InputListCSV[:-1] #remove the last duplicated comma
-            LaunchOnCondor.SendCluster_Push  (["BASH", "sh " + os.getcwd() + "/MuonTimingStudy.sh " + InputListCSV + " out.root " + str(RUN)+"; mv out.root " + os.getcwd() + "/out/Histos_%i_%i.root" % (RUN,INDEX)])
+
+            with open("HSCParticleProducer_Data_Template_cfg.py", "w") as f:
+               f.write("import sys, os\n")
+               f.write("import FWCore.ParameterSet.Config as cms\n")
+               f.write("\n")
+               f.write("isSignal = False\n")
+               f.write("isBckg = False\n")
+               f.write("isData = True\n")
+               f.write("isSkimmedSample = False\n")
+               f.write("GTAG = 'GR_P_V56'\n")
+               f.write("OUTPUTFILE = 'out/%i/%s_HSCP_%i.root'\n" % (RUN, DATASET.split('/')[1], INDEX) )
+               f.write("\n")
+               f.write("InputFileList = cms.untracked.vstring(\n")
+               for inFile in inFileList:
+                  f.write("'"+inFile+"',\n")
+               f.write(")\n")
+               f.write("\n")
+               f.write("#main EDM tuple cfg that depends on the above parameters\n")
+               f.write("execfile( os.path.expandvars('${CMSSW_BASE}/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/HSCParticleProducer_cfg.py') )\n")
+             
+            LaunchOnCondor.SendCluster_Push  (["CMSSW", ["HSCParticleProducer_Data_Template_cfg.py"] ])
             INDEX+=1
 
    LaunchOnCondor.SendCluster_Submit()
@@ -137,23 +153,4 @@ if sys.argv[1]=='1':
 
 
 if sys.argv[1]=='2':
-   os.system('find out/Histos_*.root  -type f -size +1024c | xargs hadd -f  Histos.root')
-
-if sys.argv[1]=='3':
-   os.system('sh MakePlot.sh')
-
-if sys.argv[1]=='4':
-    counter=0
-    indexfile=open("pictures/index.html",'w')
-    PictureList = glob.glob("pictures/*.png")
-    for Plot in PictureList:
-        Plot = Plot.replace('pictures/', '')
-	if(counter%3==0): indexfile.write('<TR> <TD align=center> <a href="'+Plot+'"><img src="'+Plot+'"hspace=5 vspace=5 border=0 style="width: 80%" ALT="'+Plot+'"></a><br> '+Plot+' </TD>\n')
-        if(counter%3==1): indexfile.write('     <TD align=center> <a href="'+Plot+'"><img src="'+Plot+'"hspace=5 vspace=5 border=0 style="width: 80%" ALT="'+Plot+'"></a><br> '+Plot+' </TD>\n')
-        if(counter%3==2): indexfile.write('     <TD align=center> <a href="'+Plot+'"><img src="'+Plot+'"hspace=5 vspace=5 border=0 style="width: 80%" ALT="'+Plot+'"></a><br> '+Plot+' </TD> </TR>\n')
-        counter+=1
-    indexfile.close()
-
-if sys.argv[1]=='5':
-    os.system('scp pictures/* ' + STORAGEDIR)
-
+   print("to be added")
