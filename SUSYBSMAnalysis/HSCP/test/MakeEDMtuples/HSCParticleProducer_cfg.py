@@ -126,6 +126,10 @@ process.Out = cms.OutputModule("PoolOutputModule",
     ),
 )
 
+if(isData and length(LUMITOPROCESS)>0):
+   import PhysicsTools.PythonAnalysis.LumiList as LumiList
+   process.source.lumisToProcess = LumiList.LumiList(filename = LUMITOPROCESS).getVLuminosityBlockRange()
+
 if(isBckg or isData):
    process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')
    process.Out.outputCommands.extend(["drop triggerTriggerEvent_hltTriggerSummaryAOD_*_*"])

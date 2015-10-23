@@ -93,12 +93,7 @@ if sys.argv[1]=='1':
    print("Initialize your grid proxy in case you need to access remote samples\n")
    initProxy()
 
-
-   print("compile the MuonTimingStudy code")
-   os.system("sh " + os.getcwd() + "/MuonTimingStudy.sh ") #just compile
-
    datasetList = []
-
    for DATASETMASK in DATASETMASKS:
       command_out = commands.getstatusoutput('das_client.py --limit=0 --query "dataset='+DATASETMASK+'"')
       print 'das_client.py --limit=0 --query "dataset='+DATASETMASK+'"'
@@ -136,6 +131,7 @@ if sys.argv[1]=='1':
                f.write("isSkimmedSample = False\n")
                f.write("GTAG = 'GR_P_V56'\n")
                f.write("OUTPUTFILE = 'out/%i/%s_HSCP_%i.root'\n" % (RUN, DATASET.split('/')[1], INDEX) )
+               f.write("LUMITOPROCESS = '" +  os.getcwd()+"/"+JSON+"'\n")
                f.write("\n")
                f.write("InputFileList = cms.untracked.vstring(\n")
                for inFile in inFileList:

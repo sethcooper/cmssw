@@ -7,6 +7,7 @@ isData = True
 isSkimmedSample = False
 GTAG = 'GR_P_V56'
 OUTPUTFILE = 'HSCP.root'
+LUMITOPROCESS = ''
 
 #debug input files 
 #this list is overwritten by CRAB
