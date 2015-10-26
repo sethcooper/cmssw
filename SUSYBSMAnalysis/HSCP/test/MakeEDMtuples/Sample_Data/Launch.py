@@ -130,7 +130,7 @@ if sys.argv[1]=='1':
                f.write("isData = True\n")
                f.write("isSkimmedSample = False\n")
                f.write("GTAG = 'GR_P_V56'\n")
-               f.write("OUTPUTFILE = 'out/%i/%s_HSCP_%i.root'\n" % (RUN, DATASET.split('/')[1], INDEX) )
+               f.write("OUTPUTFILE = 'out.root'\n" )
                f.write("LUMITOPROCESS = '" +  os.getcwd()+"/"+JSON+"'\n")
                f.write("\n")
                f.write("InputFileList = cms.untracked.vstring(\n")
@@ -141,6 +141,7 @@ if sys.argv[1]=='1':
                f.write("#main EDM tuple cfg that depends on the above parameters\n")
                f.write("execfile( os.path.expandvars('${CMSSW_BASE}/src/SUSYBSMAnalysis/HSCP/test/MakeEDMtuples/HSCParticleProducer_cfg.py') )\n")
              
+            LaunchOnCondor.Jobs_FinalCmds = ["mv out.root %s/out/%i/%s_HSCP_%i.root" % (os.getcwd(), RUN, DATASET.split('/')[1], INDEX)]
             LaunchOnCondor.SendCluster_Push  (["CMSSW", ["HSCParticleProducer_Data_Template_cfg.py"] ])
             INDEX+=1
 
