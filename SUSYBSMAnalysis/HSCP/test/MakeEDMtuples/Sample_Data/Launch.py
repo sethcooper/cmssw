@@ -119,7 +119,7 @@ if sys.argv[1]=='1':
          os.system("mkdir -p out/"+str(RUN));
          print str(RUN) + " --> %i files to process"  % len(FILELIST[RUN])
          INDEX=0
-         for inFileList in getChunksFromList(FILELIST[RUN],5):
+         for inFileList in getChunksFromList(FILELIST[RUN],1):
 
             with open("HSCParticleProducer_Data_Template_cfg.py", "w") as f:
                f.write("import sys, os\n")
@@ -150,4 +150,13 @@ if sys.argv[1]=='1':
 
 
 if sys.argv[1]=='2':
-   print("to be added")
+   FarmDirectory = "MERGE"
+   LaunchOnCondor.SendCluster_Create(FarmDirectory, "HSCPEdmMerge")
+   LaunchOnCondor.Jobs_Queue = '8nh'
+   for RUN in goodLumis:
+        LaunchOnCondor.Jobs_FinalCmds = ["edmLumisInFiles.py out.root --output=%s/out/Run2015_%i.json" % (os.getcwd(), RUN)]
+        LaunchOnCondor.Jobs_FinalCmds += ["mv out.root %s/out/Run2015_%i.root" % (os.getcwd(), RUN)]
+	LaunchOnCondor.ListToFile(LaunchOnCondor.GetListOfFiles('"file:','%s/out/%i/*_HSCP_*.root' % (os.getcwd(), RUN),'",'), FarmDirectory + "InputFile.txt")
+	LaunchOnCondor.SendCMSJobs(FarmDirectory, "HSCPEdmMerge_%i"%RUN, "Merge_cfg.py", FarmDirectory + "InputFile.txt", 1, ['XXX_SAVEPATH_XXX','out.root'])
+   os.system("rm " +  FarmDirectory + "InputFile.txt")
+
