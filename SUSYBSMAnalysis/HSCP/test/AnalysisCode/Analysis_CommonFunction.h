@@ -784,7 +784,7 @@ return QII;
 }
 
 
-bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t * signal)
+bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t * exitCode)
 {
    if(!cluster) return true;
    vector<int>  ampls = convert(cluster->amplitudes());
@@ -847,10 +847,10 @@ bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t
 //  
 //   bool shapetest=true;
    bool shapecdtn=false;
-   if (signal) *signal = 255;
+   if (exitCode) *exitCode = 255;
 
       if(crosstalkInv==1){
-        if(NofMax==1){shapecdtn=true; if (signal) *signal=0;}
+        if(NofMax==1){shapecdtn=true; if (exitCode) *exitCode=0;}
         return shapecdtn;
       }
 
@@ -865,22 +865,22 @@ bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t
                 if(MaxOnStart==true){
                         C_M=(Float_t)ampls[0]; C_D=(Float_t)ampls[1];
                                 if(ampls.size()<3) shapecdtn=true ;
-                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[2] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true; else if (signal) *signal=2;}
+                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[2] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true; else if (exitCode) *exitCode=2;}
                                 else if(ampls.size()>3){ C_Dn=(Float_t)ampls[2];  C_Dnn=(Float_t)ampls[3] ;
                                                         if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
                                                            && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise){
-                                                         shapecdtn=true;} else if (signal) *signal=3;
+                                                         shapecdtn=true;} else if (exitCode) *exitCode=3;
                                 }
                 }
 
                 if(MaxOnEnd==true){
                         C_M=(Float_t)ampls[ampls.size()-1]; C_D=(Float_t)ampls[ampls.size()-2];
                                 if(ampls.size()<3) shapecdtn=true ;
-                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[0] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true; else if (signal) *signal=4;}
+                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[0] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true; else if (exitCode) *exitCode=4;}
                                 else if(ampls.size()>3){C_Dn=(Float_t)ampls[ampls.size()-3] ; C_Dnn=(Float_t)ampls[ampls.size()-4] ; 
                                                         if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
                                                            && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise){ 
-                                                         shapecdtn=true;} else if (signal) *signal=5;
+                                                         shapecdtn=true;} else if (exitCode) *exitCode=5;
                                 }
                 }
 
@@ -933,12 +933,12 @@ bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t
                                         }
 
                                 }
-                        } else if (signal) *signal=6;
+                        } else if (exitCode) *exitCode=6;
                 }
         }
-        else if (NofMax>1 && signal) *signal = 1; // more than one maximum
+        else if (NofMax>1 && exitCode) *exitCode = 1; // more than one maximum
         if(ampls.size()==1){shapecdtn=true;}
-        if(shapecdtn && signal) *signal=0;
+        if(shapecdtn && exitCode) *exitCode=0;
 
    return shapecdtn;
 }
@@ -952,7 +952,7 @@ void printClusterCleaningMessage (uint8_t exitCode){
       case 4:  std::cout << "MEnd; CSize=3; CDn too big"        << std::endl; break;
       case 5:  std::cout << "MEnd; CSize>3; CDn||CDnn too big"  << std::endl; break;
       case 6:  std::cout << "MMid; Sides are too big"           << std::endl; break;
-      case 255:std::cout << "Failed all shape tests"             << std::endl; break;
+      case 255:std::cout << "Failed all shape tests"            << std::endl; break;
       default: std::cout << "Unknown exit code!"<< std::endl;
    }
 }
