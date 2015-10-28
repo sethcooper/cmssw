@@ -472,9 +472,12 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false);
-bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv=false );
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0);
+bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitSignal=NULL);
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
+void printClusterCleaningMessage (uint8_t exitSignalCode);
+std::vector<int> convert(const vector<unsigned char>& input);
+std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 
 void LoadDeDxCalibration(std::unordered_map<unsigned int,double>& TrackerGains, string path){
    TChain* t1 = new TChain("SiStripCalib/APVGain");
@@ -581,7 +584,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
 
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -592,30 +595,31 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
         DetId detid(dedxHits->detId(h));  
         if(!usePixel && detid.subdetId()<3)continue; // skip pixels
         if(!useStrip && detid.subdetId()>=3)continue; // skip strips
-//        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h)))continue;
+        if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
         if(mustBeInside && !isHitInsideTkModule(dedxHits->pos(h), detid, detid.subdetId()>=3?dedxHits->stripCluster(h):NULL))continue;
-	if(detid.subdetId()>=3 && ++SiStripNOM > MaxStripNOM) continue; // skip remaining strips, but not pixel
+        if(detid.subdetId()>=3 && ++SiStripNOM > MaxStripNOM) continue; // skip remaining strips, but not pixel
 
         int ClusterCharge = dedxHits->charge(h);
 
         if(detid.subdetId()>=3){//for strip only
            const SiStripCluster* cluster = dedxHits->stripCluster(h);
-           const vector<unsigned char>& amplitutes = cluster->amplitudes();
+           vector<int> amplitudes = convert(cluster->amplitudes());
+           if (crossTalkInvAlgo) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
            int firstStrip = cluster->firstStrip();
            int prevAPV = -1;
            double gain = 1.0;
 
            bool isSatCluster = false;
            ClusterCharge = 0;
-           for(unsigned int s=0;s<amplitutes.size();s++){               
+           for(unsigned int s=0;s<amplitudes.size();s++){
               if(TrackerGains!=NULL){ //don't reload the gain if unnecessary  since map access are slow
                  int APV = (firstStrip+s)/128;
                  if(APV != prevAPV){gain = TrackerGains->at(detid.rawId()<<3 |APV); prevAPV=APV; }
               }
 
-              int StripCharge =  amplitutes[s];
+              int StripCharge =  amplitudes[s];
               if(StripCharge<254){
                  StripCharge=(int)(StripCharge/gain);
                  if(StripCharge>=1024){         StripCharge = 255;
@@ -730,7 +734,6 @@ std::vector<int> convert(const vector<unsigned char>& input)
 }
 
 
-std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1, const float x2, bool way,float threshold,float thresholdSat) {
   const unsigned N=Q.size();
   std::vector<int> QII;
@@ -781,11 +784,11 @@ return QII;
 }
 
 
-bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv)
+bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t * signal)
 {
    if(!cluster) return true;
    vector<int>  ampls = convert(cluster->amplitudes());
-   if(crosstalkInv)ampls = CrossTalkInv(ampls,0.10,0.04, true);
+   if(crosstalkInv==1)ampls = CrossTalkInv(ampls,0.10,0.04, true);
       
 
   // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------
@@ -844,9 +847,10 @@ bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv)
 //  
 //   bool shapetest=true;
    bool shapecdtn=false;
+   if (signal) *signal = 255;
 
-      if(crosstalkInv){
-        if(NofMax==1){shapecdtn=true;}
+      if(crosstalkInv==1){
+        if(NofMax==1){shapecdtn=true; if (signal) *signal=0;}
         return shapecdtn;
       }
 
@@ -861,22 +865,22 @@ bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv)
                 if(MaxOnStart==true){
                         C_M=(Float_t)ampls[0]; C_D=(Float_t)ampls[1];
                                 if(ampls.size()<3) shapecdtn=true ;
-                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[2] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true;}
+                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[2] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true; else if (signal) *signal=2;}
                                 else if(ampls.size()>3){ C_Dn=(Float_t)ampls[2];  C_Dnn=(Float_t)ampls[3] ;
                                                         if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
                                                            && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise){
-                                                         shapecdtn=true;}
+                                                         shapecdtn=true;} else if (signal) *signal=3;
                                 }
                 }
 
                 if(MaxOnEnd==true){
                         C_M=(Float_t)ampls[ampls.size()-1]; C_D=(Float_t)ampls[ampls.size()-2];
                                 if(ampls.size()<3) shapecdtn=true ;
-                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[0] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true;}
+                                else if(ampls.size()==3){C_Dn=(Float_t)ampls[0] ; if(C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255) shapecdtn=true; else if (signal) *signal=4;}
                                 else if(ampls.size()>3){C_Dn=(Float_t)ampls[ampls.size()-3] ; C_Dnn=(Float_t)ampls[ampls.size()-4] ; 
                                                         if((C_Dn<=coeff1*coeffn*C_D+coeff2*coeffnn*C_M+2*noise || C_D==255)
                                                            && C_Dnn<=coeff1*coeffn*C_Dn+coeff2*coeffnn*C_D+2*noise){ 
-                                                         shapecdtn=true;}
+                                                         shapecdtn=true;} else if (signal) *signal=5;
                                 }
                 }
 
@@ -929,11 +933,27 @@ bool clusterCleaning(const SiStripCluster*   cluster,  bool crosstalkInv)
                                         }
 
                                 }
-                        }                       
+                        } else if (signal) *signal=6;
                 }
         }
+        else if (NofMax>1 && signal) *signal = 1; // more than one maximum
         if(ampls.size()==1){shapecdtn=true;}
+        if(shapecdtn && signal) *signal=0;
 
    return shapecdtn;
+}
+
+void printClusterCleaningMessage (uint8_t exitSignalCode){
+   switch (exitSignalCode){
+      case 0:  std::cout << "All went well"                     << std::endl; break;
+      case 1:  std::cout << "More than one maximum"             << std::endl; break;
+      case 2:  std::cout << "MFirst; CSize=3; CDn too big"      << std::endl; break;
+      case 3:  std::cout << "MFirst; CSize>3; CDn||CDnn too big"<< std::endl; break;
+      case 4:  std::cout << "MEnd; CSize=3; CDn too big"        << std::endl; break;
+      case 5:  std::cout << "MEnd; CSize>3; CDn||CDnn too big"  << std::endl; break;
+      case 6:  std::cout << "MMid; Sides are too big"           << std::endl; break;
+      case 255:std::cout << "Failed all shape tests"             << std::endl; break;
+      default: std::cout << "Unknown exit code!"<< std::endl;
+   }
 }
 #endif

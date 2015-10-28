@@ -34,7 +34,8 @@
 #include "TTree.h"
 
 //double IntegratedLuminosity13TeV               = 72.63; //pb
-double IntegratedLuminosity13TeV               = 84.557; //pb
+//double IntegratedLuminosity13TeV               = 84.557; //pb
+double IntegratedLuminosity13TeV               = 239; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
@@ -108,10 +109,10 @@ std::string        dEdxM_Legend    = "I_{h} (MeV/cm)";
 //double             dEdxK_MC        = 2.683;
 //double             dEdxC_MC        = 2.453;
 // below are the new constants computed with harm2_SO_in for both MC and Data
-double             dEdxK_Data      = 2.882;
-double             dEdxC_Data      = 2.704;
-double             dEdxK_MC        = 2.866;
-double             dEdxC_MC        = 2.725;
+double             dEdxK_Data      = 2.535;
+double             dEdxC_Data      = 3.339;
+double             dEdxK_MC        = 2.535;
+double             dEdxC_MC        = 3.339;
 
 // TOF object to be used for combined, DT and CSC TOF measurement
 std::string        TOF_Label       = "combined";

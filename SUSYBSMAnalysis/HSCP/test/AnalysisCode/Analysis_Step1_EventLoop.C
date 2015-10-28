@@ -967,11 +967,13 @@ void Analysis_Step1_EventLoop(char* SavePath)
       if(isData){ 
          dEdxSF [0] = 1.00000;
          dEdxSF [1] = 1.21836;
-         dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+//         dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+         dEdxTemplates = loadDeDxTemplate("../UsefulScripts/DeDxStudy/Templates/dEdxTemplate_hit_SP_in_noC_CCC_Run251252.root", true);
       }else{  
          dEdxSF [0] = 1.09708;
          dEdxSF [1] = 1.01875;
-         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+//         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
+         dEdxTemplates = loadDeDxTemplate("../UsefulScripts/DeDxStudy/Templates/dEdxTemplate_hit_SP_in_noC_CCC_MCMinBias.root", true);
       }
 
       if(isData){    LoadDeDxCalibration(TrackerGains, "../../data/Data13TeVGains.root"); 
@@ -1231,8 +1233,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          false, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL);
+               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
                DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
