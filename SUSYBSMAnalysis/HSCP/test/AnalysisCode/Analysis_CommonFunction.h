@@ -473,9 +473,9 @@ class DuplicatesClass{
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
 reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0);
-bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitSignal=NULL);
+bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
-void printClusterCleaningMessage (uint8_t exitSignalCode);
+void printClusterCleaningMessage (uint8_t exitCode);
 std::vector<int> convert(const vector<unsigned char>& input);
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 
@@ -943,8 +943,8 @@ bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t
    return shapecdtn;
 }
 
-void printClusterCleaningMessage (uint8_t exitSignalCode){
-   switch (exitSignalCode){
+void printClusterCleaningMessage (uint8_t exitCode){
+   switch (exitCode){
       case 0:  std::cout << "All went well"                     << std::endl; break;
       case 1:  std::cout << "More than one maximum"             << std::endl; break;
       case 2:  std::cout << "MFirst; CSize=3; CDn too big"      << std::endl; break;

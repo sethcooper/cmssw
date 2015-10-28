@@ -967,13 +967,11 @@ void Analysis_Step1_EventLoop(char* SavePath)
       if(isData){ 
          dEdxSF [0] = 1.00000;
          dEdxSF [1] = 1.21836;
-//         dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
-         dEdxTemplates = loadDeDxTemplate("../UsefulScripts/DeDxStudy/Templates/dEdxTemplate_hit_SP_in_noC_CCC_Run251252.root", true);
+         dEdxTemplates = loadDeDxTemplate("../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
       }else{  
          dEdxSF [0] = 1.09708;
          dEdxSF [1] = 1.01875;
-//         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
-         dEdxTemplates = loadDeDxTemplate("../UsefulScripts/DeDxStudy/Templates/dEdxTemplate_hit_SP_in_noC_CCC_MCMinBias.root", true);
+         dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
       }
 
       if(isData){    LoadDeDxCalibration(TrackerGains, "../../data/Data13TeVGains.root"); 
