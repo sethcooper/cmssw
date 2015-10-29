@@ -35,7 +35,7 @@
 
 //double IntegratedLuminosity13TeV               = 72.63; //pb
 //double IntegratedLuminosity13TeV               = 84.557; //pb
-double IntegratedLuminosity13TeV               = 239; //pb
+double IntegratedLuminosity13TeV               = 1680.150; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
@@ -45,7 +45,7 @@ double IntegratedLuminosityBeforeTriggerChange =    0; //pb
 string IntegratedLuminosityFromE(double SQRTS_){
   char LumiText[1024];
 
-  if(SQRTS_==13)                    sprintf(LumiText,"%1.1f pb^{-1} (%1.0f TeV)", IntegratedLuminosity13TeV, 13.0);
+  if(SQRTS_==13)                    sprintf(LumiText,"%1.1f fb^{-1} (%1.0f TeV)", 0.001*IntegratedLuminosity13TeV, 13.0);
   //else if(SQRTS_==78 || SQRTS_==87)sprintf(LumiText,"#sqrt{s} = %1.0f TeV, L = %1.1f fb^{-1}   #sqrt{s} = %1.0f TeV, L = %1.1f fb^{-1}", 7.0, 0.001*IntegratedLuminosity7TeV,8.0, 0.001*IntegratedLuminosity8TeV);
   else                              sprintf(LumiText, "unknown energy and int. lumi");
   return LumiText;

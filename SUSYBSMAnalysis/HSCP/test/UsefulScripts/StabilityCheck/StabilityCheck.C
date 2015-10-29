@@ -193,6 +193,15 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
    TProfile** dEdxMSFProf = new TProfile*[triggers.size()];
    TProfile** dEdxMPFProf = new TProfile*[triggers.size()];
    TProfile** PtProf   = new TProfile*[triggers.size()];
+   TProfile** TOFAODProf   = new TProfile*[triggers.size()];
+   TProfile** TOFAODDTProf   = new TProfile*[triggers.size()];
+   TProfile** TOFAODCSCProf   = new TProfile*[triggers.size()];
+   TProfile** TOFAODOverMinProf   = new TProfile*[triggers.size()];
+   TProfile** TOFAODDTOverMinProf   = new TProfile*[triggers.size()];
+   TProfile** TOFAODCSCOverMinProf   = new TProfile*[triggers.size()];
+   TProfile** VertexAODProf   = new TProfile*[triggers.size()];
+   TProfile** VertexAODDTProf   = new TProfile*[triggers.size()];
+   TProfile** VertexAODCSCProf   = new TProfile*[triggers.size()];
    TProfile** TOFProf   = new TProfile*[triggers.size()];
    TProfile** TOFDTProf   = new TProfile*[triggers.size()];
    TProfile** TOFCSCProf   = new TProfile*[triggers.size()];
@@ -203,9 +212,11 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
    TProfile** VertexDTProf   = new TProfile*[triggers.size()];
    TProfile** VertexCSCProf   = new TProfile*[triggers.size()];
    TH1D**     Count    = new TH1D*    [triggers.size()];
+   TH1D**     CountMuAOD  = new TH1D*    [triggers.size()];
    TH1D**     CountMu  = new TH1D*    [triggers.size()];
    TH1D**     HdEdx    = new TH1D*    [triggers.size()];
    TH1D**     HPt      = new TH1D*    [triggers.size()];
+   TH1D**     HTOFAOD  = new TH1D*    [triggers.size()];
    TH1D**     HTOF      = new TH1D*    [triggers.size()];
 
 
@@ -222,6 +233,19 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
       dEdxMPFProf[i] = new TProfile((triggers[i] + "dEdxMPFProf").c_str(), "dEdxMPFProf", 10000 ,0, 10000);
 
       PtProf  [i] = new TProfile((triggers[i] + "PtProf"  ).c_str(), "PtProf"  , 10000 ,0, 10000);
+      TOFAODProf  [i] = new TProfile((triggers[i] + "TOFAODProf"  ).c_str(), "TOFAODProf"  , 10000 ,0, 10000);
+      TOFAODDTProf  [i] = new TProfile((triggers[i] + "TOFAODDTProf"  ).c_str(), "TOFAODDTProf"  , 10000 ,0, 10000);
+      TOFAODCSCProf  [i] = new TProfile((triggers[i] + "TOFAODCSCProf"  ).c_str(), "TOFAODCSCProf"  , 10000 ,0, 10000);
+
+      TOFAODOverMinProf  [i] = new TProfile((triggers[i] + "TOFAODOverMinProf"  ).c_str(), "TOFAODOverMinProf"  , 10000 ,0, 10000);
+      TOFAODDTOverMinProf  [i] = new TProfile((triggers[i] + "TOFAODDTOverMinProf"  ).c_str(), "TOFAODDTOverMinProf"  , 10000 ,0, 10000);
+      TOFAODCSCOverMinProf  [i] = new TProfile((triggers[i] + "TOFAODCSCOverMinProf"  ).c_str(), "TOFAODCSCOverMinProf"  , 10000 ,0, 10000);
+
+      VertexAODProf  [i] = new TProfile((triggers[i] + "VertexAODProf"  ).c_str(), "VertexAODProf"  , 10000 ,0, 10000);
+      VertexAODDTProf  [i] = new TProfile((triggers[i] + "VertexAODDTProf"  ).c_str(), "VertexAODDTProf"  , 10000 ,0, 10000);
+      VertexAODCSCProf  [i] = new TProfile((triggers[i] + "VertexAODCSCProf"  ).c_str(), "VertexAODCSCProf"  , 10000 ,0, 10000);
+
+
       TOFProf  [i] = new TProfile((triggers[i] + "TOFProf"  ).c_str(), "TOFProf"  , 10000 ,0, 10000);
       TOFDTProf  [i] = new TProfile((triggers[i] + "TOFDTProf"  ).c_str(), "TOFDTProf"  , 10000 ,0, 10000);
       TOFCSCProf  [i] = new TProfile((triggers[i] + "TOFCSCProf"  ).c_str(), "TOFCSCProf"  , 10000 ,0, 10000);
@@ -235,19 +259,29 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
       VertexCSCProf  [i] = new TProfile((triggers[i] + "VertexCSCProf"  ).c_str(), "VertexCSCProf"  , 10000 ,0, 10000);
 
       Count   [i] = new TH1D(    (triggers[i] + "Count"   ).c_str(), "Count"   , 10000 ,0, 10000);  Count  [i]->Sumw2();
+      CountMuAOD[i] = new TH1D(    (triggers[i] + "CountMuAOD" ).c_str(), "CountMuAOD" , 10000 ,0, 10000);  CountMuAOD[i]->Sumw2();
       CountMu [i] = new TH1D(    (triggers[i] + "CountMu" ).c_str(), "CountMu" , 10000 ,0, 10000);  CountMu[i]->Sumw2();
       HdEdx   [i] = new TH1D(    (triggers[i] + "HdEdx"   ).c_str(), "HdEdx"   , 10000 ,0, 10000);  HdEdx  [i]->Sumw2();
       HPt     [i] = new TH1D(    (triggers[i] + "HPt"     ).c_str(), "HPt"     , 10000 ,0, 10000);  HPt    [i]->Sumw2();
+      HTOFAOD  [i] = new TH1D(    (triggers[i] + "HTOFAOD"     ).c_str(), "HTOFAOD"     , 10000 ,0, 10000);  HTOFAOD [i]->Sumw2();
       HTOF     [i] = new TH1D(    (triggers[i] + "HTOF"     ).c_str(), "HTOF"     , 10000 ,0, 10000);  HTOF    [i]->Sumw2();
    }
 
    TypeMode      = 0;
 
-   TH3F* dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd.root", true);
    std::unordered_map<unsigned int,double> TrackerGains;
    double dEdxSF [2];
    dEdxSF [0] = 1.00000;
    dEdxSF [1] = 1.21836;
+   TH3F* dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+
+
+   moduleGeom::loadGeometry("../../../data/CMS_GeomTree.root");
+   muonTimingCalculator tofCalculator;
+   tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
+   unsigned int CurrentRun = 0;
+
+
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -257,6 +291,11 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
       ev.to(e); 
       if(e%TreeStep==0){printf(".");fflush(stdout);}
 
+      //if run change, update conditions
+      if(CurrentRun != ev.eventAuxiliary().run()){
+         CurrentRun = ev.eventAuxiliary().run();
+         tofCalculator.setRun(CurrentRun);
+      }
 
 
       if(RunBinIndex.find(ev.eventAuxiliary().run()) == RunBinIndex.end()){
@@ -266,6 +305,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
             char Label[2048]; sprintf(Label,"%6i",ev.eventAuxiliary().run());
             HdEdx[i]->GetXaxis()->SetBinLabel(Bin, Label);
             HPt[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            HTOFAOD[i]->GetXaxis()->SetBinLabel(Bin, Label);
             HTOF[i]->GetXaxis()->SetBinLabel(Bin, Label);
             Count[i]->GetXaxis()->SetBinLabel(Bin, Label);
             NVertProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
@@ -278,6 +318,16 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
             dEdxMSFProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
             dEdxMPFProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
             PtProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            TOFAODProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            TOFAODDTProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            TOFAODCSCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            TOFAODOverMinProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            TOFAODDTOverMinProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            TOFAODCSCOverMinProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            VertexAODProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            VertexAODDTProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+            VertexAODCSCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+
             TOFProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
             TOFDTProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
             TOFCSCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
@@ -321,10 +371,23 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
       if(!vertexCollHandle.isValid()){printf("Vertex Collection NotFound\n");continue;}
       const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
 
+      fwlite::Handle<CSCSegmentCollection> CSCSegmentCollHandle;
+      fwlite::Handle<DTRecSegment4DCollection> DTSegmentCollHandle;            
+      if(true){ //do not reocmpute TOF on MC background
+         CSCSegmentCollHandle.getByLabel(ev, "cscSegments");
+         if(!CSCSegmentCollHandle.isValid()){printf("CSC Segment Collection not found!\n"); continue;}
+
+         DTSegmentCollHandle.getByLabel(ev, "dt4DSegments");
+         if(!DTSegmentCollHandle.isValid()){printf("DT Segment Collection not found!\n"); continue;}
+      }
+
+
+
       for(unsigned int c=0;c<hscpColl.size();c++){
          susybsm::HSCParticle hscp  = hscpColl[c];
          reco::TrackRef track = hscp.trackRef();
          if(track.isNull())continue;
+         reco::MuonRef muon = hscp.muonRef();
 
          const DeDxHitInfo* dedxHits = NULL;
          if(TypeMode!=3 && !track.isNull()) {
@@ -332,15 +395,27 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
             if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
          }
 
-         DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, false, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true);
-         DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true);
-         DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL, false, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true);
-         DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, false);
+        bool useClusterCleaning = true;
+        DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+        DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+        DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+        DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, false, true, 99, false, 1);
+
+         const reco::MuonTimeExtra* tofaod = NULL;
+         const reco::MuonTimeExtra* dttofaod = NULL;
+         const reco::MuonTimeExtra* csctofaod = NULL;
+         if(!hscp.muonRef().isNull()){ tofaod  = &TOFCollH->get(hscp.muonRef().key()); dttofaod  = &TOFDTCollH->get(hscp.muonRef().key()); csctofaod  = &TOFCSCCollH->get(hscp.muonRef().key());}
 
          const reco::MuonTimeExtra* tof = NULL;
          const reco::MuonTimeExtra* dttof = NULL;
          const reco::MuonTimeExtra* csctof = NULL;
-         if(!hscp.muonRef().isNull()){ tof  = &TOFCollH->get(hscp.muonRef().key()); dttof  = &TOFDTCollH->get(hscp.muonRef().key()); csctof  = &TOFCSCCollH->get(hscp.muonRef().key());}
+         if(!hscp.muonRef().isNull()){
+            const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+            const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+            tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
+            tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
+         }
+
 
 
          if(!PassPreselection(hscp, dedxSObj, dedxMObj, tof, dttof, csctof, ev)){continue;}
@@ -349,6 +424,21 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
             if(!PassingTrigger(ev,triggers[i])){continue;}
 
             NVertProf[i]->Fill(CurrentRunIndex, vertexColl.size()); 
+
+
+            if(tofaod && tofaod->nDof()>=GlobalMinNDOF && (dttofaod->nDof()>=GlobalMinNDOFDT || csctofaod->nDof()>=GlobalMinNDOFCSC) && tofaod->inverseBetaErr()<=GlobalMaxTOFErr){
+               if(tofaod->inverseBeta()>=GlobalMinTOF)CountMuAOD[i]->Fill(CurrentRunIndex);
+               if(tofaod->inverseBeta()>=GlobalMinTOF)TOFAODOverMinProf[i]->Fill(CurrentRunIndex, tofaod->inverseBeta());
+               if(dttofaod->inverseBeta()>=GlobalMinTOF)TOFAODDTOverMinProf[i]->Fill(CurrentRunIndex, dttofaod->inverseBeta());
+               if(csctofaod->inverseBeta()>=GlobalMinTOF)TOFAODCSCOverMinProf[i]->Fill(CurrentRunIndex, csctofaod->inverseBeta());
+               TOFAODProf[i]->Fill(CurrentRunIndex, tofaod->inverseBeta());
+               if(dttofaod->nDof()>=GlobalMinNDOFDT) TOFAODDTProf[i]->Fill(CurrentRunIndex, dttofaod->inverseBeta());
+               if(csctofaod->nDof()>=GlobalMinNDOFCSC) TOFAODCSCProf[i]->Fill(CurrentRunIndex, csctofaod->inverseBeta());
+               if(tofaod->inverseBeta() > 1.1 ) HTOFAOD[i]->Fill(CurrentRunIndex);            
+               VertexAODProf[i]->Fill(CurrentRunIndex, tofaod->timeAtIpInOut());
+               if(dttof->nDof()>=GlobalMinNDOFDT) VertexAODDTProf[i]->Fill(CurrentRunIndex, dttofaod->timeAtIpInOut());
+               if(csctof->nDof()>=GlobalMinNDOFCSC) VertexAODCSCProf[i]->Fill(CurrentRunIndex, csctofaod->timeAtIpInOut());
+            }
 
             if(tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr){
                if(tof->inverseBeta()>=GlobalMinTOF)CountMu[i]->Fill(CurrentRunIndex);
@@ -449,6 +539,34 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
    SaveCanvas(c1,OUTDIRNAME + triggers[i],"ROT_Pt");
    delete c1;
 
+   c1 = new TCanvas("c1","c1",600,600);
+   HTOFAOD[i]->Divide(CountMuAOD[i]);
+   HTOFAOD[i]->LabelsDeflate("X");
+   HTOFAOD[i]->LabelsOption("av","X");
+   HTOFAOD[i]->GetXaxis()->SetNdivisions(505);
+   HTOFAOD[i]->SetTitle("");
+   HTOFAOD[i]->SetStats(kFALSE);
+   HTOFAOD[i]->GetXaxis()->SetTitle("");
+   HTOFAOD[i]->GetYaxis()->SetTitle("Ratio over Threshold");
+   HTOFAOD[i]->GetYaxis()->SetTitleOffset(0.9);
+   HTOFAOD[i]->GetXaxis()->SetLabelSize(0.04);
+   HTOFAOD[i]->SetLineColor(Color[0]);
+   HTOFAOD[i]->SetFillColor(Color[0]);
+   HTOFAOD[i]->SetMarkerSize(0.4);
+   HTOFAOD[i]->SetMarkerStyle(Marker[0]);
+   HTOFAOD[i]->SetMarkerColor(Color[0]);
+   HTOFAOD[i]->Draw("E1");
+
+   leg = new TLegend(0.55,0.86,0.79,0.93,NULL,"brNDC");
+   leg->SetBorderSize(0);
+   leg->SetFillColor(0);
+   leg->AddEntry(HTOF[i],"1/#beta > 1.1 (AOD)","P");
+   leg->Draw();
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"ROT_TOF");
+   delete c1;
 
 
    c1 = new TCanvas("c1","c1",600,600);
