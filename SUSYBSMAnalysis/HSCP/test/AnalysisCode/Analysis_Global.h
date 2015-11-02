@@ -35,7 +35,7 @@
 
 //double IntegratedLuminosity13TeV               = 72.63; //pb
 //double IntegratedLuminosity13TeV               = 84.557; //pb
-double IntegratedLuminosity13TeV               = 1680.150; //pb
+double IntegratedLuminosity13TeV               = 1680.150 - 112.787; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;

@@ -387,7 +387,9 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
          susybsm::HSCParticle hscp  = hscpColl[c];
          reco::TrackRef track = hscp.trackRef();
          if(track.isNull())continue;
-         reco::MuonRef muon = hscp.muonRef();
+         reco::MuonRef muon = hscp.muonRef();         
+         if(muon.isNull())continue; 
+         if(!hscp.muonRef()->isStandAloneMuon())continue;
 
          const DeDxHitInfo* dedxHits = NULL;
          if(TypeMode!=3 && !track.isNull()) {
@@ -395,11 +397,11 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
             if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
          }
 
-        bool useClusterCleaning = true;
-        DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-        DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-        DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-        DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, false, true, 99, false, 1);
+         bool useClusterCleaning = true;
+         DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+         DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+         DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+         DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, false, true, 99, false, 1);
 
          const reco::MuonTimeExtra* tofaod = NULL;
          const reco::MuonTimeExtra* dttofaod = NULL;
@@ -409,14 +411,12 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
          const reco::MuonTimeExtra* tof = NULL;
          const reco::MuonTimeExtra* dttof = NULL;
          const reco::MuonTimeExtra* csctof = NULL;
-         if(!hscp.muonRef().isNull()){
+         if(!hscp.muonRef().isNull() && hscp.muonRef()->isStandAloneMuon() ){
             const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
             const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
             tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
             tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
-         }
-
-
+         }          
 
          if(!PassPreselection(hscp, dedxSObj, dedxMObj, tof, dttof, csctof, ev)){continue;}
 
@@ -849,6 +849,218 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
    delete c1;
 
 
+
+
+
+   c1 = new TCanvas("c1","c1",600,600);
+   TOFAODProf[i]->LabelsDeflate("X");
+   TOFAODProf[i]->LabelsOption("av","X");
+   TOFAODProf[i]->GetXaxis()->SetNdivisions(505);
+   TOFAODProf[i]->SetTitle("");
+   TOFAODProf[i]->SetStats(kFALSE);
+   TOFAODProf[i]->GetXaxis()->SetTitle("");
+   TOFAODProf[i]->GetYaxis()->SetTitle("1/#beta");
+   TOFAODProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   TOFAODProf[i]->GetXaxis()->SetLabelSize(0.04);
+   TOFAODProf[i]->SetLineColor(Color[0]);
+   TOFAODProf[i]->SetFillColor(Color[0]);
+   TOFAODProf[i]->SetMarkerSize(0.4);
+   TOFAODProf[i]->SetMarkerStyle(Marker[0]);
+   TOFAODProf[i]->SetMarkerColor(Color[0]);
+   TOFAODProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_TOFAOD");
+   delete c1;
+
+
+   c1 = new TCanvas("c1","c1",600,600);
+   TOFAODDTProf[i]->LabelsDeflate("X");
+   TOFAODDTProf[i]->LabelsOption("av","X");
+   TOFAODDTProf[i]->GetXaxis()->SetNdivisions(505);
+   TOFAODDTProf[i]->SetTitle("");
+   TOFAODDTProf[i]->SetStats(kFALSE);
+   TOFAODDTProf[i]->GetXaxis()->SetTitle("");
+   TOFAODDTProf[i]->GetYaxis()->SetTitle("1/#beta");
+   TOFAODDTProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   TOFAODDTProf[i]->GetXaxis()->SetLabelSize(0.04);
+   TOFAODDTProf[i]->SetLineColor(Color[0]);
+   TOFAODDTProf[i]->SetFillColor(Color[0]);
+   TOFAODDTProf[i]->SetMarkerSize(0.4);
+   TOFAODDTProf[i]->SetMarkerStyle(Marker[0]);
+   TOFAODDTProf[i]->SetMarkerColor(Color[0]);
+   TOFAODDTProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_TOFAODDT");
+   delete c1;
+
+   c1 = new TCanvas("c1","c1",600,600);
+   TOFAODCSCProf[i]->LabelsDeflate("X");
+   TOFAODCSCProf[i]->LabelsOption("av","X");
+   TOFAODCSCProf[i]->GetXaxis()->SetNdivisions(505);
+   TOFAODCSCProf[i]->SetTitle("");
+   TOFAODCSCProf[i]->SetStats(kFALSE);
+   TOFAODCSCProf[i]->GetXaxis()->SetTitle("");
+   TOFAODCSCProf[i]->GetYaxis()->SetTitle("1/#beta");
+   TOFAODCSCProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   TOFAODCSCProf[i]->GetXaxis()->SetLabelSize(0.04);
+   TOFAODCSCProf[i]->SetLineColor(Color[0]);
+   TOFAODCSCProf[i]->SetFillColor(Color[0]);
+   TOFAODCSCProf[i]->SetMarkerSize(0.4);
+   TOFAODCSCProf[i]->SetMarkerStyle(Marker[0]);
+   TOFAODCSCProf[i]->SetMarkerColor(Color[0]);
+   TOFAODCSCProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_TOFAODCSC");
+   delete c1;
+
+   c1 = new TCanvas("c1","c1",600,600);
+   TOFAODOverMinProf[i]->LabelsDeflate("X");
+   TOFAODOverMinProf[i]->LabelsOption("av","X");
+   TOFAODOverMinProf[i]->GetXaxis()->SetNdivisions(505);
+   TOFAODOverMinProf[i]->SetTitle("");
+   TOFAODOverMinProf[i]->SetStats(kFALSE);
+   TOFAODOverMinProf[i]->GetXaxis()->SetTitle("");
+   TOFAODOverMinProf[i]->GetYaxis()->SetTitle("1/#beta");
+   TOFAODOverMinProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   TOFAODOverMinProf[i]->GetXaxis()->SetLabelSize(0.04);
+   TOFAODOverMinProf[i]->SetLineColor(Color[0]);
+   TOFAODOverMinProf[i]->SetFillColor(Color[0]);
+   TOFAODOverMinProf[i]->SetMarkerSize(0.4);
+   TOFAODOverMinProf[i]->SetMarkerStyle(Marker[0]);
+   TOFAODOverMinProf[i]->SetMarkerColor(Color[0]);
+   TOFAODOverMinProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_TOFAODOverMin");
+   delete c1;
+
+
+   c1 = new TCanvas("c1","c1",600,600);
+   TOFAODDTOverMinProf[i]->LabelsDeflate("X");
+   TOFAODDTOverMinProf[i]->LabelsOption("av","X");
+   TOFAODDTOverMinProf[i]->GetXaxis()->SetNdivisions(505);
+   TOFAODDTOverMinProf[i]->SetTitle("");
+   TOFAODDTOverMinProf[i]->SetStats(kFALSE);
+   TOFAODDTOverMinProf[i]->GetXaxis()->SetTitle("");
+   TOFAODDTOverMinProf[i]->GetYaxis()->SetTitle("1/#beta");
+   TOFAODDTOverMinProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   TOFAODDTOverMinProf[i]->GetXaxis()->SetLabelSize(0.04);
+   TOFAODDTOverMinProf[i]->SetLineColor(Color[0]);
+   TOFAODDTOverMinProf[i]->SetFillColor(Color[0]);
+   TOFAODDTOverMinProf[i]->SetMarkerSize(0.4);
+   TOFAODDTOverMinProf[i]->SetMarkerStyle(Marker[0]);
+   TOFAODDTOverMinProf[i]->SetMarkerColor(Color[0]);
+   TOFAODDTOverMinProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_TOFAODDTOverMin");
+   delete c1;
+
+   c1 = new TCanvas("c1","c1",600,600);
+   TOFAODCSCOverMinProf[i]->LabelsDeflate("X");
+   TOFAODCSCOverMinProf[i]->LabelsOption("av","X");
+   TOFAODCSCOverMinProf[i]->GetXaxis()->SetNdivisions(505);
+   TOFAODCSCOverMinProf[i]->SetTitle("");
+   TOFAODCSCOverMinProf[i]->SetStats(kFALSE);
+   TOFAODCSCOverMinProf[i]->GetXaxis()->SetTitle("");
+   TOFAODCSCOverMinProf[i]->GetYaxis()->SetTitle("1/#beta");
+   TOFAODCSCOverMinProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   TOFAODCSCOverMinProf[i]->GetXaxis()->SetLabelSize(0.04);
+   TOFAODCSCOverMinProf[i]->SetLineColor(Color[0]);
+   TOFAODCSCOverMinProf[i]->SetFillColor(Color[0]);
+   TOFAODCSCOverMinProf[i]->SetMarkerSize(0.4);
+   TOFAODCSCOverMinProf[i]->SetMarkerStyle(Marker[0]);
+   TOFAODCSCOverMinProf[i]->SetMarkerColor(Color[0]);
+   TOFAODCSCOverMinProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_TOFAODCSCOverMin");
+   delete c1;
+
+
+   c1 = new TCanvas("c1","c1",600,600);
+   VertexAODProf[i]->LabelsDeflate("X");
+   VertexAODProf[i]->LabelsOption("av","X");
+   VertexAODProf[i]->GetXaxis()->SetNdivisions(505);
+   VertexAODProf[i]->SetTitle("");
+   VertexAODProf[i]->SetStats(kFALSE);
+   VertexAODProf[i]->GetXaxis()->SetTitle("");
+   VertexAODProf[i]->GetYaxis()->SetTitle("1/#beta");
+   VertexAODProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   VertexAODProf[i]->GetXaxis()->SetLabelSize(0.04);
+   VertexAODProf[i]->SetLineColor(Color[0]);
+   VertexAODProf[i]->SetFillColor(Color[0]);
+   VertexAODProf[i]->SetMarkerSize(0.4);
+   VertexAODProf[i]->SetMarkerStyle(Marker[0]);
+   VertexAODProf[i]->SetMarkerColor(Color[0]);
+   VertexAODProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_VertexAOD");
+   delete c1;
+
+
+   c1 = new TCanvas("c1","c1",600,600);
+   VertexAODDTProf[i]->LabelsDeflate("X");
+   VertexAODDTProf[i]->LabelsOption("av","X");
+   VertexAODDTProf[i]->GetXaxis()->SetNdivisions(505);
+   VertexAODDTProf[i]->SetTitle("");
+   VertexAODDTProf[i]->SetStats(kFALSE);
+   VertexAODDTProf[i]->GetXaxis()->SetTitle("");
+   VertexAODDTProf[i]->GetYaxis()->SetTitle("1/#beta");
+   VertexAODDTProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   VertexAODDTProf[i]->GetXaxis()->SetLabelSize(0.04);
+   VertexAODDTProf[i]->SetLineColor(Color[0]);
+   VertexAODDTProf[i]->SetFillColor(Color[0]);
+   VertexAODDTProf[i]->SetMarkerSize(0.4);
+   VertexAODDTProf[i]->SetMarkerStyle(Marker[0]);
+   VertexAODDTProf[i]->SetMarkerColor(Color[0]);
+   VertexAODDTProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_VertexAODDT");
+   delete c1;
+
+   c1 = new TCanvas("c1","c1",600,600);
+   VertexAODCSCProf[i]->LabelsDeflate("X");
+   VertexAODCSCProf[i]->LabelsOption("av","X");
+   VertexAODCSCProf[i]->GetXaxis()->SetNdivisions(505);
+   VertexAODCSCProf[i]->SetTitle("");
+   VertexAODCSCProf[i]->SetStats(kFALSE);
+   VertexAODCSCProf[i]->GetXaxis()->SetTitle("");
+   VertexAODCSCProf[i]->GetYaxis()->SetTitle("1/#beta");
+   VertexAODCSCProf[i]->GetYaxis()->SetTitleOffset(0.9);
+   VertexAODCSCProf[i]->GetXaxis()->SetLabelSize(0.04);
+   VertexAODCSCProf[i]->SetLineColor(Color[0]);
+   VertexAODCSCProf[i]->SetFillColor(Color[0]);
+   VertexAODCSCProf[i]->SetMarkerSize(0.4);
+   VertexAODCSCProf[i]->SetMarkerStyle(Marker[0]);
+   VertexAODCSCProf[i]->SetMarkerColor(Color[0]);
+   VertexAODCSCProf[i]->Draw("E1");
+   c1->Modified();
+   c1->SetGridx(true);
+   DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_VertexAODCSC");
+   delete c1;
+
+
+
+
+
+
+
+
    c1 = new TCanvas("c1","c1",600,600);
    TOFProf[i]->LabelsDeflate("X");
    TOFProf[i]->LabelsOption("av","X");
@@ -1049,7 +1261,11 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures")
    c1->SetGridx(true);
    DrawPreliminary(triggers[i], SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,OUTDIRNAME + triggers[i],"Profile_VertexCSC");
-   delete c1;
+   delete c1
+
+
+
+;
    }
 
 
