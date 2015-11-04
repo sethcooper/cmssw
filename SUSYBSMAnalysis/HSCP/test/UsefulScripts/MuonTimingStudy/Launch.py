@@ -13,7 +13,9 @@ import json
 import collections # kind of map
 
 #script parameters #feel free to edit those
-JSON = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-258750_13TeV_PromptReco_Collisions15_25ns_JSON.txt'   
+#JSON = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-258750_13TeV_PromptReco_Collisions15_25ns_JSON_Silver.txt'
+JSON = os.getcwd() + '/Json.txt'
+#/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions15/13TeV/Cert_246908-258750_13TeV_PromptReco_Collisions15_25ns_JSON.txt'   
 LOCALTIER   = 'T2_CH_CERN'
 DATASETMASK = '/DoubleMuon/Run2015*-PromptReco-v*/AOD'
 ISLOCAL     = False #automatically assigned

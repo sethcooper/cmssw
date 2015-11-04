@@ -293,7 +293,7 @@ void MakePlot()
    }
    fclose(pFile);
 
-/*
+
 
    makeFigure("pictures/CSC_StationsP.png", frame, "ME+11;ME+12;ME+13;ME+14;ME+21;ME+22;ME+31;ME+32;ME+41;ME+42");
    makeFigure("pictures/CSC_StationsM.png", frame, "ME-11;ME-12;ME-13;ME-14;ME-21;ME-22;ME-31;ME-32;ME-41;ME-42");
@@ -343,7 +343,7 @@ void MakePlot()
    makeFigure("pictures/DT_ChambersP22.png", frame, "DT22_01;DT22_02;DT22_03;DT22_04;DT22_05;DT22_06;DT22_07;DT22_08;DT22_09;DT22_10;DT22_11;DT22_12");
    makeFigure("pictures/DT_ChambersP23.png", frame, "DT23_01;DT23_02;DT23_03;DT23_04;DT23_05;DT23_06;DT23_07;DT23_08;DT23_09;DT23_10;DT23_11;DT23_12");
    makeFigure("pictures/DT_ChambersP24.png", frame, "DT24_01;DT24_02;DT24_03;DT24_04;DT24_05;DT24_06;DT24_07;DT24_08;DT24_09;DT24_10;DT24_11;DT24_12;DT24_13;DT24_14");
-*/
+
    for(unsigned int L=0;L<3;L++){
       TGaxis::SetMaxDigits(2); 
       TCanvas* c1 = new TCanvas("c1","c1,",600,600);
@@ -375,21 +375,21 @@ void MakePlot()
          TH1D* HiBetaFLY1 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY1",false);  HiBetaFLY1->SetLineColor(2);  HiBetaFLY1->SetLineWidth(2);  HiBetaFLY1->Draw("same"); LEG->AddEntry(HiBetaFLY1, "FWlite: station t0 corr.", "L");
          TH1D* HiBetaFLY2 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY2",false);  HiBetaFLY2->SetLineColor(8);  HiBetaFLY2->SetLineWidth(2);  HiBetaFLY2->Draw("same"); LEG->AddEntry(HiBetaFLY2, "FWlite: chamber t0 corr.", "L");
          TH1D* HiBetaFLY3 = (TH1D*)GetObjectFromPath(InputFile,"DT_iBeta_FLY3",false);  HiBetaFLY3->SetLineColor(9);  HiBetaFLY3->SetLineWidth(2);  HiBetaFLY3->Draw("same"); LEG->AddEntry(HiBetaFLY3, "same with tighter pruning", "L");
-         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.1);
+         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.2);
       }else if(L==1){
          TH1D* HiBetaAOD  = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_AOD" ,false);  HiBetaAOD ->SetLineColor(1);  HiBetaAOD ->SetLineWidth(2);  HiBetaAOD ->Draw("same"); LEG->AddEntry(HiBetaAOD , "AOD default", "L");
          TH1D* HiBetaFLY0 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY0",false);  HiBetaFLY0->SetLineColor(4);  HiBetaFLY0->SetLineWidth(2);  HiBetaFLY0->Draw("same"); LEG->AddEntry(HiBetaFLY0, "FWlite: no t0 corr.", "L");
          TH1D* HiBetaFLY1 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY1",false);  HiBetaFLY1->SetLineColor(2);  HiBetaFLY1->SetLineWidth(2);  HiBetaFLY1->Draw("same"); LEG->AddEntry(HiBetaFLY1, "FWlite: station t0 corr.", "L");
          TH1D* HiBetaFLY2 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY2",false);  HiBetaFLY2->SetLineColor(8);  HiBetaFLY2->SetLineWidth(2);  HiBetaFLY2->Draw("same"); LEG->AddEntry(HiBetaFLY2, "FWlite: chamber t0 corr.", "L");
          TH1D* HiBetaFLY3 = (TH1D*)GetObjectFromPath(InputFile,"CSC_iBeta_FLY3",false);  HiBetaFLY3->SetLineColor(9);  HiBetaFLY3->SetLineWidth(2);  HiBetaFLY3->Draw("same"); LEG->AddEntry(HiBetaFLY3, "same with tighter pruning", "L");
-         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.1);
+         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.2);
       }else{
          TH1D* HiBetaAOD  = (TH1D*)GetObjectFromPath(InputFile,"iBeta_AOD" ,false);  HiBetaAOD ->SetLineColor(1);  HiBetaAOD ->SetLineWidth(2);  HiBetaAOD ->Draw("same"); LEG->AddEntry(HiBetaAOD , "AOD default", "L");
          TH1D* HiBetaFLY0 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY0",false);  HiBetaFLY0->SetLineColor(4);  HiBetaFLY0->SetLineWidth(2);  HiBetaFLY0->Draw("same"); LEG->AddEntry(HiBetaFLY0, "FWlite: no t0 corr.", "L");
          TH1D* HiBetaFLY1 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY1",false);  HiBetaFLY1->SetLineColor(2);  HiBetaFLY1->SetLineWidth(2);  HiBetaFLY1->Draw("same"); LEG->AddEntry(HiBetaFLY1, "FWlite: station t0 corr.", "L");
          TH1D* HiBetaFLY2 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY2",false);  HiBetaFLY2->SetLineColor(8);  HiBetaFLY2->SetLineWidth(2);  HiBetaFLY2->Draw("same"); LEG->AddEntry(HiBetaFLY2, "FWlite: chamber t0 corr.", "L");
          TH1D* HiBetaFLY3 = (TH1D*)GetObjectFromPath(InputFile,"iBeta_FLY3",false);  HiBetaFLY3->SetLineColor(9);  HiBetaFLY3->SetLineWidth(2);  HiBetaFLY3->Draw("same"); LEG->AddEntry(HiBetaFLY3, "same with tighter pruning", "L");
-         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.1);
+         frame->SetMaximum(HiBetaFLY3->GetMaximum()*1.2);
       }
 
       TLine line(1.0, frame->GetMinimum(), 1.0, frame->GetMaximum());
@@ -401,6 +401,33 @@ void MakePlot()
       if(L==1)c1->SaveAs("pictures/iBeta_CSC.png");
       if(L==2)c1->SaveAs("pictures/iBeta_Combined.png");
       delete c1; delete LEG;
+   }
+
+   if(true){
+      TGaxis::SetMaxDigits(2);
+      TCanvas* c1 = new TCanvas("c1","c1,",600,600);
+      c1->SetLeftMargin(0.16);
+      c1->SetRightMargin(0.16);
+      c1->SetLogz(true);
+      frame = new TH1D("frame", "frame", 1, 0.5, 1.5);
+      frame->SetTitle("");
+      frame->SetStats(kFALSE);
+      frame->GetXaxis()->SetNdivisions(505);
+      frame->GetXaxis()->SetTitle("AOD default");
+      frame->GetXaxis()->SetTitleOffset(1.25);
+      frame->GetYaxis()->SetTitle("FWlite: chamber t0 corr.");
+      frame->GetYaxis()->SetTitleOffset(1.75);
+      frame->SetMaximum(1.5);
+      frame->SetMinimum(0.5);
+      frame->Draw("AXIS");
+
+      TH2D* H_iBetaAODvsFly  = (TH2D*)GetObjectFromPath(InputFile,"iBeta_AODvsFly" ,false);  H_iBetaAODvsFly->Draw("same COLZ"); 
+      TLine line(0.5, 0.5, 1.5, 1.5);
+      line.SetLineColor(1);  line.SetLineWidth(2);  line.SetLineStyle(2);
+      line.Draw();
+
+      c1->SaveAs("pictures/iBeta_Correlation.png");
+      delete c1;
    }
 
 }

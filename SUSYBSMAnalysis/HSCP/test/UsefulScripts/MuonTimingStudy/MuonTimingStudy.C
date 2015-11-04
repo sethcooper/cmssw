@@ -109,6 +109,9 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
    HistoName = "iBeta_FLY2"; TH1D* H_iBetaFLY2  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
    HistoName = "iBeta_FLY3"; TH1D* H_iBetaFLY3  = new TH1D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0);
 
+   HistoName = "iBeta_AODvsFly";  TH2D* H_iBetaAODvsFly   = new TH2D(HistoName.c_str(), HistoName.c_str(), 150, 0.5, 2.0, 150, 0.5, 2.0);
+
+
    HistoName = "DT_Timing";    TH1D* HDT_Timing    = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
    HistoName = "CSC_Timing";   TH1D* HCSC_Timing   = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
    HistoName = "CSCW_Timing";  TH1D* HCSCW_Timing  = new TH1D(HistoName.c_str(), HistoName.c_str(), 800, -100, 100);
@@ -257,6 +260,8 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
             HDT_iBetaFLY2 ->Fill(tofCalculator.getTimeExtra(10000.0, muonTimingCalculator::TimeMeasurementType::DT ).inverseBeta());
             HCSC_iBetaFLY2->Fill(tofCalculator.getTimeExtra(9.0    , muonTimingCalculator::TimeMeasurementType::CSC).inverseBeta());
             H_iBetaFLY2->Fill(tofCalculator.getTimeExtra(9.0).inverseBeta());
+
+            H_iBetaAODvsFly->Fill(tof->inverseBeta(), tofCalculator.getTimeExtra(9.0).inverseBeta());
 
             tofCalculator.tmSeq.clear();
             tofCalculator.addDTMeasurements(muon, 2);

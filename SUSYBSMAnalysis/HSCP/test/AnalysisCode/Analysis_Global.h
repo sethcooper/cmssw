@@ -35,7 +35,7 @@
 
 //double IntegratedLuminosity13TeV               = 72.63; //pb
 //double IntegratedLuminosity13TeV               = 84.557; //pb
-double IntegratedLuminosity13TeV               = 239; //pb
+double IntegratedLuminosity13TeV               = 1864.032; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
@@ -45,7 +45,7 @@ double IntegratedLuminosityBeforeTriggerChange =    0; //pb
 string IntegratedLuminosityFromE(double SQRTS_){
   char LumiText[1024];
 
-  if(SQRTS_==13)                    sprintf(LumiText,"%1.1f pb^{-1} (%1.0f TeV)", IntegratedLuminosity13TeV, 13.0);
+  if(SQRTS_==13)                    sprintf(LumiText,"%1.1f fb^{-1} (%1.0f TeV)", 0.001*IntegratedLuminosity13TeV, 13.0);
   //else if(SQRTS_==78 || SQRTS_==87)sprintf(LumiText,"#sqrt{s} = %1.0f TeV, L = %1.1f fb^{-1}   #sqrt{s} = %1.0f TeV, L = %1.1f fb^{-1}", 7.0, 0.001*IntegratedLuminosity7TeV,8.0, 0.001*IntegratedLuminosity8TeV);
   else                              sprintf(LumiText, "unknown energy and int. lumi");
   return LumiText;
@@ -161,6 +161,8 @@ void InitBaseDirectory(){
      BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/lpchscp/2012HSCPEDMFiles/"; //for run1
    }else if(host.find("ingrid-ui")!=std::string::npos){
       BaseDirectory = "/storage/data/cms/users/quertenmont/HSCP/2015/"; // run2 ingrid
+   }else if(host.find(".cis.gov.pl")!=std::string::npos){
+      BaseDirectory = "root://se.cis.gov.pl//cms/store/user/fruboes/HSCP/15_03_25_HSCP_Run2EDMFiles/"; // run2 Swierk
    }else{
       BaseDirectory = "dcache:/pnfs/cms/WAX/11/store/user/venkat12/2012Data/";  //for run1
       printf("YOUR MACHINE (%s) IS NOT KNOWN --> please add your machine to the 'InitBaseDirectory' function of 'Analysis_Global.h'\n", host.c_str());

@@ -60,32 +60,37 @@ void Analysis_Step3_MakePlots()
    string InputPattern;				unsigned int CutIndex;     unsigned int CutIndex_Flip=1;  unsigned int CutIndexTight;
    std::vector<string> Legends;                 std::vector<string> Inputs;
 
+   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 67;
    MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, 1);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 
 
-   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 695; CutIndex_Flip=16;
-   MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
-   MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
+   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 695; CutIndex_Flip=12;
+   MassPrediction(InputPattern, CutIndex,      "Mass"     , true, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass"     , true, "13TeV_Tight");
+   MassPrediction(InputPattern, 1,             "Mass_Flip", true, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", true, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, 1);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
+   GetSystematicOnPrediction(InputPattern, "Data13TeV");
+   CheckPrediction(InputPattern, "_Flip", "Data13TeV");
 
+  exit(0);//all done
 
-
-
-  return;
   //FIXME:  Bellow this line, all the code in THIS FUNCTION is what was used for run1 paper.
   //Note that the code for 7 and 8TeV data analysis is kept --> would be useful to perform comparison between run1 and run2
 
@@ -1357,7 +1362,6 @@ void CutFlow(string InputPattern, unsigned int CutIndex){
     for(unsigned int s=0;s<samples.size();s++){
        if(samples[s].Name=="")continue;
        if(samples[s].Type!=2)continue;
-       printf("Testing %i - %s - %i\n", s, samples[s].Name.c_str(), (int)samples[s].MakePlot);fflush(stdout);
        if(!samples[s].MakePlot)continue;
        if(stPlots_InitFromFile(InputFile, plots, samples[s].Name)){
           stPlots_Dump(plots, pFile, CutIndex);       
@@ -1646,7 +1650,9 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
 
 // Determine the systematic uncertainty by computing datadriven prediction from different paths (only works with 3D ABCD method)
 void GetSystematicOnPrediction(string InputPattern, string DataName){
-   if(DataName.find("7TeV")!=string::npos){SQRTS=7.0;}else{SQRTS=8.0;}
+   if(DataName.find("7TeV")!=string::npos){SQRTS=7.0;}
+   else if(DataName.find("8TeV")!=string::npos){SQRTS=8.0;}
+   else{SQRTS=13.0;}
 
    TypeMode = TypeFromPattern(InputPattern); 
    if(TypeMode!=2)return;
@@ -1681,46 +1687,42 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    double ArrT    [8][20];
 
    std::vector<int> Index;   std::vector<int> Plot;
-   //variation on TOF cut 50, 0.05 1.05->1.2
-   Index.push_back(16);      Plot.push_back(0);
-   Index.push_back(17);      Plot.push_back(0);
-   Index.push_back(18);      Plot.push_back(0);
-   Index.push_back(19);      Plot.push_back(0);
-   Index.push_back(20);      Plot.push_back(0);
-   Index.push_back(21);      Plot.push_back(0);
-   Index.push_back(22);      Plot.push_back(0);
-   //variation on I cut 50, 0.05->0.225 1.05
-   Index.push_back(16);      Plot.push_back(1);
-   Index.push_back(30);      Plot.push_back(1);
-   Index.push_back(44);      Plot.push_back(1);
-   Index.push_back(58);      Plot.push_back(1);
-   Index.push_back(72);      Plot.push_back(1);
-   Index.push_back(86);      Plot.push_back(1);
-   Index.push_back(100);     Plot.push_back(1);
-   Index.push_back(114);     Plot.push_back(1);
+   //variation on TOF cut 60, 0.05 1.05->1.2
+   Index.push_back(226);      Plot.push_back(0);
+   Index.push_back(227);      Plot.push_back(0);
+   Index.push_back(228);      Plot.push_back(0);
+   Index.push_back(229);      Plot.push_back(0);
+   Index.push_back(230);      Plot.push_back(0);
+   Index.push_back(231);      Plot.push_back(0);
+   Index.push_back(232);      Plot.push_back(0);
+   //variation on I cut 60, 0.05->0.225 1.05
+   Index.push_back(226);      Plot.push_back(1);
+   Index.push_back(240);      Plot.push_back(1);
+   Index.push_back(254);      Plot.push_back(1);
+   Index.push_back(268);      Plot.push_back(1);
+   Index.push_back(282);      Plot.push_back(1);
+   Index.push_back(296);      Plot.push_back(1);
+   Index.push_back(310);      Plot.push_back(1);
+   Index.push_back(324);      Plot.push_back(1);
 
-   //variation on Pt cut 50->90 0.30 1.05
-   Index.push_back(156);     Plot.push_back(2);
-   Index.push_back(366);     Plot.push_back(2);
-   Index.push_back(576);     Plot.push_back(2);
-   Index.push_back(786);     Plot.push_back(2);
-   Index.push_back( 996);    Plot.push_back(2);
-   Index.push_back(1206);    Plot.push_back(2);
-   Index.push_back(1416);    Plot.push_back(2);
-   Index.push_back(1626);    Plot.push_back(2);
+   //variation on Pt cut 60->90 0.15 1.05
+   Index.push_back( 282);     Plot.push_back(2);
+   Index.push_back( 492);     Plot.push_back(2);
+   Index.push_back( 702);     Plot.push_back(2);
+   Index.push_back( 912);     Plot.push_back(2);
+   Index.push_back(1122);     Plot.push_back(2);
+   Index.push_back(1332);     Plot.push_back(2);
 
 
-   //variation on Pt cut 50->90 0.1 1.1 
-   Index.push_back(46);      Plot.push_back(3);
+   //variation on Pt cut 60->90 0.1 1.1 
    Index.push_back(256);     Plot.push_back(3);
    Index.push_back(466);     Plot.push_back(3);
    Index.push_back(676);     Plot.push_back(3);
    Index.push_back(886);     Plot.push_back(3);
    Index.push_back(1096);    Plot.push_back(3);
    Index.push_back(1306);    Plot.push_back(3);
-   Index.push_back(1516);    Plot.push_back(3);
 
-   //variation on Pt cut 50->90 0.15 1.05 
+   //variation on Pt cut 60->90 0.15 1.05 
 //   Index.push_back(72);      Plot.push_back(4);
 //   Index.push_back(492);     Plot.push_back(4);
 //   Index.push_back(912);     Plot.push_back(4);
@@ -1730,15 +1732,13 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
 //   Index.push_back(2592);    Plot.push_back(4);
 //   Index.push_back(2802);    Plot.push_back(4);
 
-   //variation on Pt cut 50->90 0.10 1.20 
-   Index.push_back(50);      Plot.push_back(4);
+   //variation on Pt cut 60->90 0.10 1.20 
    Index.push_back(260);     Plot.push_back(4);
    Index.push_back(470);     Plot.push_back(4);
    Index.push_back(680);     Plot.push_back(4);
    Index.push_back(890);     Plot.push_back(4);
    Index.push_back(1100);    Plot.push_back(4);
    Index.push_back(1310);    Plot.push_back(4);
-   Index.push_back(1520);    Plot.push_back(4);
 
    //Not used
    Index.push_back(82 + 4);  Plot.push_back(5);
@@ -1754,16 +1754,16 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    Index.push_back(802+ 4);  Plot.push_back(5);
 
 
-   //variation on Pt cut 50->115 0.05 1.05
+   //variation on Pt cut 55->115 0.05 1.05
    Index.push_back(16);      Plot.push_back(6);
+   Index.push_back(226);     Plot.push_back(6);
    Index.push_back(436);     Plot.push_back(6);
+   Index.push_back(646);     Plot.push_back(6);
    Index.push_back(856);     Plot.push_back(6);
+   Index.push_back(1066);    Plot.push_back(6);
    Index.push_back(1276);    Plot.push_back(6);
+   Index.push_back(1486);    Plot.push_back(6);
    Index.push_back(1696);    Plot.push_back(6);
-   Index.push_back(2116);    Plot.push_back(6);
-   Index.push_back(2536);    Plot.push_back(6);
-   Index.push_back(2746);    Plot.push_back(6);
-
 
 
    for(unsigned int i=0;i<Index.size();i++){      
@@ -1885,8 +1885,8 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    MGTOF->SetTitle("");
    MGTOF->GetXaxis()->SetTitle("1/#beta selection");
    MGTOF->GetYaxis()->SetTitle("Number of expected backgrounds");
-   MGTOF->GetYaxis()->SetTitleOffset(1.70);
-   MGTOF->GetYaxis()->SetRangeUser(500,1E6);
+   MGTOF->GetYaxis()->SetTitleOffset(1.40);
+   MGTOF->GetYaxis()->SetRangeUser(1,1E6);
    LEG->Draw();
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Systematics_")+DataName+"_TOF_Value");
@@ -1903,8 +1903,8 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    MGI->SetTitle("");
    MGI->GetXaxis()->SetTitle("I_{as} selection");
    MGI->GetYaxis()->SetTitle("Number of expected backgrounds");
-   MGI->GetYaxis()->SetTitleOffset(1.70);
-   MGI->GetYaxis()->SetRangeUser(500,1E6);
+   MGI->GetYaxis()->SetTitleOffset(1.40);
+   MGI->GetYaxis()->SetRangeUser(1,1E6);
    LEG->Draw();
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Systematics_")+DataName+"_I_Value");
@@ -1921,8 +1921,8 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    MGP->SetTitle("");
    MGP->GetXaxis()->SetTitle("p_{T} selection");
    MGP->GetYaxis()->SetTitle("Number of expected backgrounds");
-   MGP->GetYaxis()->SetTitleOffset(1.70);
-   MGP->GetYaxis()->SetRangeUser(500,1E6);
+   MGP->GetYaxis()->SetTitleOffset(1.40);
+   MGP->GetYaxis()->SetRangeUser(1,1E6);
    LEG->Draw();
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Systematics_")+DataName+"_P_Value");
@@ -1941,7 +1941,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       if(p==2)graph_s = new TGraph(ArrN[p],ArrPt[p],ArrSigma[p]);
       graph_s->SetTitle("");
       graph_s->GetYaxis()->SetTitle("Prediction #sigma/#mu");
-      graph_s->GetYaxis()->SetTitleOffset(1.70);
+      graph_s->GetYaxis()->SetTitleOffset(1.40);
       graph_s->GetXaxis()->SetTitle(Title.c_str());
       graph_s->Draw("AC*");
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Sigma");
@@ -1954,7 +1954,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       if(p==2)graph_d = new TGraph(ArrN[p],ArrPt[p],ArrDist[p]);
       graph_d->SetTitle("");
       graph_d->GetYaxis()->SetTitle("Prediction Dist/#mu");
-      graph_d->GetYaxis()->SetTitleOffset(1.70);
+      graph_d->GetYaxis()->SetTitleOffset(1.40);
       graph_d->GetXaxis()->SetTitle(Title.c_str());
       graph_d->Draw("AC*");
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Dist");
@@ -1967,7 +1967,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       if(p==2)graph_sum = new TGraph(ArrN[p+2],ArrPt[p+2],ArrSum[p+2]);
       graph_sum->SetTitle("");
       graph_sum->GetYaxis()->SetTitle("Prediction #sigma_{Stat+Syst}/#mu");
-      graph_sum->GetYaxis()->SetTitleOffset(1.70);
+      graph_sum->GetYaxis()->SetTitleOffset(1.40);
       graph_sum->GetXaxis()->SetTitle(Title.c_str());
       graph_sum->Draw("AC*");
       graph_sum->GetYaxis()->SetRangeUser(0,0.5);
@@ -2006,7 +2006,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       if(p==2)graph_stat = new TGraph(ArrN[p+2],ArrPt[p+2],ArrStat[p+2]);
       graph_stat->SetTitle("");
       graph_stat->GetYaxis()->SetTitle("Prediction #sigma_{Stat}/#mu");
-      graph_stat->GetYaxis()->SetTitleOffset(1.70);
+      graph_stat->GetYaxis()->SetTitleOffset(1.40);
       graph_stat->GetXaxis()->SetTitle(Title.c_str());
       graph_stat->Draw("AC*");
       graph_stat->GetYaxis()->SetRangeUser(0,0.25);
@@ -2046,7 +2046,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       if(p==2)graph_statB = new TGraph(ArrN[p+2],ArrPt[p+2],ArrStatB[p+2]);
       graph_statB->SetTitle("");
       graph_statB->GetYaxis()->SetTitle("Prediction #sigma_{Stat}/#mu");
-      graph_statB->GetYaxis()->SetTitleOffset(1.70);
+      graph_statB->GetYaxis()->SetTitleOffset(1.40);
       graph_statB->GetXaxis()->SetTitle(Title.c_str());
       
       graph_statB->Draw("AC*");
@@ -2087,7 +2087,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       if(p==2)graph_syst = new TGraph(ArrN[p+2],ArrPt[p+2],ArrSyst[p+2]);
       graph_syst->SetTitle("");
       graph_syst->GetYaxis()->SetTitle("Prediction #sigma_{Syst}/#mu");
-      graph_syst->GetYaxis()->SetTitleOffset(1.70);
+      graph_syst->GetYaxis()->SetTitleOffset(1.40);
       graph_syst->GetXaxis()->SetTitle(Title.c_str());
       graph_syst->Draw("AC*");
       graph_syst->GetXaxis()->SetRangeUser(40,100);
@@ -2672,7 +2672,9 @@ void MakeExpLimitpLot(string Input, string Output){
 
 
 void CosmicBackgroundSystematic(string InputPattern, string DataType){
-   if(DataType.find("7TeV")!=string::npos){SQRTS=7.0;}else{SQRTS=8.0;}
+   if(DataType.find("7TeV")!=string::npos){SQRTS=7.0;}
+   else if(DataType.find("8TeV")!=string::npos){SQRTS=8.0;}
+   else{SQRTS=13.0;}
 
   string SavePath  = InputPattern;
   MakeDirectories(SavePath);
@@ -2829,7 +2831,9 @@ void CheckPrediction(string InputPattern, string HistoSuffix, string DataType){
   TypeMode = TypeFromPattern(InputPattern);
   if(TypeMode==0)return;
 
-  if(DataType.find("7TeV")!=string::npos){SQRTS=7.0;}else{SQRTS=8.0;}
+   if(DataType.find("7TeV")!=string::npos){SQRTS=7.0;}
+   else if(DataType.find("8TeV")!=string::npos){SQRTS=8.0;}
+   else{SQRTS=13.0;}
 
   std::vector<string> legend;
   string LegendTitle = LegendFromType(InputPattern);
@@ -2921,6 +2925,7 @@ void CheckPrediction(string InputPattern, string HistoSuffix, string DataType){
     else {
       DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta Cut", "Tracks", 0, 0, 1, 2200000);
     }
+    Histos[1]->Draw("E1 same");
     DrawLegend((TObject**)Histos,legend,LegendTitle,"P", 0.5);
     c1->SetLogy(true);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
@@ -3518,11 +3523,11 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    TypeMode = TypeFromPattern(InputPattern);
    string LegendTitle = LegendFromType(InputPattern);;
 
-   string S1 = "DY_8TeV_M400_Q2o3"; //double Q1=1;
-   string S2 = "DY_8TeV_M400_Q1"; //double Q2=1;
-   string S3 = "DY_8TeV_M400_Q3"; //double Q3=1;
+   string S1 = "DY_13TeV_M400_Q1"; //double Q1=1;
+   string S2 = "DY_13TeV_M400_Q2"; //double Q2=1;
+   string S3 = "PPStau_13TeV_M1599"; //double Q3=1;
 
-   string Da = "Data8TeV";
+   string Da = "Data13TeV";
    string outName = "2DPlotsS";
 
    int S1i   = JobIdToIndex(S1,samples);    if(S1i<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  } 
