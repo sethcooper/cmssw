@@ -75,7 +75,10 @@ void Macro_Core(string input, string input2, string moduleName, string GainsName
    double        tree3_Gain;
 
    TFile *f3     = new TFile(("Gains/"+GainsName+".root").c_str(), "NEW");
-   TTree *t3     = new TTree (GainsName.c_str(), GainsName.c_str());
+   f3->mkdir(moduleName.c_str());
+   f3->cd(moduleName.c_str());
+   
+   TTree *t3     = new TTree ("APVGain", GainsName.c_str());
    TBranch *branch_Index = t3->Branch ("Index", &tree3_Index, "Index/i");
    TBranch *branch_DetId = t3->Branch ("DetId", &tree3_DetId, "DetId/i");
    TBranch *branch_APVId = t3->Branch ("APVId", &tree3_APVId, "APVId/b");

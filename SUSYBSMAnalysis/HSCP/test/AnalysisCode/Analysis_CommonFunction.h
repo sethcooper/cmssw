@@ -486,14 +486,40 @@ void LoadDeDxCalibration(std::unordered_map<unsigned int,double>& TrackerGains, 
    unsigned int  tree_DetId;   t1->SetBranchAddress("DetId"             ,&tree_DetId      );
    unsigned char tree_APVId;   t1->SetBranchAddress("APVId"             ,&tree_APVId      );
    double        tree_Gain;    t1->SetBranchAddress("Gain"              ,&tree_Gain       );
-   double        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
+//   double        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
 
    TrackerGains.clear();
    for (unsigned int ientry = 0; ientry < t1->GetEntries(); ientry++) {
        t1->GetEntry(ientry);
-       TrackerGains[tree_DetId<<3 | tree_APVId] = tree_Gain / tree_PrevGain;
+       TrackerGains[tree_DetId<<3 | tree_APVId] = tree_Gain/* / tree_PrevGain*/;
    }
    delete t1;
+}
+
+
+void reloadGainsFile (std::unordered_map<unsigned int,double>& TrackerGains, string prefix_path, vector<string> paths, unsigned int CurrentRun){
+   vector<string>::iterator it = paths.begin();
+   bool success = false;
+   for (; it != paths.end(); it++){
+      unsigned int firstRun, lastRun;
+      size_t firstTokenFirstRun = it->find("_");
+      size_t secondTokenFirstRun = it->find("_", firstTokenFirstRun+1);
+      size_t firstTokenSecondRun = it->find("_", secondTokenFirstRun+1);
+      
+      string FirstRunStr  = it->substr (firstTokenFirstRun+1, secondTokenFirstRun - firstTokenFirstRun-1);
+      string SecondRunStr = it->substr (firstTokenSecondRun+1);
+
+      firstRun  = (unsigned int) atoi  (FirstRunStr.c_str());
+      lastRun   = (unsigned int) atoi (SecondRunStr.c_str());
+
+      if (CurrentRun >= firstRun && CurrentRun <= lastRun){
+          LoadDeDxCalibration (TrackerGains, prefix_path+(*it)+".root");
+          success = true;
+          break;
+      }
+   }
+   if (!success)
+       cerr << "Houston, we have a problem!" << endl;
 }
 
 

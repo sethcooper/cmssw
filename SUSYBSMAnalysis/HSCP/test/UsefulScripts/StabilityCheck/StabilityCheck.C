@@ -225,12 +225,22 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    dEdxSF [1] = 1.21836;
    TH3F* dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
 
-   LoadDeDxCalibration(TrackerGains, "../../../data/Data13TeVGains.root"); 
+//   LoadDeDxCalibration(TrackerGains, "../../../data/Data13TeVGains.root"); 
  
    moduleGeom::loadGeometry("../../../data/CMS_GeomTree.root");
    muonTimingCalculator tofCalculator;
    tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
    unsigned int CurrentRun = 0;
+
+   FILE * gainsTXT = fopen ("../DeDxStudy/gains.txt", "r");
+   char GainsFile [19];
+   vector <string> GainsFiles;
+   for (int i = 0; i < 33; i++){
+       fscanf (gainsTXT, "%s %*s %*s", GainsFile);
+       GainsFiles.push_back(string(GainsFile));
+   }
+
+   LoadDeDxCalibration(TrackerGains, "../DeDxStudy/Gains/"+GainsFiles[0]+".root"); 
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -247,6 +257,8 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
       if(CurrentRun != ev.eventAuxiliary().run()){
          CurrentRun = ev.eventAuxiliary().run();
          tofCalculator.setRun(CurrentRun);
+
+         reloadGainsFile (TrackerGains, "../DeDxStudy/Gains/", GainsFiles, CurrentRun);
 
          TDirectory* dir = OutputHisto;
          char DIRECTORY[2048]; sprintf(DIRECTORY,"%6i",ev.eventAuxiliary().run());
