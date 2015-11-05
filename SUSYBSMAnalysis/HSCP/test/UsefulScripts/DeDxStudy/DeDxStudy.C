@@ -256,8 +256,24 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          dEdxTemplatesCCC   = loadDeDxTemplate (DIRNAME+"/Templates/dEdxTemplate_hit_SP_in_noC_CCC_MCMinBias.root", true);
    }
 
+   unsigned int CurrentRun = 0;
+
+   FILE* gainsTXT   = fopen ("../../../data/gainsPrompt2015.txt", "r");
+   TFile* gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
+
+   char GainsFile [19];
+   vector <string> GainsFiles;
+   for (int i = 0; i < 33; i++){
+      fscanf (gainsTXT, "%s %*s %*s", GainsFile);
+      GainsFiles.push_back (string(GainsFile));
+   }
+   fclose (gainsTXT);
+
    std::unordered_map<unsigned int,double> TrackerGains;
-   LoadDeDxCalibration(TrackerGains, DIRNAME+"/../../../data/Data13TeVGains.root");
+   
+//   if (isData){
+       LoadDeDxCalibration(TrackerGains, GainsFiles[0], gainsFile); // MC and data ofc have different gains, right?
+//   }
 
    TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");  //File must be opened before the histogram are created
 
@@ -309,6 +325,11 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
      int treeStep(ev.size()/50), iev=0;
      for(ev.toBegin(); !ev.atEnd(); ++ev){ iev++;
          if(iev%treeStep==0){printf(".");fflush(stdout);}
+
+         if(CurrentRun != ev.eventAuxiliary().run()){
+             CurrentRun = ev.eventAuxiliary().run();
+             reloadGainsFile = (TrackerGains, gainsFile, GainsFiles, CurrentRun);
+         }
 
          fwlite::Handle<DeDxHitInfoAss> dedxCollH;
          dedxCollH.getByLabel(ev, "dedxHitInfo");

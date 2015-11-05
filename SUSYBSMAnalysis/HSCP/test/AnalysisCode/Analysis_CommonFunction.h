@@ -479,25 +479,22 @@ void printClusterCleaningMessage (uint8_t exitCode);
 std::vector<int> convert(const vector<unsigned char>& input);
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 
-void LoadDeDxCalibration(std::unordered_map<unsigned int,double>& TrackerGains, string path){
-   TChain* t1 = new TChain("SiStripCalib/APVGain");
-   t1->Add(path.c_str());
+void LoadDeDxCalibration(std::unordered_map<unsigned int,double>& TrackerGains, string path, TFile* gainsFile){
+   TTree* t1 = (TTree*) GetObjectFromPath (gainsFile, path);
 
    unsigned int  tree_DetId;   t1->SetBranchAddress("DetId"             ,&tree_DetId      );
    unsigned char tree_APVId;   t1->SetBranchAddress("APVId"             ,&tree_APVId      );
    double        tree_Gain;    t1->SetBranchAddress("Gain"              ,&tree_Gain       );
-//   double        tree_PrevGain;t1->SetBranchAddress("PrevGain"          ,&tree_PrevGain   );
 
    TrackerGains.clear();
    for (unsigned int ientry = 0; ientry < t1->GetEntries(); ientry++) {
        t1->GetEntry(ientry);
-       TrackerGains[tree_DetId<<3 | tree_APVId] = tree_Gain/* / tree_PrevGain*/;
+       TrackerGains[tree_DetId<<3 | tree_APVId] = tree_Gain;
    }
-   delete t1;
 }
 
 
-void reloadGainsFile (std::unordered_map<unsigned int,double>& TrackerGains, string prefix_path, vector<string> paths, unsigned int CurrentRun){
+void reloadGainsFile (std::unordered_map<unsigned int,double>& TrackerGains, TFile* gainsFile, vector<string> paths, unsigned int CurrentRun){
    vector<string>::iterator it = paths.begin();
    bool success = false;
    for (; it != paths.end(); it++){
@@ -513,13 +510,13 @@ void reloadGainsFile (std::unordered_map<unsigned int,double>& TrackerGains, str
       lastRun   = (unsigned int) atoi (SecondRunStr.c_str());
 
       if (CurrentRun >= firstRun && CurrentRun <= lastRun){
-          LoadDeDxCalibration (TrackerGains, prefix_path+(*it)+".root");
-          success = true;
-          break;
+         LoadDeDxCalibration (TrackerGains, *it, gainsFile);
+         success = true;
+         break;
       }
    }
    if (!success)
-       cerr << "Houston, we have a problem!" << endl;
+      cerr << "Houston, we have a problem!" << endl;
 }
 
 

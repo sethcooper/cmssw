@@ -232,15 +232,17 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
    unsigned int CurrentRun = 0;
 
-   FILE * gainsTXT = fopen ("../DeDxStudy/gains.txt", "r");
+   FILE * gainsTXT = fopen ("../../../data/gainsPrompt2015.txt", "r");
    char GainsFile [19];
    vector <string> GainsFiles;
    for (int i = 0; i < 33; i++){
        fscanf (gainsTXT, "%s %*s %*s", GainsFile);
        GainsFiles.push_back(string(GainsFile));
    }
+   fclose (gainsTXT);
 
-   LoadDeDxCalibration(TrackerGains, "../DeDxStudy/Gains/"+GainsFiles[0]+".root"); 
+   TFile *gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
+   LoadDeDxCalibration(TrackerGains, GainsFiles[0], gainsFile); 
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -258,43 +260,77 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          CurrentRun = ev.eventAuxiliary().run();
          tofCalculator.setRun(CurrentRun);
 
-         reloadGainsFile (TrackerGains, "../DeDxStudy/Gains/", GainsFiles, CurrentRun);
+         reloadGainsFile (TrackerGains, gainsFile, GainsFiles, CurrentRun);
 
          TDirectory* dir = OutputHisto;
          char DIRECTORY[2048]; sprintf(DIRECTORY,"%6i",ev.eventAuxiliary().run());
          TDirectory::AddDirectory(kTRUE);
          TH1::AddDirectory(kTRUE);
-         dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
-         dir->cd();
+         dir = (TDirectory*)OutputHisto->Get(DIRECTORY);
+         if(dir==NULL){
+            dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
+            dir->cd();
 
-         for(unsigned int i=0;i<triggers.size();i++){
-            NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
-            Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
+            for(unsigned int i=0;i<triggers.size();i++){
+               NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
+               Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
 
-            dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
-            dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
-            dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
-            dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
-            dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
-            dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 100, 0.0, 5.0);
-            dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 100, 0.0, 5.0);
-            dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 100, 0.0, 5.0);
+               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
+               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
+               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
+               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
+               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
+               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 100, 0.0, 5.0);
+               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 100, 0.0, 5.0);
+               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 100, 0.0, 5.0);
 
-            TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
-            TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
-            TOFAODCSC[i] = new TH1D((triggers[i] + "TOFAODCSC"  ).c_str(), "TOFAODCSC", 100, -1.0, 3.0);
+               TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
+               TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
+               TOFAODCSC[i] = new TH1D((triggers[i] + "TOFAODCSC"  ).c_str(), "TOFAODCSC", 100, -1.0, 3.0);
 
-            TOF      [i] = new TH1D((triggers[i] + "TOF"  ).c_str(), "TOF"            , 100, -1.0, 3.0);
-            TOFDT    [i] = new TH1D((triggers[i] + "TOFDT"  ).c_str(), "TOFDT"        , 100, -1.0, 3.0);
-            TOFCSC   [i] = new TH1D((triggers[i] + "TOFCSC"  ).c_str(), "TOFCSC"      , 100, -1.0, 3.0);
+               TOF      [i] = new TH1D((triggers[i] + "TOF"  ).c_str(), "TOF"            , 100, -1.0, 3.0);
+               TOFDT    [i] = new TH1D((triggers[i] + "TOFDT"  ).c_str(), "TOFDT"        , 100, -1.0, 3.0);
+               TOFCSC   [i] = new TH1D((triggers[i] + "TOFCSC"  ).c_str(), "TOFCSC"      , 100, -1.0, 3.0);
 
-            VertexAOD   [i] = new TH1D((triggers[i] + "VertexAOD"  ).c_str(), "VertexAOD"      , 100, -10.0, 10.0);
-            VertexAODDT [i] = new TH1D((triggers[i] + "VertexAODDT"  ).c_str(), "VertexAODDT"  , 100, -10.0, 10.0);
-            VertexAODCSC[i] = new TH1D((triggers[i] + "VertexAODCSC"  ).c_str(), "VertexAODCSC", 100, -10.0, 10.0);
+               VertexAOD   [i] = new TH1D((triggers[i] + "VertexAOD"  ).c_str(), "VertexAOD"      , 100, -10.0, 10.0);
+               VertexAODDT [i] = new TH1D((triggers[i] + "VertexAODDT"  ).c_str(), "VertexAODDT"  , 100, -10.0, 10.0);
+               VertexAODCSC[i] = new TH1D((triggers[i] + "VertexAODCSC"  ).c_str(), "VertexAODCSC", 100, -10.0, 10.0);
 
-            Vertex      [i] = new TH1D((triggers[i] + "Vertex"  ).c_str(), "Vertex"            , 100, -10.0, 10.0);
-            VertexDT    [i] = new TH1D((triggers[i] + "VertexDT"  ).c_str(), "VertexDT"        , 100, -10.0, 10.0);
-            VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
+               Vertex      [i] = new TH1D((triggers[i] + "Vertex"  ).c_str(), "Vertex"            , 100, -10.0, 10.0);
+               VertexDT    [i] = new TH1D((triggers[i] + "VertexDT"  ).c_str(), "VertexDT"        , 100, -10.0, 10.0);
+               VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
+            }
+         }else{
+            dir->cd();
+            for(unsigned int i=0;i<triggers.size();i++){
+               NVert[i]        = (TH1D*) dir->Get((triggers[i] + "NVert"    ).c_str());
+               Pt  [i]         = (TH1D*) dir->Get((triggers[i] + "Pt"       ).c_str());
+
+               dEdx[i]         = (TH1D*) dir->Get((triggers[i] + "dEdx"   ).c_str());
+               dEdxM[i]        = (TH1D*) dir->Get((triggers[i] + "dEdxM"  ).c_str());
+               dEdxMS[i]       = (TH1D*) dir->Get((triggers[i] + "dEdxMS" ).c_str());
+               dEdxMP[i]       = (TH1D*) dir->Get((triggers[i] + "dEdxMP" ).c_str());
+               dEdxMSC[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMSC").c_str());
+               dEdxMPC[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMPC").c_str());
+               dEdxMSF[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMSF").c_str());
+               dEdxMPF[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMPF").c_str());
+
+               TOFAOD   [i]    = (TH1D*) dir->Get((triggers[i] + "TOFAOD"  ).c_str());
+               TOFAODDT [i]    = (TH1D*) dir->Get((triggers[i] + "TOFAODDT"  ).c_str());
+               TOFAODCSC[i]    = (TH1D*) dir->Get((triggers[i] + "TOFAODCSC"  ).c_str());
+
+               TOF      [i]    = (TH1D*) dir->Get((triggers[i] + "TOF"  ).c_str());
+               TOFDT    [i]    = (TH1D*) dir->Get((triggers[i] + "TOFDT"  ).c_str());
+               TOFCSC   [i]    = (TH1D*) dir->Get((triggers[i] + "TOFCSC"  ).c_str());
+
+               VertexAOD   [i] = (TH1D*) dir->Get((triggers[i] + "VertexAOD"  ).c_str());
+               VertexAODDT [i] = (TH1D*) dir->Get((triggers[i] + "VertexAODDT"  ).c_str());
+               VertexAODCSC[i] = (TH1D*) dir->Get((triggers[i] + "VertexAODCSC"  ).c_str());
+
+               Vertex      [i] = (TH1D*) dir->Get((triggers[i] + "Vertex"  ).c_str());
+               VertexDT    [i] = (TH1D*) dir->Get((triggers[i] + "VertexDT"  ).c_str());
+               VertexCSC   [i] = (TH1D*) dir->Get((triggers[i] + "VertexCSC"  ).c_str());
+            }
          }
       }
 

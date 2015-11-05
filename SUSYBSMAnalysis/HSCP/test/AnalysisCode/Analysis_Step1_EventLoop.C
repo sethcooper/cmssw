@@ -958,6 +958,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
    //Initialize histo common to all samples
    InitHistos(NULL);
+   vector <string> GainsFiles;
+   TFile *gainsFile = new TFile ("../../data/Data13TeVGains_v2.root");
 
    for(unsigned int s=0;s<samples.size();s++){
       bool isData   = (samples[s].Type==0);
@@ -974,7 +976,17 @@ void Analysis_Step1_EventLoop(char* SavePath)
          dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
       }
 
-      if(isData){    LoadDeDxCalibration(TrackerGains, "../../data/Data13TeVGains.root"); 
+
+      if(isData){
+         FILE * gainsTXT = fopen ("../../data/gainsPrompt2015.txt", "r");
+         char GainsFile [19];
+         for (int i = 0; i < 33; i++){
+            fscanf (gainsTXT, "%s %*s %*s", GainsFile);
+            GainsFiles.push_back(string(GainsFile));
+         }
+         fclose (gainsTXT);
+
+         LoadDeDxCalibration(TrackerGains, GainsFiles[0], gainsFile); 
       }else{  //FIXME check gain for MC
       }
 
@@ -1067,10 +1079,11 @@ void Analysis_Step1_EventLoop(char* SavePath)
             if(ientry%TreeStep==0){printf(".");fflush(stdout);}
             if(checkDuplicates && duplicateChecker.isDuplicate(ev.eventAuxiliary().run(), ev.eventAuxiliary().event()))continue;
 
-            //if run change, update conditions
+            //if run changes, update conditions
             if(CurrentRun != ev.eventAuxiliary().run()){
                CurrentRun = ev.eventAuxiliary().run();
                tofCalculator.setRun(CurrentRun);
+               reloadGainsFile (TrackerGains, gainsFile, GainsFiles, CurrentRun);
             }
 
 
