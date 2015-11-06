@@ -27,6 +27,42 @@
 
 std::map<unsigned int, double> RunToIntLumi;
 
+void DrawLines (TGraphErrors* graph, vector<string>& runList, vector<string> paths)
+{
+   unsigned int c     = 0,
+                c_old = 0;
+   for (size_t i = 0; i < runList.size(); i++){
+      unsigned int RunNumber = atoi(runList[i].c_str());
+
+      vector<string>::iterator it = paths.begin();
+      bool success = false;
+      c = 0;
+      for (; it != paths.end(); it++){
+         unsigned int firstRun, lastRun;
+         size_t firstTokenFirstRun = it->find("_");
+         size_t secondTokenFirstRun = it->find("_", firstTokenFirstRun+1);
+         size_t firstTokenSecondRun = it->find("_", secondTokenFirstRun+1);
+
+         string FirstRunStr  = it->substr (firstTokenFirstRun+1, secondTokenFirstRun - firstTokenFirstRun-1);
+         string SecondRunStr = it->substr (firstTokenSecondRun+1);
+
+         firstRun  = (unsigned int) atoi  (FirstRunStr.c_str());
+         lastRun   = (unsigned int) atoi (SecondRunStr.c_str());
+
+         if (RunNumber >= firstRun && RunNumber <= lastRun && c != c_old){
+            TLine line;
+            line.SetLineWidth(1);
+            line.SetLineStyle(7);
+            c_old = c;
+            line.DrawLine (i, 2.5, i, 3.7);
+            success = true;
+            break;
+         }
+         c++;
+      }
+   }
+}
+
 bool LoadLumiToRun()
 {
    float TotalIntLuminosity = 0;
@@ -329,6 +365,14 @@ void MakePlot()
 
    system("mkdir -p pictures");
 
+   FILE * gainsTXT = fopen ("../../../data/gainsPrompt2015.txt", "r");
+   char GainsFile [19];
+   vector <string> GainsFiles;
+   for (int i = 0; i < 33; i++){
+       fscanf (gainsTXT, "%s %*s %*s", GainsFile);
+       GainsFiles.push_back(string(GainsFile));
+   }
+   fclose (gainsTXT);
 
    TCanvas* c1;
    TObject** Histos = new TObject*[10];
@@ -586,6 +630,7 @@ void MakePlot()
    //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    //DrawLegend(Histos,legend,"","P");
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   DrawLines (SingleMu_dEdx, runList, GainsFiles);
    SaveCanvas(c1,"pictures/","Summary_Profile_dEdx");
    delete c1;
 
@@ -599,6 +644,7 @@ void MakePlot()
    //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    //DrawLegend(Histos,legend,"","P");
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   DrawLines (SingleMu_dEdxM, runList, GainsFiles);
    SaveCanvas(c1,"pictures/","Summary_Profile_dEdxM");
    delete c1;
 
