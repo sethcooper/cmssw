@@ -266,7 +266,7 @@ bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
    if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*"))return true;
    if(passTriggerPatterns(tr, "HLT_Mu50_v*"))return true;
 
-   return true; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
+   return false; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
 
    //for(unsigned int i=0;i<tr.size();i++){
    //printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));

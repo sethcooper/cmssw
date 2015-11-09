@@ -252,37 +252,68 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          char DIRECTORY[2048]; sprintf(DIRECTORY,"%6i",ev.eventAuxiliary().run());
          TDirectory::AddDirectory(kTRUE);
          TH1::AddDirectory(kTRUE);
-         dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
-         dir->cd();
+         dir = (TDirectory*)OutputHisto->Get(DIRECTORY);
+         if(dir==NULL){
+            dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);}
+            dir->cd();
 
-         for(unsigned int i=0;i<triggers.size();i++){
-            NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
-            Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
+            for(unsigned int i=0;i<triggers.size();i++){
+               NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
+               Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
 
-            dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
-            dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
-            dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
-            dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
-            dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
-            dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 100, 0.0, 5.0);
-            dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 100, 0.0, 5.0);
-            dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 100, 0.0, 5.0);
+               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
+               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
+               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
+               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
+               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
+               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 100, 0.0, 5.0);
+               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 100, 0.0, 5.0);
+               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 100, 0.0, 5.0);
 
-            TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
-            TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
-            TOFAODCSC[i] = new TH1D((triggers[i] + "TOFAODCSC"  ).c_str(), "TOFAODCSC", 100, -1.0, 3.0);
+               TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
+               TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
+               TOFAODCSC[i] = new TH1D((triggers[i] + "TOFAODCSC"  ).c_str(), "TOFAODCSC", 100, -1.0, 3.0);
 
-            TOF      [i] = new TH1D((triggers[i] + "TOF"  ).c_str(), "TOF"            , 100, -1.0, 3.0);
-            TOFDT    [i] = new TH1D((triggers[i] + "TOFDT"  ).c_str(), "TOFDT"        , 100, -1.0, 3.0);
-            TOFCSC   [i] = new TH1D((triggers[i] + "TOFCSC"  ).c_str(), "TOFCSC"      , 100, -1.0, 3.0);
+               TOF      [i] = new TH1D((triggers[i] + "TOF"  ).c_str(), "TOF"            , 100, -1.0, 3.0);
+               TOFDT    [i] = new TH1D((triggers[i] + "TOFDT"  ).c_str(), "TOFDT"        , 100, -1.0, 3.0);
+               TOFCSC   [i] = new TH1D((triggers[i] + "TOFCSC"  ).c_str(), "TOFCSC"      , 100, -1.0, 3.0);
 
-            VertexAOD   [i] = new TH1D((triggers[i] + "VertexAOD"  ).c_str(), "VertexAOD"      , 100, -10.0, 10.0);
-            VertexAODDT [i] = new TH1D((triggers[i] + "VertexAODDT"  ).c_str(), "VertexAODDT"  , 100, -10.0, 10.0);
-            VertexAODCSC[i] = new TH1D((triggers[i] + "VertexAODCSC"  ).c_str(), "VertexAODCSC", 100, -10.0, 10.0);
+               VertexAOD   [i] = new TH1D((triggers[i] + "VertexAOD"  ).c_str(), "VertexAOD"      , 100, -10.0, 10.0);
+               VertexAODDT [i] = new TH1D((triggers[i] + "VertexAODDT"  ).c_str(), "VertexAODDT"  , 100, -10.0, 10.0);
+               VertexAODCSC[i] = new TH1D((triggers[i] + "VertexAODCSC"  ).c_str(), "VertexAODCSC", 100, -10.0, 10.0);
 
-            Vertex      [i] = new TH1D((triggers[i] + "Vertex"  ).c_str(), "Vertex"            , 100, -10.0, 10.0);
-            VertexDT    [i] = new TH1D((triggers[i] + "VertexDT"  ).c_str(), "VertexDT"        , 100, -10.0, 10.0);
-            VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
+               Vertex      [i] = new TH1D((triggers[i] + "Vertex"  ).c_str(), "Vertex"            , 100, -10.0, 10.0);
+               VertexDT    [i] = new TH1D((triggers[i] + "VertexDT"  ).c_str(), "VertexDT"        , 100, -10.0, 10.0);
+               VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
+            }
+         }else{
+               NVert[i] = (TH1D*)dir->Get("NVert");
+               Pt  [i]  = (TH1D*)dir->Get("Pt");
+
+               dEdx[i]    = (TH1D*)dir->Get("dEdx");
+               dEdxM[i]   = (TH1D*)dir->Get("dEdxM");
+               dEdxMS[i]  = (TH1D*)dir->Get("dEdxMS");
+               dEdxMP[i]  = (TH1D*)dir->Get("dEdxMP");
+               dEdxMSC[i] = (TH1D*)dir->Get("dEdxMSC");
+               dEdxMPC[i] = (TH1D*)dir->Get("dEdxMPC");
+               dEdxMSF[i] = (TH1D*)dir->Get("dEdxMSF");
+               dEdxMPF[i] = (TH1D*)dir->Get("dEdxMPF");
+
+               TOFAOD   [i] = (TH1D*)dir->Get("TOFAOD");
+               TOFAODDT [i] = (TH1D*)dir->Get("TOFAODDT");
+               TOFAODCSC[i] = (TH1D*)dir->Get("TOFAODCSC");
+
+               TOF      [i] = (TH1D*)dir->Get("TOF");
+               TOFDT    [i] = (TH1D*)dir->Get("TOFDT");
+               TOFCSC   [i] = (TH1D*)dir->Get("TOFCSC");
+
+               VertexAOD   [i] = (TH1D*)dir->Get("VertexAOD");
+               VertexAODDT [i] = (TH1D*)dir->Get("VertexAODDT");
+               VertexAODCSC[i] = (TH1D*)dir->Get("VertexAODCSC");
+
+               Vertex      [i] = (TH1D*)dir->Get("Vertex");
+               VertexDT    [i] = (TH1D*)dir->Get("VertexDT");
+               VertexCSC   [i] = (TH1D*)dir->Get("VertexCSC");
          }
       }
 
