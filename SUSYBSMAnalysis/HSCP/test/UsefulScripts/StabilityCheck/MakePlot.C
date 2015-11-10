@@ -356,6 +356,9 @@ void MakePlot()
    for(unsigned int r=0;r<N;r++){frame->GetXaxis()->SetBinLabel(r+1, ((r+0)%2==0)?runList[r].c_str():"");}  //plot only a label every 2
 
 
+   TGraphErrors* Any_NVert             = getStabilityGraph(runList, InputFile, "AnyNVert");
+   TGraphErrors* SingleMu_NVert        = getStabilityGraph(runList, InputFile, "HLT_Mu50NVert");
+   TGraphErrors* PFMet_NVert           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedNVert");
 
 
    TGraphErrors* Any_Pt                = getStabilityGraph(runList, InputFile, "AnyPt");
@@ -567,6 +570,17 @@ void MakePlot()
    }  
 */
 
+
+   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   frame->GetYaxis()->SetTitle("<#Vertices>");       frame->SetMinimum(0.0);   frame->SetMaximum(20);  frame->Draw("AXIS");
+   SingleMu_NVert->Draw("0 P same");;                  legend.push_back("SingleMu50");
+   //for(unsigned int i=0;i<legend.size();i++){((Tile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
+   //DrawLegend(Histos,legend,"","P");
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"pictures/","Summary_Profile_NVert");
+   delete c1;
+
+
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    frame->GetYaxis()->SetTitle("p_{T} (GeV/c)");   frame->SetMinimum(0.0);   frame->SetMaximum(150.0);  frame->Draw("AXIS");
    SingleMu_Pt->Draw("0 P same");;                  legend.push_back("SingleMu50");
@@ -578,7 +592,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.0);   frame->SetMaximum(0.05);  frame->Draw("AXIS");
+   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.15);   frame->SetMaximum(0.35);  frame->Draw("AXIS");
    //Any_dEdx->Draw("0 P same");                       legend.push_back("Any");
    SingleMu_dEdx->Draw("0 P same");                  legend.push_back("SingleMu50");
    //PFMet_dEdx->Draw("0 P same");                     legend.push_back("PFMET170");

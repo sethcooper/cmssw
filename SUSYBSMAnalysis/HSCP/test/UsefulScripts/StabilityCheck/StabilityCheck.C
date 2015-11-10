@@ -254,7 +254,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          TH1::AddDirectory(kTRUE);
          dir = (TDirectory*)OutputHisto->Get(DIRECTORY);
          if(dir==NULL){
-            dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);}
+            dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
             dir->cd();
 
             for(unsigned int i=0;i<triggers.size();i++){
@@ -287,6 +287,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
             }
          }else{
+            for(unsigned int i=0;i<triggers.size();i++){
                NVert[i] = (TH1D*)dir->Get("NVert");
                Pt  [i]  = (TH1D*)dir->Get("Pt");
 
@@ -314,6 +315,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                Vertex      [i] = (TH1D*)dir->Get("Vertex");
                VertexDT    [i] = (TH1D*)dir->Get("VertexDT");
                VertexCSC   [i] = (TH1D*)dir->Get("VertexCSC");
+            }
          }
       }
 
