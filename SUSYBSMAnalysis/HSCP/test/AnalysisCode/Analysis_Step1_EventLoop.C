@@ -256,8 +256,8 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
 {
-   edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
-   if(!tr.isValid())         tr = ev.triggerResultsByName("HLT");
+   edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
+   if(!tr.isValid())         tr = ev.triggerResultsByName("MergeHLT");
    if(!tr.isValid())return false;
 
 
