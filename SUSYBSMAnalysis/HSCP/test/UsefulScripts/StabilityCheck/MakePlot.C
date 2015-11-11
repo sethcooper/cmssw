@@ -592,7 +592,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.15);   frame->SetMaximum(0.35);  frame->Draw("AXIS");
+   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.012);   frame->SetMaximum(0.022);  frame->Draw("AXIS");
    //Any_dEdx->Draw("0 P same");                       legend.push_back("Any");
    SingleMu_dEdx->Draw("0 P same");                  legend.push_back("SingleMu50");
    //PFMet_dEdx->Draw("0 P same");                     legend.push_back("PFMET170");

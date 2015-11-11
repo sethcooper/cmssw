@@ -141,7 +141,7 @@
 "CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_9"                   , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
 "CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_10"                  , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
 "CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_11"                  , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-#"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_12"                  , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this #can be uncommented
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_12"                  , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
 "CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_13"                  , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
 "CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_14"                  , "MC: DYToMuMu"                            , "S10"   ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
 #
@@ -225,7 +225,7 @@
 "CMSSW_7_4", 2, "Stop_13TeV_M100N"                   , "Stop_13TeV_M100N"                      , "MC: #tilde{t} 100 GeV CS"                , "S10"   ,    100, 1.4300000000E+03, 0, 1.000, 1.000, 1.000 
 "CMSSW_7_4", 2, "Stop_13TeV_M200N"                   , "Stop_13TeV_M200N"                      , "MC: #tilde{t} 200 GeV CS"                , "S10"   ,    200, 6.1200000000E+01, 0, 1.000, 1.000, 1.000 
 "CMSSW_7_4", 2, "Stop_13TeV_M400N"                   , "Stop_13TeV_M400N"                      , "MC: #tilde{t} 400 GeV CS"                , "S10"   ,    400, 1.7700000000E+00, 1, 1.000, 1.000, 1.000 
-#"CMSSW_7_4", 2, "Stop_13TeV_M600N"                   , "Stop_13TeV_M600N"                      , "MC: #tilde{t} 600 GeV CS"                , "S10"   ,    600, 1.7200000000E-01, 0, 1.000, 1.000, 1.000  #can be uncommented
+"CMSSW_7_4", 2, "Stop_13TeV_M600N"                   , "Stop_13TeV_M600N"                      , "MC: #tilde{t} 600 GeV CS"                , "S10"   ,    600, 1.7200000000E-01, 0, 1.000, 1.000, 1.000  
 "CMSSW_7_4", 2, "Stop_13TeV_M800N"                   , "Stop_13TeV_M800N"                      , "MC: #tilde{t} 800 GeV CS"                , "S10"   ,    800, 2.8000000000E-02, 0, 1.000, 1.000, 1.000
 "CMSSW_7_4", 2, "Stop_13TeV_M1000N"                  , "Stop_13TeV_M1000N"                     , "MC: #tilde{t} 1000 GeV CS"               , "S10"   ,   1000, 6.0400000000E-03, 1, 1.000, 1.000, 1.000
 "CMSSW_7_4", 2, "Stop_13TeV_M1200N"                  , "Stop_13TeV_M1200N"                     , "MC: #tilde{t} 1200 GeV CS"               , "S10"   ,   1200, 1.5600000000E-03, 0, 1.000, 1.000, 1.000

@@ -690,14 +690,13 @@ std::cout<<"TESTA\n";
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double),THXSEC8TeV_GMStau_Mass,THXSEC8TeV_GMStau_Low,THXSEC8TeV_GMStau_High, PlotMinScale, PlotMaxScale);
          }else if(SQRTS==13){ 
 //            #Prospino xsection that I get looks very weird, use pythia for the time being
-//            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Cen);
-//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Low,THXSEC13TeV_GMStau_High, PlotMinScale, PlotMaxScale);
-            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
-            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
-            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
-            
+            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Low,THXSEC13TeV_GMStau_High, PlotMinScale, PlotMaxScale);
+//            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+//            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+//            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+//            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);            
          }else{
             const int NMass=sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double);
             double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
@@ -712,13 +711,13 @@ std::cout<<"TESTA\n";
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double),THXSEC8TeV_PPStau_Mass,THXSEC8TeV_PPStau_Low,THXSEC8TeV_PPStau_High, PlotMinScale, PlotMaxScale);
          }else if(SQRTS==13){
 //            #Prospino xsection that I get looks very weird, use pythia for the time being
-//            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Cen);
-//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Low,THXSEC13TeV_PPStau_High, PlotMinScale, PlotMaxScale);
-            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);            
-            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
-            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
-            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
+            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Low,THXSEC13TeV_PPStau_High, PlotMinScale, PlotMaxScale);
+//            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);            
+//            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+//            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+//            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
          }else{
            const int NMass=sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double);
            double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
@@ -736,7 +735,7 @@ std::cout<<"TESTA\n";
          double* XSecErrHigh = new double[ThXSec[k]->GetN()];
          //assume 10% error on xsection
          for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-         ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale); 
+         ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, 1E-5, PlotMaxScale); 
        }
    }
 
@@ -1046,8 +1045,8 @@ std::cout<<"TESTD\n";
    LEGTk->AddEntry(TkGraphMap["PPStau"     ], "stau; dir. prod."                ,"LP");
    LEGTk->AddEntry(TkGraphMap["GMStau"     ], "stau"                              ,"LP");
    //LEGTk->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e/3"                            ,"LP");
-   LEGTk->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 1e"                            ,"LP");
-   LEGTk->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e"                            ,"LP");
+   LEGTk->AddEntry(TkGraphMap["DY_Q1"    ], "|Q| = 1e"                            ,"LP");
+   LEGTk->AddEntry(TkGraphMap["DY_Q2"    ], "|Q| = 2e"                            ,"LP");
 
    TLegend* LEGThTk = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
    LEGThTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
