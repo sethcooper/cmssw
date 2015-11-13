@@ -369,6 +369,10 @@ void MakePlot()
    TGraphErrors* SingleMu_dEdx         = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdx");
    TGraphErrors* PFMet_dEdx            = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdx");
 
+   TGraphErrors* Any_dEdxMT            = getStabilityGraph(runList, InputFile, "AnydEdxMT");
+   TGraphErrors* SingleMu_dEdxMT       = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMT");
+   TGraphErrors* PFMet_dEdxMT          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMT");
+
    TGraphErrors* Any_dEdxM             = getStabilityGraph(runList, InputFile, "AnydEdxM");
    TGraphErrors* SingleMu_dEdxM        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxM");
    TGraphErrors* PFMet_dEdxM           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxM");
@@ -615,6 +619,23 @@ void MakePlot()
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,"pictures/","Summary_Profile_dEdxM");
    delete c1;
+
+
+   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   frame->GetYaxis()->SetTitle("I_{t}");   frame->SetMinimum(3.5);   frame->SetMaximum(4.5);  frame->Draw("AXIS");
+   //Any_dEdxMT->Draw("0 P same");                      legend.push_back("Any");
+   SingleMu_dEdxMT->Draw("0 P same");                 legend.push_back("SingleMu50");
+   //PFMet_dEdxMT->Draw("0 P same");                    legend.push_back("PFMET170");
+
+   //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
+   //DrawLegend(Histos,legend,"","P");
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMT");
+   delete c1;
+
+
+
+
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    frame->GetYaxis()->SetTitle("I_{h} S");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");

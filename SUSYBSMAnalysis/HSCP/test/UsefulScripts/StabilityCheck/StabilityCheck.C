@@ -265,20 +265,20 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
                Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
 
-               dEdxAOD[i]    = new TH1D((triggers[i] + "dEdxAOD"   ).c_str(), "dEdxAOD"   , 100, 0.0, 5.0);
-               dEdxMTAOD[i]  = new TH1D((triggers[i] + "dEdxMTAOD" ).c_str(), "dEdxMTAOD" , 100, 0.0, 5.0);
-               dEdxMAOD[i]   = new TH1D((triggers[i] + "dEdxMAOD"  ).c_str(), "dEdxMAOD"  , 100, 0.0, 5.0);
+               dEdxAOD[i]    = new TH1D((triggers[i] + "dEdxAOD"   ).c_str(), "dEdxAOD"   , 100, 0.0, 1.0);
+               dEdxMTAOD[i]  = new TH1D((triggers[i] + "dEdxMTAOD" ).c_str(), "dEdxMTAOD" , 200, 0.0,10.0);
+               dEdxMAOD[i]   = new TH1D((triggers[i] + "dEdxMAOD"  ).c_str(), "dEdxMAOD"  , 200, 0.0,10.0);
 
 
-               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
-               dEdxMT[i]  = new TH1D((triggers[i] + "dEdxMT" ).c_str(), "dEdxMT" , 100, 0.0, 5.0);
-               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
-               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
-               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
-               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
-               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 100, 0.0, 5.0);
-               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 100, 0.0, 5.0);
-               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 100, 0.0, 5.0);
+               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 1.0);
+               dEdxMT[i]  = new TH1D((triggers[i] + "dEdxMT" ).c_str(), "dEdxMT" , 200, 0.0,10.0);
+               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 200, 0.0,10.0);
+               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 200, 0.0,10.0);
+               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 200, 0.0,10.0);
+               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 200, 0.0,10.0);
+               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 200, 0.0,10.0);
+               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 200, 0.0,10.0);
+               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 200, 0.0,10.0);
 
                TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
                TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
