@@ -198,7 +198,6 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    TH1D** dEdx = new TH1D*[triggers.size()];;
    TH1D** dEdxMT = new TH1D*[triggers.size()];;
    TH1D** dEdxM = new TH1D*[triggers.size()];;
-   TH1D** dEdxT = new TH1D*[triggers.size()];;
    TH1D** dEdxMS = new TH1D*[triggers.size()];;
    TH1D** dEdxMP = new TH1D*[triggers.size()];;
    TH1D** dEdxMSC = new TH1D*[triggers.size()];;
@@ -231,12 +230,6 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    TH3F* dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
 
 //   LoadDeDxCalibration(TrackerGains, "../../../data/Data13TeVGains.root"); 
- 
-   moduleGeom::loadGeometry("../../../data/CMS_GeomTree.root");
-   muonTimingCalculator tofCalculator;
-   tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
-   unsigned int CurrentRun = 0;
-
    vector <unsigned int> ChangeGains = get_ChangeGains();
    unsigned int RunIndex = 1;
    char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
@@ -245,6 +238,12 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    TFile *gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
    LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
    gainsFile->Close();
+
+ 
+   moduleGeom::loadGeometry("../../../data/CMS_GeomTree.root");
+   muonTimingCalculator tofCalculator;
+   tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
+   unsigned int CurrentRun = 0;
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -288,15 +287,20 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
                Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
 
-               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
-               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
-               dEdxT[i]   = new TH1D((triggers[i] + "dEdxT"  ).c_str(), "dEdxT"  , 100, 0.0, 5.0);
-               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
-               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
-               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
-               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 100, 0.0, 5.0);
-               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 100, 0.0, 5.0);
-               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 100, 0.0, 5.0);
+               dEdxAOD[i]    = new TH1D((triggers[i] + "dEdxAOD"   ).c_str(), "dEdxAOD"   , 100, 0.0, 1.0);
+               dEdxMTAOD[i]  = new TH1D((triggers[i] + "dEdxMTAOD" ).c_str(), "dEdxMTAOD" , 200, 0.0,10.0);
+               dEdxMAOD[i]   = new TH1D((triggers[i] + "dEdxMAOD"  ).c_str(), "dEdxMAOD"  , 200, 0.0,10.0);
+
+
+               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 1.0);
+               dEdxMT[i]  = new TH1D((triggers[i] + "dEdxMT" ).c_str(), "dEdxMT" , 200, 0.0,10.0);
+               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 200, 0.0,10.0);
+               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 200, 0.0,10.0);
+               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 200, 0.0,10.0);
+               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 200, 0.0,10.0);
+               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 200, 0.0,10.0);
+               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 200, 0.0,10.0);
+               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 200, 0.0,10.0);
 
                TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
                TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
@@ -315,7 +319,6 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
             }
          }else{
-            dir->cd();
             for(unsigned int i=0;i<triggers.size();i++){
                NVert[i] = (TH1D*)dir->Get("NVert");
                Pt  [i]  = (TH1D*)dir->Get("Pt");
@@ -413,7 +416,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 
          DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
          DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-         DeDxData dedxTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+         DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
          DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
          DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, false, true, 99, false, 1);
 
@@ -479,7 +482,6 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             dEdx[i]->Fill(dedxSObj.dEdx());
             dEdxMT[i]->Fill(dedxMTObj.dEdx());
             dEdxM[i]->Fill(dedxMObj.dEdx());
-            dEdxT[i]->Fill(dedxTObj.dEdx());
             dEdxMS[i]->Fill(dedxMSObj.dEdx());
             dEdxMP[i]->Fill(dedxMPObj.dEdx());
             if(fabs(track->eta())<0.5){
