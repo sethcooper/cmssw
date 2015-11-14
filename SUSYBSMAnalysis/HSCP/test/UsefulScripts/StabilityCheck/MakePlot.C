@@ -24,41 +24,117 @@
 
 #include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
 
+vector <unsigned int> get_ChangeGains (void){
+   vector <unsigned int> ChangeGains;
+   ChangeGains.push_back (252116);
+   ChangeGains.push_back (254227);
+   ChangeGains.push_back (254437);
+   ChangeGains.push_back (254532);
+   ChangeGains.push_back (254790);
+   ChangeGains.push_back (254879);
+   ChangeGains.push_back (255031);
+   ChangeGains.push_back (256630);
+   ChangeGains.push_back (256734);
+   ChangeGains.push_back (256941);
+   ChangeGains.push_back (256957);
+   ChangeGains.push_back (257490);
+   ChangeGains.push_back (257531);
+   ChangeGains.push_back (257682);
+   ChangeGains.push_back (257823);
+   ChangeGains.push_back (258129);
+   ChangeGains.push_back (258174);
+   ChangeGains.push_back (258287);
+   ChangeGains.push_back (258702);
+   ChangeGains.push_back (258713);
+   ChangeGains.push_back (258750);
+   ChangeGains.push_back (259237);
+   ChangeGains.push_back (259352);
+   ChangeGains.push_back (259399);
+   ChangeGains.push_back (259626);
+   ChangeGains.push_back (259686);
+   ChangeGains.push_back (259809);
+   ChangeGains.push_back (259861);
+   ChangeGains.push_back (260373);
+   ChangeGains.push_back (260069);
+   ChangeGains.push_back (260427);
+   ChangeGains.push_back (260533);
+   ChangeGains.push_back (260577);
+   ChangeGains.push_back (999999);
+
+   return ChangeGains;
+}
+
+vector <unsigned int> get_PromptGains (void){
+   vector <unsigned int> PromptGains;
+   PromptGains.push_back(252116);
+   PromptGains.push_back(254227);
+   PromptGains.push_back(256957);
+   PromptGains.push_back(260373);
+   PromptGains.push_back(260069);
+   PromptGains.push_back(999999);
+
+   return PromptGains;
+}
+
+vector <unsigned int> get_NormalGains (void){
+   vector <unsigned int> NormalGains;
+   NormalGains.push_back(252116);
+   NormalGains.push_back(254227);
+   NormalGains.push_back(254437);
+   NormalGains.push_back(254532);
+   NormalGains.push_back(254790);
+   NormalGains.push_back(254879);
+   NormalGains.push_back(255031);
+   NormalGains.push_back(256630);
+   NormalGains.push_back(256734);
+   NormalGains.push_back(256941);
+   NormalGains.push_back(257490);
+   NormalGains.push_back(257531);
+   NormalGains.push_back(257682);
+   NormalGains.push_back(257823);
+   NormalGains.push_back(258129);
+   NormalGains.push_back(258174);
+   NormalGains.push_back(258287);
+   NormalGains.push_back(258702);
+   NormalGains.push_back(258713);
+   NormalGains.push_back(258750);
+   NormalGains.push_back(259237);
+   NormalGains.push_back(259352);
+   NormalGains.push_back(259399);
+   NormalGains.push_back(259626);
+   NormalGains.push_back(259686);
+   NormalGains.push_back(259809);
+   NormalGains.push_back(259861);
+   NormalGains.push_back(260373);
+   NormalGains.push_back(260427);
+   NormalGains.push_back(260533);
+   NormalGains.push_back(260577);
+   NormalGains.push_back(999999);
+
+   return NormalGains;
+}
 
 std::map<unsigned int, double> RunToIntLumi;
 
-void DrawLines (TGraphErrors* graph, vector<string>& runList, vector<string> paths)
+void DrawLines (TGraphErrors* graph, vector<string>& runList, vector<unsigned int> GainsToUse, float offset = 0.0, Color_t color = kBlack, Style_t style = 7, Width_t width = 1)
 {
-   unsigned int c     = 0,
-                c_old = 0;
+   unsigned int k_old = 0;
    for (size_t i = 0; i < runList.size(); i++){
       unsigned int RunNumber = atoi(runList[i].c_str());
 
-      vector<string>::iterator it = paths.begin();
-      bool success = false;
-      c = 0;
-      for (; it != paths.end(); it++){
-         unsigned int firstRun, lastRun;
-         size_t firstTokenFirstRun = it->find("_");
-         size_t secondTokenFirstRun = it->find("_", firstTokenFirstRun+1);
-         size_t firstTokenSecondRun = it->find("_", secondTokenFirstRun+1);
+      for (unsigned int k = 0; k < GainsToUse.size()-1; k++){
+         unsigned int firstRun = GainsToUse[k],
+                      lastRun  = GainsToUse[k+1];
 
-         string FirstRunStr  = it->substr (firstTokenFirstRun+1, secondTokenFirstRun - firstTokenFirstRun-1);
-         string SecondRunStr = it->substr (firstTokenSecondRun+1);
-
-         firstRun  = (unsigned int) atoi  (FirstRunStr.c_str());
-         lastRun   = (unsigned int) atoi (SecondRunStr.c_str());
-
-         if (RunNumber >= firstRun && RunNumber <= lastRun && c != c_old){
+         if (RunNumber >= firstRun && RunNumber <= lastRun && k != k_old){
             TLine line;
-            line.SetLineWidth(1);
-            line.SetLineStyle(7);
-            c_old = c;
-            line.DrawLine (i, 2.5, i, 3.7);
-            success = true;
+            line.SetLineWidth(width);
+            line.SetLineStyle(style);
+            line.SetLineColor(color);
+            k_old = k;
+            line.DrawLine (i+offset, 2.5, i+offset, 3.7);
             break;
          }
-         c++;
       }
    }
 }
@@ -145,6 +221,7 @@ void MakedEdxPlot()
    TProfile* SingleMu_PtProf           = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50PtProf");      
    TProfile* SingleMu_dEdxProf         = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxProf");   
    TProfile* SingleMu_dEdxMProf        = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMProf");
+   TProfile* SingleMu_dEdxTProf        = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxTProf");
    TProfile* SingleMu_dEdxMSProf       = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMSProf");
    TProfile* SingleMu_dEdxMPProf       = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMPProf");
    TProfile* SingleMu_dEdxMSCProf      = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMSCProf");
@@ -174,6 +251,7 @@ void MakedEdxPlot()
 
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
       TGraph* graph =  ConvertFromRunToIntLumi(SingleMu_dEdxMProf  , "A*", "I_{h} (MeV/cm)");
+      TGraph* graphT =  ConvertFromRunToIntLumi(SingleMu_dEdxTProf  , "A*", "I_{t} (MeV/cm)");
       TGraph* graphS = ConvertFromRunToIntLumi(SingleMu_dEdxMSProf, "*" , "I_{h} (MeV/cm)");
       TGraph* graphP = ConvertFromRunToIntLumi(SingleMu_dEdxMPProf, "*" , "I_{h} (MeV/cm)");
       graphS->SetMarkerColor(2);    graphS->SetMarkerStyle(26);
@@ -365,14 +443,9 @@ void MakePlot()
 
    system("mkdir -p pictures");
 
-   FILE * gainsTXT = fopen ("../../../data/gainsPrompt2015.txt", "r");
-   char GainsFile [19];
-   vector <string> GainsFiles;
-   for (int i = 0; i < 33; i++){
-       fscanf (gainsTXT, "%s %*s %*s", GainsFile);
-       GainsFiles.push_back(string(GainsFile));
-   }
-   fclose (gainsTXT);
+   vector <unsigned int> ChangeGains = get_ChangeGains();
+   vector <unsigned int> PromptGains = get_PromptGains();
+   vector <unsigned int> NormalGains = get_NormalGains();
 
    TCanvas* c1;
    TObject** Histos = new TObject*[10];
@@ -400,6 +473,9 @@ void MakePlot()
    for(unsigned int r=0;r<N;r++){frame->GetXaxis()->SetBinLabel(r+1, ((r+0)%2==0)?runList[r].c_str():"");}  //plot only a label every 2
 
 
+   TGraphErrors* Any_NVert             = getStabilityGraph(runList, InputFile, "AnyNVert");
+   TGraphErrors* SingleMu_NVert        = getStabilityGraph(runList, InputFile, "HLT_Mu50NVert");
+   TGraphErrors* PFMet_NVert           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedNVert");
 
 
    TGraphErrors* Any_Pt                = getStabilityGraph(runList, InputFile, "AnyPt");
@@ -410,9 +486,18 @@ void MakePlot()
    TGraphErrors* SingleMu_dEdx         = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdx");
    TGraphErrors* PFMet_dEdx            = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdx");
 
+   TGraphErrors* Any_dEdxMT            = getStabilityGraph(runList, InputFile, "AnydEdxMT");
+   TGraphErrors* SingleMu_dEdxMT       = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMT");
+   TGraphErrors* PFMet_dEdxMT          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMT");
+
    TGraphErrors* Any_dEdxM             = getStabilityGraph(runList, InputFile, "AnydEdxM");
    TGraphErrors* SingleMu_dEdxM        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxM");
    TGraphErrors* PFMet_dEdxM           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxM");
+
+
+   TGraphErrors* Any_dEdxT             = getStabilityGraph(runList, InputFile, "AnydEdxT");
+   TGraphErrors* SingleMu_dEdxT        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxT");
+   TGraphErrors* PFMet_dEdxT           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxT");
 
    TGraphErrors* Any_dEdxMS             = getStabilityGraph(runList, InputFile, "AnydEdxMS");
    TGraphErrors* SingleMu_dEdxMS        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMS");
@@ -611,6 +696,17 @@ void MakePlot()
    }  
 */
 
+
+   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   frame->GetYaxis()->SetTitle("<#Vertices>");       frame->SetMinimum(0.0);   frame->SetMaximum(20);  frame->Draw("AXIS");
+   SingleMu_NVert->Draw("0 P same");;                  legend.push_back("SingleMu50");
+   //for(unsigned int i=0;i<legend.size();i++){((Tile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
+   //DrawLegend(Histos,legend,"","P");
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"pictures/","Summary_Profile_NVert");
+   delete c1;
+
+
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    frame->GetYaxis()->SetTitle("p_{T} (GeV/c)");   frame->SetMinimum(0.0);   frame->SetMaximum(150.0);  frame->Draw("AXIS");
    SingleMu_Pt->Draw("0 P same");;                  legend.push_back("SingleMu50");
@@ -620,9 +716,10 @@ void MakePlot()
    SaveCanvas(c1,"pictures/","Summary_Profile_Pt");
    delete c1;
 
+   return;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.0);   frame->SetMaximum(0.05);  frame->Draw("AXIS");
+   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.012);   frame->SetMaximum(0.022);  frame->Draw("AXIS");
    //Any_dEdx->Draw("0 P same");                       legend.push_back("Any");
    SingleMu_dEdx->Draw("0 P same");                  legend.push_back("SingleMu50");
    //PFMet_dEdx->Draw("0 P same");                     legend.push_back("PFMET170");
@@ -630,10 +727,26 @@ void MakePlot()
    //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    //DrawLegend(Histos,legend,"","P");
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-   DrawLines (SingleMu_dEdx, runList, GainsFiles);
+   DrawLines (SingleMu_dEdx, runList, ChangeGains);
+   DrawLines (SingleMu_dEdx, runList, PromptGains, -0.1, kBlue);
+   DrawLines (SingleMu_dEdx, runList, NormalGains, -0.2, kRed);
    SaveCanvas(c1,"pictures/","Summary_Profile_dEdx");
    delete c1;
 
+   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   frame->GetYaxis()->SetTitle("I_{t}");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   //Any_dEdxM->Draw("0 P same");                      legend.push_back("Any");
+   SingleMu_dEdxT->Draw("0 P same");                 legend.push_back("SingleMu50");
+   //PFMet_dEdxM->Draw("0 P same");                    legend.push_back("PFMET170");
+
+   //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
+   //DrawLegend(Histos,legend,"","P");
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   DrawLines (SingleMu_dEdxT, runList, ChangeGains);
+   DrawLines (SingleMu_dEdxT, runList, PromptGains, -0.1, kBlue);
+   DrawLines (SingleMu_dEdxT, runList, NormalGains, -0.2, kRed);
+   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxT");
+   delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    frame->GetYaxis()->SetTitle("I_{h}");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
@@ -644,9 +757,28 @@ void MakePlot()
    //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    //DrawLegend(Histos,legend,"","P");
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-   DrawLines (SingleMu_dEdxM, runList, GainsFiles);
+   DrawLines (SingleMu_dEdxM, runList, ChangeGains);
+   DrawLines (SingleMu_dEdxM, runList, PromptGains, -0.1, kBlue);
+   DrawLines (SingleMu_dEdxM, runList, NormalGains, -0.2, kRed);
    SaveCanvas(c1,"pictures/","Summary_Profile_dEdxM");
    delete c1;
+
+
+   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   frame->GetYaxis()->SetTitle("I_{t}");   frame->SetMinimum(3.5);   frame->SetMaximum(4.5);  frame->Draw("AXIS");
+   //Any_dEdxMT->Draw("0 P same");                      legend.push_back("Any");
+   SingleMu_dEdxMT->Draw("0 P same");                 legend.push_back("SingleMu50");
+   //PFMet_dEdxMT->Draw("0 P same");                    legend.push_back("PFMET170");
+
+   //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
+   //DrawLegend(Histos,legend,"","P");
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMT");
+   delete c1;
+
+
+
+
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    frame->GetYaxis()->SetTitle("I_{h} S");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");

@@ -257,24 +257,16 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
    }
 
    unsigned int CurrentRun = 0;
+   vector <unsigned int> ChangeGains = get_ChangeGains();
+   unsigned int RunIndex = 1;
 
-   FILE* gainsTXT   = fopen ("../../../data/gainsPrompt2015.txt", "r");
-   TFile* gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
-
-   char GainsFile [19];
-   vector <string> GainsFiles;
-   for (int i = 0; i < 33; i++){
-      fscanf (gainsTXT, "%s %*s %*s", GainsFile);
-      GainsFiles.push_back (string(GainsFile));
-   }
-   fclose (gainsTXT);
-
-   std::unordered_map<unsigned int,double> TrackerGains;
+   char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
+   char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
+   string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
+   TFile *gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
+   LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
+   gainsFile->Close();
    
-//   if (isData){
-       LoadDeDxCalibration(TrackerGains, GainsFiles[0], gainsFile); // MC and data ofc have different gains, right?
-//   }
-
    TFile* OutputHisto = new TFile((OUTPUT).c_str(),"RECREATE");  //File must be opened before the histogram are created
 
    std::vector<dEdxStudyObj*> results;
@@ -327,8 +319,19 @@ void DeDxStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string OUTPUT
          if(iev%treeStep==0){printf(".");fflush(stdout);}
 
          if(CurrentRun != ev.eventAuxiliary().run()){
-             CurrentRun = ev.eventAuxiliary().run();
-             reloadGainsFile = (TrackerGains, gainsFile, GainsFiles, CurrentRun);
+            CurrentRun = ev.eventAuxiliary().run();
+            if (CurrentRun > ChangeGains[RunIndex]){
+               do{
+                  RunIndex++;
+                  if (ChangeGains.size() < RunIndex){ cerr << "RunIndex out of bounds!" << endl; exit(EXIT_FAILURE);}
+               } while (CurrentRun > ChangeGains[RunIndex]);
+               char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
+               char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
+               string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
+               TFile *gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
+               LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
+               gainsFile->Close();
+            }
          }
 
          fwlite::Handle<DeDxHitInfoAss> dedxCollH;

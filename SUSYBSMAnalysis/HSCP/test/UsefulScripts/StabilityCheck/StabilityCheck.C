@@ -192,8 +192,13 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    triggers.push_back("HLT_PFMET170_NoiseCleaned");
 
    TH1D** NVert = new TH1D*[triggers.size()];;
+   TH1D** dEdxAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMTAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMAOD = new TH1D*[triggers.size()];;
    TH1D** dEdx = new TH1D*[triggers.size()];;
+   TH1D** dEdxMT = new TH1D*[triggers.size()];;
    TH1D** dEdxM = new TH1D*[triggers.size()];;
+   TH1D** dEdxT = new TH1D*[triggers.size()];;
    TH1D** dEdxMS = new TH1D*[triggers.size()];;
    TH1D** dEdxMP = new TH1D*[triggers.size()];;
    TH1D** dEdxMSC = new TH1D*[triggers.size()];;
@@ -232,17 +237,14 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
    unsigned int CurrentRun = 0;
 
-   FILE * gainsTXT = fopen ("../../../data/gainsPrompt2015.txt", "r");
-   char GainsFile [19];
-   vector <string> GainsFiles;
-   for (int i = 0; i < 33; i++){
-       fscanf (gainsTXT, "%s %*s %*s", GainsFile);
-       GainsFiles.push_back(string(GainsFile));
-   }
-   fclose (gainsTXT);
-
+   vector <unsigned int> ChangeGains = get_ChangeGains();
+   unsigned int RunIndex = 1;
+   char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
+   char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
+   string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
    TFile *gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
-   LoadDeDxCalibration(TrackerGains, GainsFiles[0], gainsFile); 
+   LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
+   gainsFile->Close();
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
@@ -260,7 +262,18 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          CurrentRun = ev.eventAuxiliary().run();
          tofCalculator.setRun(CurrentRun);
 
-         reloadGainsFile (TrackerGains, gainsFile, GainsFiles, CurrentRun);
+         if (CurrentRun > ChangeGains[RunIndex]){
+            do{
+               RunIndex++;
+               if (ChangeGains.size() < RunIndex){ cerr << "RunIndex out of bounds!" << endl; exit(EXIT_FAILURE);}
+            } while (CurrentRun > ChangeGains[RunIndex]);
+            char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
+            char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
+            string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
+            TFile *gainsFile = new TFile ("../../../data/Data13TeVGains_v2.root");
+            LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
+            gainsFile->Close();
+         }
 
          TDirectory* dir = OutputHisto;
          char DIRECTORY[2048]; sprintf(DIRECTORY,"%6i",ev.eventAuxiliary().run());
@@ -277,6 +290,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 
                dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 5.0);
                dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 100, 0.0, 5.0);
+               dEdxT[i]   = new TH1D((triggers[i] + "dEdxT"  ).c_str(), "dEdxT"  , 100, 0.0, 5.0);
                dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 100, 0.0, 5.0);
                dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 100, 0.0, 5.0);
                dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 100, 0.0, 5.0);
@@ -303,33 +317,39 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          }else{
             dir->cd();
             for(unsigned int i=0;i<triggers.size();i++){
-               NVert[i]        = (TH1D*) dir->Get((triggers[i] + "NVert"    ).c_str());
-               Pt  [i]         = (TH1D*) dir->Get((triggers[i] + "Pt"       ).c_str());
+               NVert[i] = (TH1D*)dir->Get("NVert");
+               Pt  [i]  = (TH1D*)dir->Get("Pt");
 
-               dEdx[i]         = (TH1D*) dir->Get((triggers[i] + "dEdx"   ).c_str());
-               dEdxM[i]        = (TH1D*) dir->Get((triggers[i] + "dEdxM"  ).c_str());
-               dEdxMS[i]       = (TH1D*) dir->Get((triggers[i] + "dEdxMS" ).c_str());
-               dEdxMP[i]       = (TH1D*) dir->Get((triggers[i] + "dEdxMP" ).c_str());
-               dEdxMSC[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMSC").c_str());
-               dEdxMPC[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMPC").c_str());
-               dEdxMSF[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMSF").c_str());
-               dEdxMPF[i]      = (TH1D*) dir->Get((triggers[i] + "dEdxMPF").c_str());
+               dEdxAOD[i]    = (TH1D*)dir->Get("dEdxAOD");
+               dEdxMTAOD[i]   = (TH1D*)dir->Get("dEdxMTAOD");
+               dEdxMAOD[i]   = (TH1D*)dir->Get("dEdxMAOD");
 
-               TOFAOD   [i]    = (TH1D*) dir->Get((triggers[i] + "TOFAOD"  ).c_str());
-               TOFAODDT [i]    = (TH1D*) dir->Get((triggers[i] + "TOFAODDT"  ).c_str());
-               TOFAODCSC[i]    = (TH1D*) dir->Get((triggers[i] + "TOFAODCSC"  ).c_str());
 
-               TOF      [i]    = (TH1D*) dir->Get((triggers[i] + "TOF"  ).c_str());
-               TOFDT    [i]    = (TH1D*) dir->Get((triggers[i] + "TOFDT"  ).c_str());
-               TOFCSC   [i]    = (TH1D*) dir->Get((triggers[i] + "TOFCSC"  ).c_str());
+               dEdx[i]    = (TH1D*)dir->Get("dEdx");
+               dEdxMT[i]   = (TH1D*)dir->Get("dEdxMT");
+               dEdxM[i]   = (TH1D*)dir->Get("dEdxM");
+               dEdxMS[i]  = (TH1D*)dir->Get("dEdxMS");
+               dEdxMP[i]  = (TH1D*)dir->Get("dEdxMP");
+               dEdxMSC[i] = (TH1D*)dir->Get("dEdxMSC");
+               dEdxMPC[i] = (TH1D*)dir->Get("dEdxMPC");
+               dEdxMSF[i] = (TH1D*)dir->Get("dEdxMSF");
+               dEdxMPF[i] = (TH1D*)dir->Get("dEdxMPF");
 
-               VertexAOD   [i] = (TH1D*) dir->Get((triggers[i] + "VertexAOD"  ).c_str());
-               VertexAODDT [i] = (TH1D*) dir->Get((triggers[i] + "VertexAODDT"  ).c_str());
-               VertexAODCSC[i] = (TH1D*) dir->Get((triggers[i] + "VertexAODCSC"  ).c_str());
+               TOFAOD   [i] = (TH1D*)dir->Get("TOFAOD");
+               TOFAODDT [i] = (TH1D*)dir->Get("TOFAODDT");
+               TOFAODCSC[i] = (TH1D*)dir->Get("TOFAODCSC");
 
-               Vertex      [i] = (TH1D*) dir->Get((triggers[i] + "Vertex"  ).c_str());
-               VertexDT    [i] = (TH1D*) dir->Get((triggers[i] + "VertexDT"  ).c_str());
-               VertexCSC   [i] = (TH1D*) dir->Get((triggers[i] + "VertexCSC"  ).c_str());
+               TOF      [i] = (TH1D*)dir->Get("TOF");
+               TOFDT    [i] = (TH1D*)dir->Get("TOFDT");
+               TOFCSC   [i] = (TH1D*)dir->Get("TOFCSC");
+
+               VertexAOD   [i] = (TH1D*)dir->Get("VertexAOD");
+               VertexAODDT [i] = (TH1D*)dir->Get("VertexAODDT");
+               VertexAODCSC[i] = (TH1D*)dir->Get("VertexAODCSC");
+
+               Vertex      [i] = (TH1D*)dir->Get("Vertex");
+               VertexDT    [i] = (TH1D*)dir->Get("VertexDT");
+               VertexCSC   [i] = (TH1D*)dir->Get("VertexCSC");
             }
          }
       }
@@ -387,8 +407,13 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          }
 
          bool useClusterCleaning = true;
+         DeDxData dedxSObjaod = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, NULL, true, true, 99, false, 1);
+         DeDxData dedxMObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1);
+         DeDxData dedxMTObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, NULL, true, true, 99, false, 1);
+
          DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
          DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+         DeDxData dedxTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
          DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
          DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, false, true, 99, false, 1);
 
@@ -445,8 +470,16 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             }
 */
 
+
+            dEdxAOD[i]->Fill(dedxSObjaod.dEdx());
+            dEdxMTAOD[i]->Fill(dedxMTObjaod.dEdx());
+            dEdxMAOD[i]->Fill(dedxMObjaod.dEdx());
+
+
             dEdx[i]->Fill(dedxSObj.dEdx());
+            dEdxMT[i]->Fill(dedxMTObj.dEdx());
             dEdxM[i]->Fill(dedxMObj.dEdx());
+            dEdxT[i]->Fill(dedxTObj.dEdx());
             dEdxMS[i]->Fill(dedxMSObj.dEdx());
             dEdxMP[i]->Fill(dedxMPObj.dEdx());
             if(fabs(track->eta())<0.5){

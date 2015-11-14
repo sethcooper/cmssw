@@ -256,8 +256,8 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
 {
-   edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
-   if(!tr.isValid())         tr = ev.triggerResultsByName("HLT");
+   edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
+   if(!tr.isValid())         tr = ev.triggerResultsByName("MergeHLT");
    if(!tr.isValid())return false;
 
 
@@ -266,7 +266,7 @@ bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
    if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*"))return true;
    if(passTriggerPatterns(tr, "HLT_Mu50_v*"))return true;
 
-   return true; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
+   return false; //FIXME triggers bellow will need to be adapted based on Run2 trigger menu
 
    //for(unsigned int i=0;i<tr.size();i++){
    //printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
@@ -958,8 +958,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
    //Initialize histo common to all samples
    InitHistos(NULL);
-   vector <string> GainsFiles;
-   TFile *gainsFile = new TFile ("../../data/Data13TeVGains_v2.root");
+   vector <unsigned int> ChangeGains = get_ChangeGains();
+   unsigned int RunIndex = 1;
 
    for(unsigned int s=0;s<samples.size();s++){
       bool isData   = (samples[s].Type==0);
@@ -978,15 +978,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
 
       if(isData){
-         FILE * gainsTXT = fopen ("../../data/gainsPrompt2015.txt", "r");
-         char GainsFile [19];
-         for (int i = 0; i < 33; i++){
-            fscanf (gainsTXT, "%s %*s %*s", GainsFile);
-            GainsFiles.push_back(string(GainsFile));
-         }
-         fclose (gainsTXT);
-
-         LoadDeDxCalibration(TrackerGains, GainsFiles[0], gainsFile); 
+         char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
+         char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
+         string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
+         TFile *gainsFile = new TFile ("../../data/Data13TeVGains_v2.root");
+         LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
+         gainsFile->Close();
       }else{  //FIXME check gain for MC
       }
 
@@ -1083,7 +1080,18 @@ void Analysis_Step1_EventLoop(char* SavePath)
             if(CurrentRun != ev.eventAuxiliary().run()){
                CurrentRun = ev.eventAuxiliary().run();
                tofCalculator.setRun(CurrentRun);
-               reloadGainsFile (TrackerGains, gainsFile, GainsFiles, CurrentRun);
+               if (CurrentRun > ChangeGains[RunIndex]){
+                  do{
+                     RunIndex++;
+                     if (ChangeGains.size() < RunIndex){ cerr << "RunIndex out of bounds!" << endl; exit(EXIT_FAILURE);}
+                  } while (CurrentRun > ChangeGains[RunIndex]);
+                  char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
+                  char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
+                  string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
+                  TFile *gainsFile = new TFile ("../../data/Data13TeVGains_v2.root");
+                  LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
+                  gainsFile->Close();
+               }
             }
 
 

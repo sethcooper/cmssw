@@ -6,6 +6,98 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 // general purpose code 
 
+vector <unsigned int> get_ChangeGains (void){
+   vector <unsigned int> ChangeGains;
+   ChangeGains.push_back (252116);
+   ChangeGains.push_back (254227);
+   ChangeGains.push_back (254437);
+   ChangeGains.push_back (254532);
+   ChangeGains.push_back (254790);
+   ChangeGains.push_back (254879);
+   ChangeGains.push_back (255031);
+   ChangeGains.push_back (256630);
+   ChangeGains.push_back (256734);
+   ChangeGains.push_back (256941);
+   ChangeGains.push_back (256957);
+   ChangeGains.push_back (257490);
+   ChangeGains.push_back (257531);
+   ChangeGains.push_back (257682);
+   ChangeGains.push_back (257823);
+   ChangeGains.push_back (258129);
+   ChangeGains.push_back (258174);
+   ChangeGains.push_back (258287);
+   ChangeGains.push_back (258702);
+   ChangeGains.push_back (258713);
+   ChangeGains.push_back (258750);
+   ChangeGains.push_back (259237);
+   ChangeGains.push_back (259352);
+   ChangeGains.push_back (259399);
+   ChangeGains.push_back (259626);
+   ChangeGains.push_back (259686);
+   ChangeGains.push_back (259809);
+   ChangeGains.push_back (259861);
+   ChangeGains.push_back (260373);
+   ChangeGains.push_back (260069);
+   ChangeGains.push_back (260427);
+   ChangeGains.push_back (260533);
+   ChangeGains.push_back (260577);
+   ChangeGains.push_back (999999);
+
+   return ChangeGains;
+}
+
+vector <unsigned int> get_PromptGains (void){
+   vector <unsigned int> PromptGains;
+   PromptGains.push_back(252116);
+   PromptGains.push_back(254227);
+   PromptGains.push_back(256957);
+   PromptGains.push_back(260373);
+   PromptGains.push_back(260069);
+   PromptGains.push_back(999999);
+
+   return PromptGains;
+}
+
+vector <unsigned int> get_NormalGains (void){
+   vector <unsigned int> NormalGains;
+   NormalGains.push_back(252116);
+   NormalGains.push_back(254227);
+   NormalGains.push_back(254437);
+   NormalGains.push_back(254532);
+   NormalGains.push_back(254790);
+   NormalGains.push_back(254879);
+   NormalGains.push_back(255031);
+   NormalGains.push_back(256630);
+   NormalGains.push_back(256734);
+   NormalGains.push_back(256941);
+   NormalGains.push_back(257490);
+   NormalGains.push_back(257531);
+   NormalGains.push_back(257682);
+   NormalGains.push_back(257823);
+   NormalGains.push_back(258129);
+   NormalGains.push_back(258174);
+   NormalGains.push_back(258287);
+   NormalGains.push_back(258702);
+   NormalGains.push_back(258713);
+   NormalGains.push_back(258750);
+   NormalGains.push_back(259237);
+   NormalGains.push_back(259352);
+   NormalGains.push_back(259399);
+   NormalGains.push_back(259626);
+   NormalGains.push_back(259686);
+   NormalGains.push_back(259809);
+   NormalGains.push_back(259861);
+   NormalGains.push_back(260373);
+   NormalGains.push_back(260427);
+   NormalGains.push_back(260533);
+   NormalGains.push_back(260577);
+   NormalGains.push_back(999999);
+
+   return NormalGains;
+}
+
+
+
 // return the TypeMode from a string inputPattern
 int TypeFromPattern(const std::string& InputPattern){
    if(InputPattern.find("Type0",0)<std::string::npos){       return 0;
@@ -492,34 +584,6 @@ void LoadDeDxCalibration(std::unordered_map<unsigned int,double>& TrackerGains, 
        TrackerGains[tree_DetId<<3 | tree_APVId] = tree_Gain;
    }
 }
-
-
-void reloadGainsFile (std::unordered_map<unsigned int,double>& TrackerGains, TFile* gainsFile, vector<string> paths, unsigned int CurrentRun){
-   vector<string>::iterator it = paths.begin();
-   bool success = false;
-   for (; it != paths.end(); it++){
-      unsigned int firstRun, lastRun;
-      size_t firstTokenFirstRun = it->find("_");
-      size_t secondTokenFirstRun = it->find("_", firstTokenFirstRun+1);
-      size_t firstTokenSecondRun = it->find("_", secondTokenFirstRun+1);
-      
-      string FirstRunStr  = it->substr (firstTokenFirstRun+1, secondTokenFirstRun - firstTokenFirstRun-1);
-      string SecondRunStr = it->substr (firstTokenSecondRun+1);
-
-      firstRun  = (unsigned int) atoi  (FirstRunStr.c_str());
-      lastRun   = (unsigned int) atoi (SecondRunStr.c_str());
-
-      if (CurrentRun >= firstRun && CurrentRun <= lastRun){
-         LoadDeDxCalibration (TrackerGains, *it, gainsFile);
-         success = true;
-         break;
-      }
-   }
-   if (!success)
-      cerr << "Houston, we have a problem!" << endl;
-}
-
-
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType){
    TFile* InputFile = new TFile(path.c_str());

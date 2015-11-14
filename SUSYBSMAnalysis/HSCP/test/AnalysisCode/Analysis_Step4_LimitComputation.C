@@ -690,14 +690,13 @@ std::cout<<"TESTA\n";
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_GMStau_Mass)/sizeof(double),THXSEC8TeV_GMStau_Mass,THXSEC8TeV_GMStau_Low,THXSEC8TeV_GMStau_High, PlotMinScale, PlotMaxScale);
          }else if(SQRTS==13){ 
 //            #Prospino xsection that I get looks very weird, use pythia for the time being
-//            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Cen);
-//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Low,THXSEC13TeV_GMStau_High, PlotMinScale, PlotMaxScale);
-            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
-            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
-            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
-            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
-            
+            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double),THXSEC13TeV_GMStau_Mass,THXSEC13TeV_GMStau_Low,THXSEC13TeV_GMStau_High, PlotMinScale, PlotMaxScale);
+//            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);
+//            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+//            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+//            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);            
          }else{
             const int NMass=sizeof(THXSEC13TeV_GMStau_Mass)/sizeof(double);
             double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
@@ -712,13 +711,13 @@ std::cout<<"TESTA\n";
             ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC8TeV_PPStau_Mass)/sizeof(double),THXSEC8TeV_PPStau_Mass,THXSEC8TeV_PPStau_Low,THXSEC8TeV_PPStau_High, PlotMinScale, PlotMaxScale);
          }else if(SQRTS==13){
 //            #Prospino xsection that I get looks very weird, use pythia for the time being
-//            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Cen);
-//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Low,THXSEC13TeV_PPStau_High, PlotMinScale, PlotMaxScale);
-            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);            
-            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
-            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
-            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
+            ThXSec   [k] = new TGraph(sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Cen);
+            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double),THXSEC13TeV_PPStau_Mass,THXSEC13TeV_PPStau_Low,THXSEC13TeV_PPStau_High, PlotMinScale, PlotMaxScale);
+//            ThXSec   [k] = MakePlot(NULL, NULL, TkPattern,modelVector[k], 0, modelMap[modelVector[k]], LInt);            
+//            double* XSecErrLow  = new double[ThXSec[k]->GetN()];
+//            double* XSecErrHigh = new double[ThXSec[k]->GetN()];
+//            for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
+//            ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale);
          }else{
            const int NMass=sizeof(THXSEC13TeV_PPStau_Mass)/sizeof(double);
            double ones[NMass]; for(int i=0; i<NMass; i++) ones[i]=1;
@@ -736,7 +735,7 @@ std::cout<<"TESTA\n";
          double* XSecErrHigh = new double[ThXSec[k]->GetN()];
          //assume 10% error on xsection
          for(int i=0;i<ThXSec[k]->GetN();i++){ XSecErrLow[i] = ThXSec[k]->GetY()[i]*0.90; XSecErrHigh[i] = ThXSec[k]->GetY()[i]*1.10; }
-         ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, PlotMinScale, PlotMaxScale); 
+         ThXSecErr[k] = GetErrorBand(modelVector[k]+"ThErr", ThXSec[k]->GetN(),ThXSec[k]->GetX(),XSecErrLow,XSecErrHigh, 1E-5, PlotMaxScale); 
        }
    }
 
@@ -823,9 +822,9 @@ std::cout<<"TESTC\n";
 
    ThGraphMap["Gluino_f10"   ]->SetLineColor(4);  ThGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   ThGraphMap["Gluino_f10"   ]->SetLineWidth(1);   ThGraphMap["Gluino_f10"   ]->SetLineStyle(1);  ThGraphMap["Gluino_f10"   ]->SetMarkerStyle(1);
    MuGraphMap["Gluino_f10"   ]->SetLineColor(4);  MuGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-   //MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+   MuGraphMap["Gluino_f50"   ]->SetLineColor(4);  MuGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MuGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MuGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MuGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
    TkGraphMap["Gluino_f10"   ]->SetLineColor(4);  TkGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f10"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f10"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
-   //TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
+   TkGraphMap["Gluino_f50"   ]->SetLineColor(4);  TkGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   TkGraphMap["Gluino_f50"   ]->SetLineWidth(2);   TkGraphMap["Gluino_f50"   ]->SetLineStyle(1);  TkGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
    TkGraphMap["GluinoN_f10"  ]->SetLineColor(4);  TkGraphMap["GluinoN_f10"  ]->SetMarkerColor(4);   TkGraphMap["GluinoN_f10"  ]->SetLineWidth(2);   TkGraphMap["GluinoN_f10"  ]->SetLineStyle(1);  TkGraphMap["GluinoN_f10"  ]->SetMarkerStyle(26);
    //MOGraphMap["Gluino_f10"   ]->SetLineColor(4);  MOGraphMap["Gluino_f10"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f10"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f10"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f10"   ]->SetMarkerStyle(22);
    //MOGraphMap["Gluino_f50"   ]->SetLineColor(4);  MOGraphMap["Gluino_f50"   ]->SetMarkerColor(4);   MOGraphMap["Gluino_f50"   ]->SetLineWidth(2);   MOGraphMap["Gluino_f50"   ]->SetLineStyle(1);  MOGraphMap["Gluino_f50"   ]->SetMarkerStyle(23);
@@ -853,10 +852,13 @@ std::cout<<"TESTC\n";
    //LQGraphMap["DY_Q2o3"      ]->SetLineColor(43); LQGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  LQGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
    //LQGraphMap["DY_Q1"        ]->SetLineColor(46); LQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  LQGraphMap["DY_Q1"        ]->SetLineWidth(2);   LQGraphMap["DY_Q1"        ]->SetLineStyle(1);  LQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
 
-   //ThGraphMap["DY_Q1"        ]->SetLineColor(46); ThGraphMap["DY_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY_Q1"        ]->SetLineStyle(1);  ThGraphMap["DY_Q1"        ]->SetMarkerStyle(1);
-   //MuGraphMap["DY_Q1"        ]->SetLineColor(46); MuGraphMap["DY_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
+   ThGraphMap["DY_Q1"        ]->SetLineColor(46); ThGraphMap["DY_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY_Q1"        ]->SetLineStyle(1);  ThGraphMap["DY_Q1"        ]->SetMarkerStyle(1);
+   MuGraphMap["DY_Q1"        ]->SetLineColor(46); MuGraphMap["DY_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
+   TkGraphMap["DY_Q1"        ]->SetLineColor(46); TkGraphMap["DY_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
    //HQGraphMap["DY_Q1"        ]->SetLineColor(46); HQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  HQGraphMap["DY_Q1"        ]->SetLineWidth(2);   HQGraphMap["DY_Q1"        ]->SetLineStyle(1);  HQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
-   //ThGraphMap["DY_Q2"        ]->SetLineColor(2 ); ThGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(2);  ThGraphMap["DY_Q2"        ]->SetMarkerStyle(1);
+   ThGraphMap["DY_Q2"        ]->SetLineColor(2 ); ThGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(2);  ThGraphMap["DY_Q2"        ]->SetMarkerStyle(1);
+   MuGraphMap["DY_Q2"        ]->SetLineColor(43); MuGraphMap["DY_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
+   TkGraphMap["DY_Q2"        ]->SetLineColor(43); TkGraphMap["DY_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
    //HQGraphMap["DY_Q2"        ]->SetLineColor(2 ); HQGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  HQGraphMap["DY_Q2"        ]->SetLineWidth(2);   HQGraphMap["DY_Q2"        ]->SetLineStyle(1);  HQGraphMap["DY_Q2"        ]->SetMarkerStyle(21);
    //ThGraphMap["DY_Q3"        ]->SetLineColor(1 ); ThGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  ThGraphMap["DY_Q3"        ]->SetLineWidth(1);   ThGraphMap["DY_Q3"        ]->SetLineStyle(9);  ThGraphMap["DY_Q3"        ]->SetMarkerStyle(1);
    //HQGraphMap["DY_Q3"        ]->SetLineColor(1 ); HQGraphMap["DY_Q3"        ]->SetMarkerColor(1 );  HQGraphMap["DY_Q3"        ]->SetLineWidth(2);   HQGraphMap["DY_Q3"        ]->SetLineStyle(1);  HQGraphMap["DY_Q3"        ]->SetMarkerStyle(22);
@@ -906,34 +908,39 @@ std::cout<<"TESTD\n";
       //ThErrorMap["DY_Q2o3"   ]->Draw("F");
       //ThGraphMap["DY_Q2o3"    ]->Draw("L");
 
-      //ThErrorMap["DY_Q1"   ]->Draw("F");
-      //ThGraphMap["DY_Q1"    ]->Draw("L");
+      ThErrorMap["DY_Q1"   ]->Draw("F");
+      ThGraphMap["DY_Q1"    ]->Draw("L");
+
+      ThErrorMap["DY_Q2"   ]->Draw("F");
+      ThGraphMap["DY_Q2"    ]->Draw("L");
    }else{
       TLine* LineAtOne = new TLine(50,1,1550,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
    }
 
    MuGraphMap["Gluino_f10" ]->Draw("LP");
-   //MuGraphMap["Gluino_f50" ]->Draw("LP");
+   MuGraphMap["Gluino_f50" ]->Draw("LP");
    MuGraphMap["Stop"       ]->Draw("LP");
    MuGraphMap["GMStau"     ]->Draw("LP");
    MuGraphMap["PPStau"     ]->Draw("LP");
    //MuGraphMap["DY_Q2o3"    ]->Draw("LP");
-   //MuGraphMap["DY_Q1"    ]->Draw("LP");
+   MuGraphMap["DY_Q1"    ]->Draw("LP");
+   MuGraphMap["DY_Q2"    ]->Draw("LP");
 
-   DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    TLegend* LEGMu = !Combine ? new TLegend(0.50,0.92-7*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+7*0.043);
    LEGMu->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGMu->SetTextSize(18); //font size
    LEGMu->SetFillColor(0); 
    LEGMu->SetFillStyle(0);
    LEGMu->SetBorderSize(0);
-   //LEGMu->AddEntry(MuGraphMap["Gluino_f50"] , "gluino; 50% #tilde{g}g"    ,"LP");
+   LEGMu->AddEntry(MuGraphMap["Gluino_f50"] , "gluino; 50% #tilde{g}g"    ,"LP");
    LEGMu->AddEntry(MuGraphMap["Gluino_f10"] , "gluino; 10% #tilde{g}g"    ,"LP");
    LEGMu->AddEntry(MuGraphMap["Stop"      ] , "stop"                      ,"LP");
    LEGMu->AddEntry(MuGraphMap["PPStau"    ] , "stau; dir. prod."           ,"LP");
    LEGMu->AddEntry(MuGraphMap["GMStau"    ] , "stau"                 ,"LP");
    //LEGMu->AddEntry(MuGraphMap["DY_Q2o3"   ], "|Q| = 2e/3"                ,"LP");
-   //LEGMu->AddEntry(MuGraphMap["DY_Q1"   ], "|Q| = 1e"                ,"LP");
+   LEGMu->AddEntry(MuGraphMap["DY_Q1"   ], "|Q| = 1e"                ,"LP");
+   LEGMu->AddEntry(MuGraphMap["DY_Q2"   ], "|Q| = 2e"                ,"LP");
 
    TLegend* LEGTh = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
    LEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -959,9 +966,12 @@ std::cout<<"TESTD\n";
    //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
    //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
    //LEGTh->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
-   //TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
-   //DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
-   //LEGTh->AddEntry(DYQ1ThLeg   ,"|Q| = 1e (LO)" ,"LF");
+   TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
+   DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
+   LEGTh->AddEntry(DYQ1ThLeg   ,"|Q| = 1e (LO)" ,"LF");
+   TGraph* DYQ2ThLeg = (TGraph*) ThGraphMap["DY_Q2"        ]->Clone("DYQ2ThLeg");
+   DYQ2ThLeg->SetFillColor(ThErrorMap["DY_Q2"]->GetFillColor());
+   LEGTh->AddEntry(DYQ2ThLeg   ,"|Q| = 2e (LO)" ,"LF");
    LEGTh->Draw();
    }
    LEGMu->Draw();
@@ -996,6 +1006,12 @@ std::cout<<"TESTD\n";
       ThErrorMap["PPStau"    ]->Draw("F");
       ThGraphMap["PPStau"    ]->Draw("L");
 
+      ThErrorMap["DY_Q1"   ]->Draw("F");
+      ThGraphMap["DY_Q1"   ]->Draw("L");
+
+      ThErrorMap["DY_Q2"   ]->Draw("F");
+      ThGraphMap["DY_Q2"   ]->Draw("L");
+
       //ThErrorMap["DY_Q2o3"   ]->Draw("F");
       //ThGraphMap["DY_Q2o3"   ]->Draw("L");
    }else{
@@ -1003,15 +1019,17 @@ std::cout<<"TESTD\n";
    }
 
    TkGraphMap["Gluino_f10" ]->Draw("LP");
-   //TkGraphMap["Gluino_f50" ]->Draw("LP");
+   TkGraphMap["Gluino_f50" ]->Draw("LP");
    TkGraphMap["GluinoN_f10"]->Draw("LP");
    TkGraphMap["Stop"       ]->Draw("LP");
    TkGraphMap["StopN"      ]->Draw("LP");
    TkGraphMap["GMStau"     ]->Draw("LP");
    TkGraphMap["PPStau"     ]->Draw("LP");
+   TkGraphMap["DY_Q1"    ]->Draw("LP");
+   TkGraphMap["DY_Q2"    ]->Draw("LP");
    //TkGraphMap["DY_Q2o3"    ]->Draw("LP");
 
-   DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
 
    TLegend* LEGTk = !Combine ? new TLegend(0.50,0.92-8*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+8*0.043);
    LEGTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1019,7 +1037,7 @@ std::cout<<"TESTD\n";
    LEGTk->SetFillColor(0); 
    LEGTk->SetFillStyle(0);
    LEGTk->SetBorderSize(0);
-   //LEGTk->AddEntry(TkGraphMap["Gluino_f50" ], "gluino; 50% #tilde{g}g"            ,"LP");
+   LEGTk->AddEntry(TkGraphMap["Gluino_f50" ], "gluino; 50% #tilde{g}g"            ,"LP");
    LEGTk->AddEntry(TkGraphMap["Gluino_f10" ], "gluino; 10% #tilde{g}g"            ,"LP");
    LEGTk->AddEntry(TkGraphMap["GluinoN_f10"], "gluino; 10% #tilde{g}g; CS"        ,"LP");
    LEGTk->AddEntry(TkGraphMap["Stop"       ], "stop"                              ,"LP");
@@ -1027,6 +1045,8 @@ std::cout<<"TESTD\n";
    LEGTk->AddEntry(TkGraphMap["PPStau"     ], "stau; dir. prod."                ,"LP");
    LEGTk->AddEntry(TkGraphMap["GMStau"     ], "stau"                              ,"LP");
    //LEGTk->AddEntry(TkGraphMap["DY_Q2o3"    ], "|Q| = 2e/3"                            ,"LP");
+   LEGTk->AddEntry(TkGraphMap["DY_Q1"    ], "|Q| = 1e"                            ,"LP");
+   LEGTk->AddEntry(TkGraphMap["DY_Q2"    ], "|Q| = 2e"                            ,"LP");
 
    TLegend* LEGThTk = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
    LEGThTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1051,9 +1071,13 @@ std::cout<<"TESTD\n";
    //TGraph* DYQ2o3ThLeg = (TGraph*) ThGraphMap["DY_Q2o3"        ]->Clone("DYQ2o3ThLeg");
    //DYQ2o3ThLeg->SetFillColor(ThErrorMap["DY_Q2o3"]->GetFillColor());
    //LEGThTk->AddEntry(DYQ2o3ThLeg   ,"|Q| = 2e/3 (LO)" ,"LF");
-   ////TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
-   ////DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
-   ////LEGThTk->AddEntry(DYQ2o3ThLeg   ,"|Q| = 1e (LO)" ,"LF");
+   TGraph* DYQ1ThLeg = (TGraph*) ThGraphMap["DY_Q1"        ]->Clone("DYQ1ThLeg");
+   DYQ1ThLeg->SetFillColor(ThErrorMap["DY_Q1"]->GetFillColor());
+   LEGThTk->AddEntry(DYQ1ThLeg   ,"|Q| = 1e (LO)" ,"LF");
+   TGraph* DYQ2ThLeg = (TGraph*) ThGraphMap["DY_Q2"        ]->Clone("DYQ2ThLeg");
+   DYQ2ThLeg->SetFillColor(ThErrorMap["DY_Q2"]->GetFillColor());
+   LEGThTk->AddEntry(DYQ2ThLeg   ,"|Q| = 2e (LO)" ,"LF");
+
    LEGThTk->Draw();
    }
 
@@ -1093,7 +1117,7 @@ if(Combine){
 
    TLine* LineAtOne = new TLine(90,1,570,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
 
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
 
    LEGTk = !Combine ? new TLegend(0.50,0.92-3*0.043,0.83,0.92) : new TLegend(0.45,0.15+4*0.043,0.80,0.15+7*0.043);
    LEGTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1172,7 +1196,7 @@ if(Combine){
    MGMO->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
    MGMO->GetXaxis()->SetRangeUser(50,1550);
    
-   DrawPreliminary(LegendFromType(MOPattern).c_str(), 8.0, IntegratedLuminosityFromE(8.0), false);
+   DrawPreliminary(LegendFromType(MOPattern).c_str(), 8.0, IntegratedLuminosityFromE(8.0), true);
 
    TLegend* LEGMO = !Combine ? new TLegend(0.50,0.92-4*0.043,0.83,0.92) : new TLegend(0.55,0.25,0.80,0.25+4*0.043);
    LEGMO->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1268,7 +1292,7 @@ if(Combine){
    MGLQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
    MGLQ->GetXaxis()->SetRangeUser(75,625);
 
-   DrawPreliminary(LegendFromType(LQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendFromType(LQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
 
    TLegend* LEGLQ = !Combine ? new TLegend(0.50,0.92-2*0.043,0.83,0.92) : new TLegend(0.20,0.88-2*0.043,0.50,0.88);
    LEGLQ->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1333,7 +1357,7 @@ if(Combine){
    //MGHQ->GetYaxis()->SetRangeUser(PlotMinScale,100);
    MGHQ->GetXaxis()->SetRangeUser(50,1050);
 
-   DrawPreliminary(LegendFromType(HQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendFromType(HQPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    TLegend* LEGHQ = !Combine ? new TLegend(0.62,0.92-0.043-8*0.043,0.83,0.92-0.043) : new TLegend(0.55,0.35,0.80,0.35+6*0.043);
 //   TLegend* LEGHQ = !Combine ? new TLegend(0.62,0.92-5*0.043,0.83,0.92) : new TLegend(0.55,0.35,0.80,0.35+6*0.043);
    LEGHQ->SetTextFont(43); //give the font size in pixel (instead of fraction)

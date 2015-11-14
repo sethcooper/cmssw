@@ -589,7 +589,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    gPad->RedrawAxis(); 
 
    //add CMS label and save
-   DrawPreliminary(LegendFromType(InputPattern), SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendFromType(InputPattern), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    c1->SetLogy(true);
 
    c1->cd();
@@ -753,7 +753,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  dEdxS_Legend, YAxisTitle,TypeMode!=5?0:0.7,TypeMode!=5?0.5:1.0, 0,0);
    DrawLegend(Histos,legend,"", "P", 0.77, 0.92, 0.43, 0.05);
    c1->SetLogy(true);
-   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_IsSpectrum");
    delete c1;
 
@@ -788,7 +788,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", YAxisTitle, 1.0, 1.4, 0, 0); 
    DrawLegend(Histos,legend, "" ,"P", 0.80, 0.92, 0.43, 0.05);
    c1->SetLogy(true);
-   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_TOFSpectrum");
    c1->SetLogy(false);
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_TOFSpectrumNoLog");
@@ -808,7 +808,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", YAxisTitle, 1,1.4, 0.000005,0.6);
    CtrlIs_S4_TOF->Draw("E1 same"); //redraw this histogram to make sure it is on top of the other ones
    DrawLegend(Histos,legend, "","P", 0.77, 0.92, 0.43, 0.05);
-   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), false);   
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);   
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Is_TOFSpectrumLog");
 
    c1->SetLogy(false);
@@ -1206,7 +1206,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
          LEG->AddEntry(mapPred[P3], L3.c_str(),"FL");
          LEG->Draw("same");
 
-         DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+         DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);
 	 if(r==0) {
 	   c1->SetLogy(1);
 	   SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_NPredVsNObs"+suffix);
@@ -3637,13 +3637,13 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
-   leg->AddEntry(Data_PIm,    "Data (#sqrt{s} = 8 TeV)"     ,"F");
+   leg->AddEntry(Data_PIm,    "Data (#sqrt{s} = 13 TeV)"    ,"F");
    leg->AddEntry(Signal3PIm,  samples[S3i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal2PIm,  samples[S2i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal1PIm,  samples[S1i].Legend.c_str()   ,"F");
    leg->AddEntry(box,         "Excluded"                    ,"F");
    leg->Draw();
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    SaveCanvas(c1, outpath, outName + "_PIm", false);
    delete c1;
    delete leg;
@@ -3663,9 +3663,9 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
    //leg->AddEntry(Data_PIm,    "Data (#sqrt{s}=8 TeV)"       ,"F");
-   leg->AddEntry(box,         "Excluded"                    ,"F");
+//   leg->AddEntry(box,         "Excluded"                    ,"F");
    leg->Draw();
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    SaveCanvas(c1, outpath, outName + "_PImData", false);
    delete c1;
    delete leg;
@@ -3692,13 +3692,13 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
-   leg->AddEntry(Data_PIm,    "Data (#sqrt{s} = 8 TeV)"     ,"F");
+   leg->AddEntry(Data_PIm,    "Data (#sqrt{s} = 13 TeV)"     ,"F");
    leg->AddEntry(Signal3PIm,  samples[S3i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal2PIm,  samples[S2i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal1PIm,  samples[S1i].Legend.c_str()   ,"F");
-   leg->AddEntry(box,         "Excluded"                    ,"F");
+//   leg->AddEntry(box,         "Excluded"                    ,"F");
    leg->Draw();
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), false);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
    SaveCanvas(c1, outpath, outName + "_PImSignal", false);
    delete c1;
    delete leg;
