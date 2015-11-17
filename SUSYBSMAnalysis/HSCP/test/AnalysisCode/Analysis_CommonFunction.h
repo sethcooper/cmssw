@@ -492,6 +492,7 @@ class dedxGainCorrector{
       ~dedxGainCorrector(){}
 
       void setRun(unsigned int currentRun){
+         if(TrackerGainsPerRuns.size()<=0){TrackerGains=NULL; return;}
          std::map<unsigned int, std::unordered_map<unsigned int, double> >::iterator it, itPrev=TrackerGainsPerRuns.begin();
          for(it=TrackerGainsPerRuns.begin(); it!=TrackerGainsPerRuns.end(); it++){
             if(it->first>currentRun){TrackerGains = &(itPrev->second); return;}//runs are ordered, so the previous iterator correspond to our run
@@ -696,7 +697,7 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
         }
      }
 
-     if(dropLowerDeDxValue && lowerStripDeDxIndex>=0){vect.erase(lowerStripDeDxIndex);}
+     if(dropLowerDeDxValue && lowerStripDeDxIndex>=0){vect.erase(vect.begin()+lowerStripDeDxIndex);}
 
      double result;
      int size = vect.size();

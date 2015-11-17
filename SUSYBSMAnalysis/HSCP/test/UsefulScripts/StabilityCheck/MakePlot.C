@@ -406,6 +406,13 @@ void MakePlot()
    TGraphErrors* SingleMu_dEdxMin      = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMin");
    TGraphErrors* PFMet_dEdxMin         = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMin");
 
+   TGraphErrors* Any_dEdxAOD              = getStabilityGraph(runList, InputFile, "AnydEdxAOD");
+   TGraphErrors* SingleMu_dEdxAOD         = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxAOD");
+   TGraphErrors* PFMet_dEdxAOD            = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxAOD");
+
+   TGraphErrors* Any_dEdxMAOD             = getStabilityGraph(runList, InputFile, "AnydEdxMAOD");
+   TGraphErrors* SingleMu_dEdxMAOD        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMAOD");
+   TGraphErrors* PFMet_dEdxMAOD           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMAOD");
 
 
    TGraphErrors* Any_dEdx              = getStabilityGraph(runList, InputFile, "AnydEdx");
@@ -518,7 +525,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
    //Any_dEdxMin->Draw("0 P same");                       legend.push_back("Any");
    SingleMu_dEdxMin->Draw("0 P same");                  legend.push_back("SingleMu50");
    //PFMet_dEdxMin->Draw("0 P same");                     legend.push_back("PFMET170");
@@ -534,7 +541,10 @@ void MakePlot()
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    frameR->GetYaxis()->SetTitle("I_{as}");   frameR->SetMinimum(0.012);   frameR->SetMaximum(0.022);  frameR->Draw("AXIS");
    //Any_dEdx->Draw("0 P same");                       legend.push_back("Any");
+   SingleMu_dEdx->SetLineColor(4);
    SingleMu_dEdx->Draw("0 P same");                  legend.push_back("SingleMu50");
+   SingleMu_dEdxAOD->Draw("0 P same");                  legend.push_back("SingleMu50");
+
    //PFMet_dEdx->Draw("0 P same");                     legend.push_back("PFMET170");
 
    //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
@@ -545,9 +555,11 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+   SingleMu_dEdxM->SetLineColor(4);
    //Any_dEdxM->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxM->Draw("0 P same");                 legend.push_back("SingleMu50");
+   SingleMu_dEdxMAOD->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxM->Draw("0 P same");                    legend.push_back("PFMET170");
 
    //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}

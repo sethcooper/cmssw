@@ -233,21 +233,36 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
       return;
    }
 
+std::cout<<"A\n";
+
    //initialize LumiReWeighting
    //FIXME  pileup scenario must be updated based on data/mc
    if(samples[0].Pileup=="S15"){        for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Startup2015_25ns[i]);
-   }else if(samples[0].Pileup=="NoPU"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(BgLumiMC[i]); //Push same as data to garantee no PU reweighting
+   }else if(samples[0].Pileup=="NoPU"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(TrueDist2015_f[i]); //Push same as data to garantee no PU reweighting
    }else if (samples[0].Pileup=="S10"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
    }else{                               for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
    }
+std::cout<<"A1\n";
+
    for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2015_f[i]);
    for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2015_XSecShiftUp_f[i]);
+std::cout<<"A2\n";
+
    LumiWeightsMC     = edm::LumiReWeighting(BgLumiMC, TrueDist);
+std::cout<<"A3\n";
+
    LumiWeightsMCSyst = edm::LumiReWeighting(BgLumiMC, TrueDistSyst);
+
+std::cout<<"B\n";
+
 
    //create histogram file and run the analyis
    HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+samples[0].FileName+".root").c_str(),"RECREATE");
+std::cout<<"C\n";
+
    Analysis_Step1_EventLoop(Buffer);
+std::cout<<"Z\n";
+
    HistoFile->Write();
    HistoFile->Close();
    return;
@@ -966,6 +981,9 @@ void Analysis_Step1_EventLoop(char* SavePath)
       bool isMC     = (samples[s].Type==1);
       bool isSignal = (samples[s].Type>=2);
 
+std::cout<<"D\n";
+
+
       if(isData){ 
          dEdxSF [0] = 1.00000;
          dEdxSF [1] = 1.21836;
@@ -976,9 +994,13 @@ void Analysis_Step1_EventLoop(char* SavePath)
          dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
       }
 
+std::cout<<"E\n";
+
       if(isData){    trackerCorrector.LoadDeDxCalibration("../../data/Data13TeVGains_v2.root"); 
       }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
       }
+
+std::cout<<"F\n";
 
       //check that the plot container exist for this sample, otherwise create it
       if(plotsMap.find(samples[s].Name)==plotsMap.end()){plotsMap[samples[s].Name] = stPlots();}
@@ -1057,6 +1079,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
          }
 
 	 if(SampleWeight==0) continue; //If sample weight 0 don't run, happens Int Lumi before change = 0
+
+std::cout<<"G\n";
 
          //Loop on the events
          printf("Progressing Bar                   :0%%       20%%       40%%       60%%       80%%       100%%\n");
