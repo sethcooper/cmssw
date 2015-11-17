@@ -2256,8 +2256,10 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 // produce the Higgs combine stat tool datacard
 void makeDataCard(string outpath, string rootPath, string ChannelName, string SignalName, double Obs, double Pred, double PredRelErr, double Sign, double SignStat, double SignalUnc, bool Shape){
 
-
-   double LumiUnc   = (SQRTS==7?1.022:1.044);
+   double LumiUnc   = 1.0;
+   if(SQRTS==7 ) LumiUnc=1.022;
+   if(SQRTS==8 ) LumiUnc=1.044;
+   if(SQRTS==13) LumiUnc=1.120;
 
    if(isnan(float(PredRelErr)))PredRelErr= 1.2;
 

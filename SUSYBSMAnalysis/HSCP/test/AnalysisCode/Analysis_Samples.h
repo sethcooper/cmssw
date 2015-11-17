@@ -290,7 +290,10 @@ double GetPUWeight(const fwlite::ChainEvent& ev, const std::string& pileup, doub
    std::vector<PileupSummaryInfo>::const_iterator PVI;
    int npv = -1; float Tnpv = -1;
 
-   if(pileup=="S4"){
+   if(pileup=="NoPU"){
+      PUWeight_thisevent = 1.0;
+      PUSystFactor = 1.0;
+   }else if(pileup=="S4"){
       float sum_nvtx = 0;
       for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
          npv = PVI->getPU_NumInteractions();
@@ -318,10 +321,19 @@ double GetPUWeight(const fwlite::ChainEvent& ev, const std::string& pileup, doub
        }
      }
      PUWeight_thisevent = LumiWeightsMC.weight( Tnpv );
+     PUSystFactor = PShift.ShiftWeight( Tnpv );   
+   }else if(pileup=="S15"){
+     for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
+       int BX = PVI->getBunchCrossing();
+       if(BX == 0) {
+         Tnpv = PVI->getTrueNumInteractions();
+         continue;
+       }
+     }
+     PUWeight_thisevent = LumiWeightsMC.weight( Tnpv );
      PUSystFactor = PShift.ShiftWeight( Tnpv );
-   }
-   else {
-     printf("Can not find pile up scenario");
+   }else {
+     printf("Can not find pile up scenario: %s", pileup.c_str());
    }
    return PUWeight_thisevent;
 }
@@ -337,7 +349,10 @@ double GetPUWeight(const fwlite::ChainEvent& ev, const std::string& pileup, doub
    std::vector<PileupSummaryInfo>::const_iterator PVI;
    int npv = -1; float Tnpv = -1;
 
-   if(pileup=="S4"){
+   if(pileup=="NoPU"){
+      PUWeight_thisevent = 1.0;
+      PUSystFactor = 1.0;
+   }else if(pileup=="S4"){
       float sum_nvtx = 0;
       for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
          npv = PVI->getPU_NumInteractions();
@@ -369,8 +384,18 @@ double GetPUWeight(const fwlite::ChainEvent& ev, const std::string& pileup, doub
      PUWeight_thisevent = LumiWeightsMC.weight( Tnpv );
      if(PUWeight_thisevent==0) PUSystFactor=1;
      else PUSystFactor = LumiWeightsMCSyst.weight( Tnpv ) / PUWeight_thisevent;
-   }
-   else {
+   }else if(pileup=="S15"){
+     for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
+       int BX = PVI->getBunchCrossing();
+       if(BX == 0) {
+         Tnpv = PVI->getTrueNumInteractions();
+         continue;
+       }
+     }
+     PUWeight_thisevent = LumiWeightsMC.weight( Tnpv );
+     if(PUWeight_thisevent==0) PUSystFactor=1;
+     else PUSystFactor = LumiWeightsMCSyst.weight( Tnpv ) / PUWeight_thisevent;
+   }else {
      printf("Can not find pile up scenario");
    }
    return PUWeight_thisevent;

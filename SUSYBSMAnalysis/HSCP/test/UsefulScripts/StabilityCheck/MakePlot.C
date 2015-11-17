@@ -314,6 +314,39 @@ TGraphErrors* getStabilityGraph(std::vector<string>& runList, TFile* InputFile, 
    return graph;
 }
 
+
+void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, double xMin, double xMax, string savePath){
+   TCanvas* c = new TCanvas("c","c,",600,600);     
+
+   TH1D* frame = new TH1D("frame", "frame", 1, xMin, xMax);
+   frame->SetTitle("");
+   frame->SetStats(kFALSE);
+   frame->GetXaxis()->SetNdivisions(505);
+   frame->GetXaxis()->SetTitle("");
+   frame->GetYaxis()->SetTitleOffset(0.95);
+   frame->Draw("AXIS");
+
+   double yMax=-1E100;
+   double yMin= 1E100;
+
+   for(unsigned int r=0;r<runList.size();r++){
+      char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
+      TH1D* histo = (TH1D*)GetObjectFromPath(InputFile, name);  
+      if(!histo || histo->GetEntries()<10000)continue;
+      histo->Scale(1.0/histo->Integral());
+      histo->SetLineColor(gStyle->GetColorPalette(int(r*(255.0/runList.size()))));
+      histo->SetLineWidth(1);
+      histo->Draw("same");
+
+      yMax = std::max(yMax, histo->GetMaximum());
+      yMin = std::min(yMin, histo->GetMinimum());
+   }
+   frame->SetMaximum(yMax*1.1);
+   frame->SetMinimum(std::max(1E-3, yMin));
+   c->SetLogy(true);
+   SaveCanvas(c,"pictures/",savePath);
+}
+
 void MakePlot()
 {
    setTDRStyle();
@@ -347,13 +380,17 @@ void MakePlot()
    }
    unsigned int N= runList.size();
 
-   TH1D* frame = new TH1D("frame", "frame", N, 0, N);
-   frame->SetTitle("");
-   frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetNdivisions(505);
-   frame->GetXaxis()->SetTitle("");
-   frame->GetYaxis()->SetTitleOffset(0.95);
-   for(unsigned int r=0;r<N;r++){frame->GetXaxis()->SetBinLabel(r+1, ((r+0)%2==0)?runList[r].c_str():"");}  //plot only a label every 2
+
+   
+
+
+   TH1D* frameR = new TH1D("frameR", "frameR", N, 0, N);
+   frameR->SetTitle("");
+   frameR->SetStats(kFALSE);
+   frameR->GetXaxis()->SetNdivisions(505);
+   frameR->GetXaxis()->SetTitle("");
+   frameR->GetYaxis()->SetTitleOffset(0.95);
+   for(unsigned int r=0;r<N;r++){frameR->GetXaxis()->SetBinLabel(r+1, ((r+0)%2==0)?runList[r].c_str():"");}  //plot only a label every 2
 
 
    TGraphErrors* Any_NVert             = getStabilityGraph(runList, InputFile, "AnyNVert");
@@ -365,9 +402,18 @@ void MakePlot()
    TGraphErrors* SingleMu_Pt           = getStabilityGraph(runList, InputFile, "HLT_Mu50Pt");
    TGraphErrors* PFMet_Pt              = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedPt");
 
+   TGraphErrors* Any_dEdxMin           = getStabilityGraph(runList, InputFile, "AnydEdxMin");
+   TGraphErrors* SingleMu_dEdxMin      = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMin");
+   TGraphErrors* PFMet_dEdxMin         = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMin");
+
+
+
    TGraphErrors* Any_dEdx              = getStabilityGraph(runList, InputFile, "AnydEdx");
    TGraphErrors* SingleMu_dEdx         = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdx");
    TGraphErrors* PFMet_dEdx            = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdx");
+
+   overlay(runList, InputFile, "HLT_Mu50dEdxMT", 0.0, 10.0, "overlay_dEdxMT");
+   overlay(runList, InputFile, "HLT_Mu50dEdxM" , 0.0, 10.0, "overlay_dEdxM");
 
    TGraphErrors* Any_dEdxMT            = getStabilityGraph(runList, InputFile, "AnydEdxMT");
    TGraphErrors* SingleMu_dEdxMT       = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMT");
@@ -450,133 +496,8 @@ void MakePlot()
    TGraphErrors* SingleMu_VertexCSC       = getStabilityGraph(runList, InputFile, "HLT_Mu50VertexCSC", true);
    TGraphErrors* PFMet_VertexCSC          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertexCSC", true);
 
-//   TGraphErrors* Any_HdEdx                 = getStabilityGraph(runList, InputFile, "AnyHdEdx");
-//   TGraphErrors* SingleMu_HdEdx          = getStabilityGraph(runList, InputFile, "HLT_Mu50HdEdx");
-//   TGraphErrors* PFMet_HdEdx             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedHdEdx");
-
-//   TGraphErrors* Any_HPt                 = getStabilityGraph(runList, InputFile, "AnyHPt");
-//   TGraphErrors* SingleMu_HPt          = getStabilityGraph(runList, InputFile, "HLT_Mu50HPt");
-//   TGraphErrors* PFMet_HPt             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedHPt");
-
-//   TGraphErrors* Any_HTOFAOD                 = getStabilityGraph(runList, InputFile, "AnyHTOFAOD");
-//   TGraphErrors* SingleMu_HTOFAOD          = getStabilityGraph(runList, InputFile, "HLT_Mu50HTOFAOD");
-//   TGraphErrors* PFMet_HTOFAOD             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedHTOFAOD");
-
-//   TGraphErrors* Any_HTOF                 = getStabilityGraph(runList, InputFile, "AnyHTOF");
-//   TGraphErrors* SingleMu_HTOF          = getStabilityGraph(runList, InputFile, "HLT_Mu50HTOF");
-//   TGraphErrors* PFMet_HTOF             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedHTOF");
-
-
-/*
-   for(int i=0;i<SingleMu_Pt->GetXaxis()->GetNbins();i++){
-//      if((i+3)%12==0)continue; 
-      if((i+2)%4==0)continue; 
-//      continue;// //uncomment to show less label that bins
-      Any_Pt         ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_Pt    ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_Pt       ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdx       ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdx  ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdx     ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxM      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxM ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxM    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMS      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMS ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMS    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMP      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMP ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMP    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMSC     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMSC->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMSC   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMPC     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMPC->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMPC   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMSF     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMSF->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMSF   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMPF     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMPF->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMPF   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFAOD        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFAOD   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFAOD      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFAODDT      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFAODDT ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFAODDT    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFAODCSC     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFAODCSC->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFAODCSC   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexAOD        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexAOD   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexAOD      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexAODDT      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexAODDT ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexAODDT    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexAODCSC     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexAODCSC->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexAODCSC   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOF        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOF   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOF      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFDT      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFDT ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFDT    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFCSC     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFCSC->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFCSC   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_Vertex        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_Vertex   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_Vertex      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexDT      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexDT ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexDT    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexCSC     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexCSC->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexCSC   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HdEdx          ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HdEdx     ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HdEdx        ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HPt            ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HPt       ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HPt          ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HTOFAOD        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HTOFAOD   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HTOFAOD      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HTOF           ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HTOF      ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HTOF         ->GetXaxis()->SetBinLabel(i,"");
-   }  
-*/
-
-
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("<#Vertices>");       frame->SetMinimum(0.0);   frame->SetMaximum(20);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("<#Vertices>");       frameR->SetMinimum(0.0);   frameR->SetMaximum(20);  frameR->Draw("AXIS");
    SingleMu_NVert->Draw("0 P same");;                  legend.push_back("SingleMu50");
    //for(unsigned int i=0;i<legend.size();i++){((Tile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    //DrawLegend(Histos,legend,"","P");
@@ -586,7 +507,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("p_{T} (GeV/c)");   frame->SetMinimum(0.0);   frame->SetMaximum(150.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("p_{T} (GeV/c)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(150.0);  frameR->Draw("AXIS");
    SingleMu_Pt->Draw("0 P same");;                  legend.push_back("SingleMu50");
    //for(unsigned int i=0;i<legend.size();i++){((Tile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    //DrawLegend(Histos,legend,"","P");
@@ -595,8 +516,23 @@ void MakePlot()
    delete c1;
 
 
+
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{as}");   frame->SetMinimum(0.012);   frame->SetMaximum(0.022);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
+   //Any_dEdxMin->Draw("0 P same");                       legend.push_back("Any");
+   SingleMu_dEdxMin->Draw("0 P same");                  legend.push_back("SingleMu50");
+   //PFMet_dEdxMin->Draw("0 P same");                     legend.push_back("PFMET170");
+
+   //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
+   //DrawLegend(Histos,legend,"","P");
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMin");
+   delete c1;
+
+
+
+   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+   frameR->GetYaxis()->SetTitle("I_{as}");   frameR->SetMinimum(0.012);   frameR->SetMaximum(0.022);  frameR->Draw("AXIS");
    //Any_dEdx->Draw("0 P same");                       legend.push_back("Any");
    SingleMu_dEdx->Draw("0 P same");                  legend.push_back("SingleMu50");
    //PFMet_dEdx->Draw("0 P same");                     legend.push_back("PFMET170");
@@ -609,7 +545,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h}");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxM->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxM->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxM->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -622,7 +558,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{t}");   frame->SetMinimum(3.5);   frame->SetMaximum(4.5);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{t}");   frameR->SetMinimum(3.5);   frameR->SetMaximum(4.5);  frameR->Draw("AXIS");
    //Any_dEdxMT->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMT->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMT->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -638,7 +574,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h} S");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h} S");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxMS->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMS->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMS->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -650,7 +586,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h} P");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h} P");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxMP->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMP->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMP->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -662,7 +598,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h} SC");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h} SC");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxMSC->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMSC->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMSC->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -674,7 +610,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h} PC");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h} PC");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxMPC->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMPC->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMPC->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -686,7 +622,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h} SF");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h} SF");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxMSF->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMSF->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMSF->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -698,7 +634,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("I_{h} PF");   frame->SetMinimum(2.5);   frame->SetMaximum(3.7);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("I_{h} PF");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
    //Any_dEdxMPF->Draw("0 P same");                      legend.push_back("Any");
    SingleMu_dEdxMPF->Draw("0 P same");                 legend.push_back("SingleMu50");
    //PFMet_dEdxMPF->Draw("0 P same");                    legend.push_back("PFMET170");
@@ -711,7 +647,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF} (AOD)");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    //Any_TOFAOD->Draw("0 P same");                        legend.push_back("Any");   
    SingleMu_TOFAOD->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_TOFAOD->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -723,7 +659,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF_DT} (AOD)");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF_DT} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    //Any_TOFAODDT->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_TOFAODDT->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_TOFAODDT->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -735,7 +671,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF_CSC} (AOD)");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF_CSC} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    //Any_TOFAODCSC->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_TOFAODCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_TOFAODCSC->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -749,7 +685,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF} (AOD)");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    SingleMu_TOFAOD->Draw("0 P same");                   legend.push_back("DT+CSC");
    SingleMu_TOFAODDT->Draw("0 P same");                 legend.push_back("DT");
    SingleMu_TOFAODCSC->Draw("0 P same");                legend.push_back("CSC");
@@ -763,7 +699,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("Vertex time [ns] (AOD)");   frame->SetMinimum(-2.0);   frame->SetMaximum(2.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("Vertex time [ns] (AOD)");   frameR->SetMinimum(-2.0);   frameR->SetMaximum(2.0);  frameR->Draw("AXIS");
    //Any_VertexAOD->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_VertexAOD->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_VertexAOD->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -775,7 +711,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("Vertex time DT [ns] (AOD)");   frame->SetMinimum(-2.0);   frame->SetMaximum(2.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("Vertex time DT [ns] (AOD)");   frameR->SetMinimum(-2.0);   frameR->SetMaximum(2.0);  frameR->Draw("AXIS");
    //Any_VertexAODDT->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_VertexAODDT->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_VertexAODDT->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -787,7 +723,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("Vertex time CSC [ns] (AOD)");   frame->SetMinimum(-2.0);   frame->SetMaximum(2.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("Vertex time CSC [ns] (AOD)");   frameR->SetMinimum(-2.0);   frameR->SetMaximum(2.0);  frameR->Draw("AXIS");
    //Any_VertexAODCSC->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_VertexAODCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_VertexAODCSC->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -800,7 +736,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF}");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    //Any_TOF->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_TOF->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_TOF->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -812,7 +748,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF_DT}");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF_DT}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    //Any_TOFDT->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_TOFDT->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_TOFDT->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -824,7 +760,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF_CSC}");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF_CSC}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    //Any_TOFCSC->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_TOFCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_TOFCSC->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -838,7 +774,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("1/#beta_{TOF}");   frame->SetMinimum(0.85);   frame->SetMaximum(1.15);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("1/#beta_{TOF}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
    SingleMu_TOF->Draw("0 P same");                   legend.push_back("DT+CSC");
    SingleMu_TOFDT->Draw("0 P same");                 legend.push_back("DT");
    SingleMu_TOFCSC->Draw("0 P same");                legend.push_back("CSC");
@@ -852,7 +788,7 @@ void MakePlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("Vertex time [ns]");   frame->SetMinimum(-5.0);   frame->SetMaximum(5.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("Vertex time [ns]");   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
    //Any_Vertex->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_Vertex->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_Vertex->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -864,7 +800,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("Vertex time DT [ns]");   frame->SetMinimum(-5.0);   frame->SetMaximum(5.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("Vertex time DT [ns]");   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
    //Any_VertexDT->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_VertexDT->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_VertexDT->Draw("0 P same");                      legend.push_back("PFMET170");
@@ -876,7 +812,7 @@ void MakePlot()
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   frame->GetYaxis()->SetTitle("Vertex time CSC [ns]");   frame->SetMinimum(-5.0);   frame->SetMaximum(5.0);  frame->Draw("AXIS");
+   frameR->GetYaxis()->SetTitle("Vertex time CSC [ns]");   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
    //Any_VertexCSC->Draw("0 P same");                        legend.push_back("Any");
    SingleMu_VertexCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
    //PFMet_VertexCSC->Draw("0 P same");                      legend.push_back("PFMET170");

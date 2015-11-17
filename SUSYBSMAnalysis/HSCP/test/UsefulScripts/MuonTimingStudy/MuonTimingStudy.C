@@ -189,7 +189,7 @@ void MuonTimingStudy(string DIRNAME="COMPILE", string INPUT="dEdx.root", string 
             reco::MuonRef muon = reco::MuonRef( muonCollHandle.product(), c );
             if(muon.isNull())continue;
             if(!muon->isGlobalMuon())continue;
-            if(muon->pt()<10)continue;
+            if(muon->pt()<55)continue;//40
             if(isCompatibleWithCosmic(muon->track(), vertexColl))continue;
 
 

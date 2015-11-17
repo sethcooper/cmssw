@@ -104,7 +104,7 @@ edm::LumiReWeighting LumiWeightsMCSyst;
 //reweight::PoissonMeanShifter PShift(0.6);//0.6 for upshift, -0.6 for downshift
 
 TH3F* dEdxTemplates = NULL;
-std::unordered_map<unsigned int,double> TrackerGains;
+dedxGainCorrector trackerCorrector;
 double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
    1.21836    // [1]  Pixel data to SiStrip data
@@ -235,11 +235,13 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
 
    //initialize LumiReWeighting
    //FIXME  pileup scenario must be updated based on data/mc
-   if(samples[0].Pileup=="S10"){   for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
-   }else{                          for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
+   if(samples[0].Pileup=="S15"){        for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Startup2015_25ns[i]);
+   }else if(samples[0].Pileup=="NoPU"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(BgLumiMC[i]); //Push same as data to garantee no PU reweighting
+   }else if (samples[0].Pileup=="S10"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
+   }else{                               for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
    }
-   for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2012_f[i]);
-   for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2012_XSecShiftUp_f[i]);
+   for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2015_f[i]);
+   for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2015_XSecShiftUp_f[i]);
    LumiWeightsMC     = edm::LumiReWeighting(BgLumiMC, TrueDist);
    LumiWeightsMCSyst = edm::LumiReWeighting(BgLumiMC, TrueDistSyst);
 
@@ -334,28 +336,28 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
    vertexCollHandle.getByLabel(ev,"offlinePrimaryVertices");
    if(!vertexCollHandle.isValid()){printf("Vertex Collection NotFound\n");return false;}
    const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
-   if(st){st->BS_NVertex->Fill(vertexColl.size(), Event_Weight);
-     st->BS_NVertex_NoEventWeight->Fill(vertexColl.size());
-   }
    if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
 
    int highestPtGoodVertex = -1;
    int goodVerts=0;
    for(unsigned int i=0;i<vertexColl.size();i++){
+     if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
+     goodVerts++;
      if(st) st->BS_dzAll->Fill( track->dz (vertexColl[i].position()),Event_Weight);
      if(st) st->BS_dxyAll->Fill(track->dxy(vertexColl[i].position()),Event_Weight);
-     if(fabs(vertexColl[i].z())<15 && sqrt(vertexColl[i].x()*vertexColl[i].x()+vertexColl[i].y()*vertexColl[i].y())<2 && vertexColl[i].ndof()>3){ goodVerts++;}else{continue;} //only consider good vertex
-       if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
 //     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
 //       dz  = track->dz (vertexColl[i].position());
 //       dxy = track->dxy(vertexColl[i].position());
 //     }
    }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
-   double dz  = track->dz (vertexColl[0].position());
-   double dxy = track->dxy(vertexColl[0].position());
 
-   
-
+   if(st){st->BS_NVertex->Fill(vertexColl.size(), Event_Weight);
+     st->BS_NVertex_NoEventWeight->Fill(vertexColl.size());
+   }
+   double dz  = track->dz (vertexColl[highestPtGoodVertex].position());
+   double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
+ 
    bool PUA = (vertexColl.size()<15);
    bool PUB = (vertexColl.size()>=15);
 
@@ -974,8 +976,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
          dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
       }
 
-      if(isData){    LoadDeDxCalibration(TrackerGains, "../../data/Data13TeVGains.root"); 
-      }else{  //FIXME check gain for MC
+      if(isData){    trackerCorrector.LoadDeDxCalibration("../../data/Data13TeVGains_v2.root"); 
+      }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
       }
 
       //check that the plot container exist for this sample, otherwise create it
@@ -1071,6 +1073,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
             if(CurrentRun != ev.eventAuxiliary().run()){
                CurrentRun = ev.eventAuxiliary().run();
                tofCalculator.setRun(CurrentRun);
+               trackerCorrector.setRun(CurrentRun);
             }
 
 
@@ -1231,8 +1234,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
+               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
                DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
@@ -1243,7 +1246,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
                   bool   PRescale = true;
                   double IRescale = 0.05; // added to the Ias value
                   double MRescale = 1.03;
-		  double TRescale = -0.005; // added to the 1/beta value
+		  double TRescale = 0.015; //-0.005 (used in 2012); // added to the 1/beta value
 		  
 		  double genpT = -1.0;
 		  for(unsigned int g=0;g<genColl.size();g++) {
@@ -1282,11 +1285,13 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                   // compute systematic due to momentum scale
                   if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
+                     double RescalingFactor = RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())/track->pt();
+
                      if(TypeMode==5 && isSemiCosmicSB)continue;
- 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p()*PRescale,dedxMObj->dEdx(),!isData);
-		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p()*PRescale,tof->inverseBeta());
+ 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p()*RescalingFactor,dedxMObj->dEdx(),!isData);
+		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p()*RescalingFactor,tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*RescalingFactor, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1309,7 +1314,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1332,7 +1337,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx()*MRescale,!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1355,7 +1360,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
  		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),(tof->inverseBeta()+TRescale));
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/(tof->inverseBeta()+TRescale)))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1378,7 +1383,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 

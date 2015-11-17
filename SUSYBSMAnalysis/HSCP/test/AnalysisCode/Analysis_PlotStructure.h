@@ -2061,7 +2061,7 @@ void stPlots_DrawComparison(std::string SavePath, std::string LegendTitle, unsig
      if(Histos[i]->Integral(0, Histos[i]->GetNbinsX()+1)>0) Histos[i]->Scale(1.0/Histos[i]->Integral(0, Histos[i]->GetNbinsX()+1));
    }
    sprintf(YAxisTitle,"Fraction of tracks/%2.0f [cm]",Histos[0]->GetBinWidth(1));
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Dxy (cm)", YAxisTitle, 0, 0, 5E-4,2, false, false, true, true);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Dxy (cm)", YAxisTitle, -0.5, 0.5, 5E-4,2, false, false, true, true);
    DrawLegend((TObject**)Histos,legend,"","P", 0.9, 0.92, 0.38, 0.045);
    c1->SetLogy(true);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
@@ -2092,7 +2092,7 @@ void stPlots_DrawComparison(std::string SavePath, std::string LegendTitle, unsig
      if(Histos[i]->Integral(0, Histos[i]->GetNbinsX()+1)>0) Histos[i]->Scale(1.0/Histos[i]->Integral(0, Histos[i]->GetNbinsX()+1));
    }
    sprintf(YAxisTitle,"Fraction of tracks/%2.0f [cm]",Histos[0]->GetBinWidth(1));
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Dz (cm)", YAxisTitle, 0, 0, 5E-4,2, false, false, true, true);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Dz (cm)", YAxisTitle, -0.5, 0.5, 5E-4,2, false, false, true, true);
    DrawLegend((TObject**)Histos,legend,"","P", 0.9, 0.92, 0.38, 0.045);
    c1->SetLogy(true);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
@@ -2285,7 +2285,7 @@ void stPlots_DrawComparison(std::string SavePath, std::string LegendTitle, unsig
    for(unsigned int i=0;i<st.size();i++){
      Histos[i] = (TH1*)st[i]->BS_NVertex;  legend.push_back(lg[i]);   if(Histos[i]->Integral()>0) Histos[i]->Scale(1.0/Histos[i]->Integral());   }
    sprintf(YAxisTitle,"Fraction of tracks/%0.0f vertex",Histos[0]->GetBinWidth(1));
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Number of reconstructed vertices", YAxisTitle, 0,0, 1E-3,2);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Number of reconstructed vertices", YAxisTitle, 0,0, 1E-3,0.3);
    DrawLegend((TObject**)Histos,legend,"","P",  0.78, 0.92, 0.38, 0.045);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,SavePath,"NVertex_BS");
