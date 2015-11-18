@@ -552,298 +552,79 @@ void MakePlot()
 
 
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      LEG = new TLegend(0.15,0.20,0.90,0.40);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
       frameR->GetYaxis()->SetTitle("I_{as}");   frameR->SetMinimum(0.012);   frameR->SetMaximum(0.022);  frameR->Draw("AXIS");
-      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdx");     g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
-      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxAOD");  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdx", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
       LEG->Draw();
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_dEdx");
       delete c1;
 
-/*
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
       frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
-      SingleMu_dEdxM->SetMarkerColor(4);
-      //Any_dEdxM->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxM->Draw("0 P same");                 legend.push_back("SingleMu50");
-      SingleMu_dEdxMAOD->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxM->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxM", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxMAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_dEdxM");
       delete c1;
 
-
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{t}");   frameR->SetMinimum(3.5);   frameR->SetMaximum(4.5);  frameR->Draw("AXIS");
-      //Any_dEdxMT->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMT->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMT->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
+      frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxMT", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+//      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxMTAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMT");
       delete c1;
 
-
-
-
-
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{h} S");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
-      //Any_dEdxMS->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMS->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMS->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
+      frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxMin", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+//      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxMinAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMS");
+      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMin");
       delete c1;
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{h} P");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
-      //Any_dEdxMP->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMP->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMP->Draw("0 P same");                    legend.push_back("PFMET170");
+      std::string dEdxVariables[] = {"dEdxMS", "dEdxMP", "dEdxMSC", "dEdxMPC", "dEdxMSF", "dEdxMPF"};
+      std::string dEdxLegends[]   = {"I_{h} StripOnly", "I_{h} PixelOnly", "I_{h} StripOnly Barrel", "I_{h} PixelOnly Barrel", "I_{h} StripOnly Endcap", "I_{h} PixelOnly Endcap"};
+      for(unsigned int S=0;S<sizeof(dEdxVariables)/sizeof(string);S++){
+         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         frameR->GetYaxis()->SetTitle(dEdxLegends[S].c_str());   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+         LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+         g1 = getStabilityGraph(runList, InputFile, trigger+dEdxVariables[S], false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+//         g2 = getStabilityGraph(runList, InputFile, trigger+dEdxVariables[S]+"AOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+         LEG->Draw();
+         DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+         SaveCanvas(c1,"pictures/","Summary_Profile_"+dEdxVariables[S]);
+         delete c1;
+     }
 
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMP");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{h} SC");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
-      //Any_dEdxMSC->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMSC->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMSC->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMSC");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{h} PC");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
-      //Any_dEdxMPC->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMPC->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMPC->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMPC");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{h} SF");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
-      //Any_dEdxMSF->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMSF->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMSF->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMSF");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("I_{h} PF");   frameR->SetMinimum(2.5);   frameR->SetMaximum(3.7);  frameR->Draw("AXIS");
-      //Any_dEdxMPF->Draw("0 P same");                      legend.push_back("Any");
-      SingleMu_dEdxMPF->Draw("0 P same");                 legend.push_back("SingleMu50");
-      //PFMet_dEdxMPF->Draw("0 P same");                    legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMPF");
-      delete c1;
+      std::string TOFVariables[] = {"TOF", "TOFDT", "TOFCSC", "Vertex", "VertexDT", "VertexCSC"};
+      std::string TOFLegends[]   = {"1/#beta_{TOF}", "1/#beta_{TOF DT}", "1/#beta_{TOF CSC}", "Vertex time [ns]", "Vertex time from DT [ns]", "Vertex time from CSC  [ns]" };
+      for(unsigned int T=0;T<sizeof(TOFVariables)/sizeof(string);T++){
+         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         if(TOFVariables[T].find("Vertex")!=std::string::npos){
+         frameR->GetYaxis()->SetTitle(TOFLegends[T].c_str());   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
+         }else{
+         frameR->GetYaxis()->SetTitle(TOFLegends[T].c_str());   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
+         }
+         LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+         g1 = getStabilityGraph(runList, InputFile, trigger+TOFVariables[T], false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+         g2 = getStabilityGraph(runList, InputFile, trigger+TOFVariables[T]+"AOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+         LEG->Draw();
+         DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+         SaveCanvas(c1,"pictures/","Summary_Profile_"+TOFVariables[T]);
+         delete c1;
+      }
 
 
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      //Any_TOFAOD->Draw("0 P same");                        legend.push_back("Any");   
-      SingleMu_TOFAOD->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_TOFAOD->Draw("0 P same");                      legend.push_back("PFMET170");
-      
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOFAOD");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF_DT} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      //Any_TOFAODDT->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_TOFAODDT->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_TOFAODDT->Draw("0 P same");                      legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOFAODDT");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF_CSC} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      //Any_TOFAODCSC->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_TOFAODCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_TOFAODCSC->Draw("0 P same");                      legend.push_back("PFMET170");
-         
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOFAODCSC");
-      delete c1;
-
-
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF} (AOD)");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      SingleMu_TOFAOD->Draw("0 P same");                   legend.push_back("DT+CSC");
-      SingleMu_TOFAODDT->Draw("0 P same");                 legend.push_back("DT");
-      SingleMu_TOFAODCSC->Draw("0 P same");                legend.push_back("CSC");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P", 0.29, 0.52, 0.20, 0.05);
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOFAOD_Combined");
-      delete c1;
-
-
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("Vertex time [ns] (AOD)");   frameR->SetMinimum(-2.0);   frameR->SetMaximum(2.0);  frameR->Draw("AXIS");
-      //Any_VertexAOD->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_VertexAOD->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_VertexAOD->Draw("0 P same");                      legend.push_back("PFMET170");
-      
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_VertexAOD");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("Vertex time DT [ns] (AOD)");   frameR->SetMinimum(-2.0);   frameR->SetMaximum(2.0);  frameR->Draw("AXIS");
-      //Any_VertexAODDT->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_VertexAODDT->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_VertexAODDT->Draw("0 P same");                      legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_VertexAODDT");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("Vertex time CSC [ns] (AOD)");   frameR->SetMinimum(-2.0);   frameR->SetMaximum(2.0);  frameR->Draw("AXIS");
-      //Any_VertexAODCSC->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_VertexAODCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_VertexAODCSC->Draw("0 P same");                      legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_VertexAODCSC");
-      delete c1;
-
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      //Any_TOF->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_TOF->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_TOF->Draw("0 P same");                      legend.push_back("PFMET170");
-      
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOF");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF_DT}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      //Any_TOFDT->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_TOFDT->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_TOFDT->Draw("0 P same");                      legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOFDT");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF_CSC}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      //Any_TOFCSC->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_TOFCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_TOFCSC->Draw("0 P same");                      legend.push_back("PFMET170");
-         
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOFCSC");
-      delete c1;
-
-
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("1/#beta_{TOF}");   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
-      SingleMu_TOF->Draw("0 P same");                   legend.push_back("DT+CSC");
-      SingleMu_TOFDT->Draw("0 P same");                 legend.push_back("DT");
-      SingleMu_TOFCSC->Draw("0 P same");                legend.push_back("CSC");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P", 0.29, 0.52, 0.20, 0.05);
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_TOF_Combined");
-      delete c1;
-
-
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("Vertex time [ns]");   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
-      //Any_Vertex->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_Vertex->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_Vertex->Draw("0 P same");                      legend.push_back("PFMET170");
-      
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_Vertex");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("Vertex time DT [ns]");   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
-      //Any_VertexDT->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_VertexDT->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_VertexDT->Draw("0 P same");                      legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_VertexDT");
-      delete c1;
-
-      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("Vertex time CSC [ns]");   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
-      //Any_VertexCSC->Draw("0 P same");                        legend.push_back("Any");
-      SingleMu_VertexCSC->Draw("0 P same");                   legend.push_back("SingleMu50");
-      //PFMet_VertexCSC->Draw("0 P same");                      legend.push_back("PFMET170");
-
-      //for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-      //DrawLegend(Histos,legend,"","P");
-      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
-      SaveCanvas(c1,"pictures/","Summary_Profile_VertexCSC");
-      delete c1;
-*/
-   }
+   }//end of trigger loop
 
 //   MakedEdxPlot();
 }
