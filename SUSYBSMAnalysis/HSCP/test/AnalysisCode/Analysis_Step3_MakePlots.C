@@ -59,7 +59,7 @@ void Analysis_Step3_MakePlots()
 
    string InputPattern;				unsigned int CutIndex;     unsigned int CutIndex_Flip=1;  unsigned int CutIndexTight;
    std::vector<string> Legends;                 std::vector<string> Inputs;
-/*
+
    Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 67;
@@ -72,10 +72,10 @@ void Analysis_Step3_MakePlots()
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
-*/
+
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 695; CutIndex_Flip=12;
-/*
+
    MassPrediction(InputPattern, CutIndex,      "Mass"     , true, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass"     , true, "13TeV_Tight");
    MassPrediction(InputPattern, 1,             "Mass_Flip", true, "13TeV_Loose");
@@ -86,12 +86,12 @@ void Analysis_Step3_MakePlots()
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
-*/
+
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
   std::cout<<"A\n";
    GetSystematicOnPrediction(InputPattern, "Data13TeV");
   std::cout<<"B\n";
-//   CheckPrediction(InputPattern, "_Flip", "Data13TeV");
+   CheckPrediction(InputPattern, "_Flip", "Data13TeV");
 
   std::cout<<"ALL DONE WITH THE PLOTTING CODE\n";
 
