@@ -1,5 +1,6 @@
 
 #include <vector>
+#include <algorithm>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -18,11 +19,12 @@
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TPaveText.h"
-#include "tdrstyle.C"
 #include "TProfile.h"
+#include "TCutG.h"
 
-#include "../../ICHEP_Analysis/Analysis_PlotFunction.h"
-#include "../../ICHEP_Analysis/Analysis_Samples.h"
+
+#include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
+
 
 std::map<unsigned int, double> RunToIntLumi;
 
@@ -46,6 +48,7 @@ bool LoadLumiToRun()
      sscanf(Line,"%d %s %s %s %f\n",&Run,Tmp1,Tmp2,Tmp3,&IntLumi);
      TotalIntLuminosity+= IntLumi/1000000.0;
 //     printf("%6i --> %f/pb   (%s | %s | %s)\n",Run,TotalIntLuminosity,Tmp1,Tmp2,Tmp3);
+
      RunToIntLumi[Run] = TotalIntLuminosity;
    }
    fclose(pFile);
@@ -55,7 +58,7 @@ bool LoadLumiToRun()
 
 TGraph* ConvertFromRunToIntLumi(TProfile* Object, const char* DrawOption, string YLabel, double YRange_Min=3.1, double YRange_Max=3.7){
    TGraphErrors* graph = new TGraphErrors(Object->GetXaxis()->GetNbins());
-   for(unsigned int i=1;i<Object->GetXaxis()->GetNbins()+1;i++){
+   for(int i=1;i<Object->GetXaxis()->GetNbins()+1;i++){
       int RunNumber;
       sscanf(Object->GetXaxis()->GetBinLabel(i),"%d",&RunNumber);
       graph->SetPoint(i-1, RunToIntLumi[RunNumber], Object->GetBinContent(i));
@@ -93,17 +96,28 @@ void MakedEdxPlot()
 
    TFile* InputFile = new TFile("pictures/Histos.root");
 
-   TProfile* SingleMu_PtProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuPtProf");      
-   TProfile* SingleMu_dEdxProf         = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxProf");   
-   TProfile* SingleMu_dEdxMProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMProf");
-   TProfile* SingleMu_dEdxMSProf       = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMSProf");
-   TProfile* SingleMu_dEdxMPProf       = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMPProf");
-   TProfile* SingleMu_dEdxMSCProf      = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMSCProf");
-   TProfile* SingleMu_dEdxMPCProf      = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMPCProf");
-   TProfile* SingleMu_dEdxMSFProf      = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMSFProf");
-   TProfile* SingleMu_dEdxMPFProf      = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMPFProf");
+   std::vector<string> runList;
+   TList* ObjList = InputFile->GetListOfKeys();
+   for(int i=0;i<ObjList->GetSize();i++){
+      TObject* tmp = GetObjectFromPath(InputFile,ObjList->At(i)->GetName(),false);
+      if(tmp->InheritsFrom("TDirectory")){
+         runList.push_back(ObjList->At(i)->GetName());
+         printf("Add a new run: %s\n", ObjList->At(i)->GetName() );
+      }
+      delete tmp;
+   }
 
-   TProfile* SingleMu_NVertProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuNVertProf");
+   TProfile* SingleMu_PtProf           = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50PtProf");      
+   TProfile* SingleMu_dEdxProf         = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxProf");   
+   TProfile* SingleMu_dEdxMProf        = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMProf");
+   TProfile* SingleMu_dEdxMSProf       = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMSProf");
+   TProfile* SingleMu_dEdxMPProf       = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMPProf");
+   TProfile* SingleMu_dEdxMSCProf      = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMSCProf");
+   TProfile* SingleMu_dEdxMPCProf      = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMPCProf");
+   TProfile* SingleMu_dEdxMSFProf      = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMSFProf");
+   TProfile* SingleMu_dEdxMPFProf      = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50dEdxMPFProf");
+
+   TProfile* SingleMu_NVertProf        = (TProfile*)GetObjectFromPath(InputFile, "HLT_Mu50NVertProf");
 
    SingleMu_NVertProf->LabelsDeflate("X");
    SingleMu_NVertProf->LabelsOption("av","X");
@@ -114,10 +128,10 @@ void MakedEdxPlot()
    TFile* InputFileLumi167807 = new TFile("pictures/HistosLumi167807.root");
    TFile* InputFileLumi167898 = new TFile("pictures/HistosLumi167898.root");
 
-   TProfile* SingleMu_dEdxMProfLumi166380         = (TProfile*)GetObjectFromPath(InputFileLumi166380, "HscpPathSingleMudEdxMProf");
-   TProfile* SingleMu_dEdxMProfLumi166512         = (TProfile*)GetObjectFromPath(InputFileLumi166512, "HscpPathSingleMudEdxMProf");
-   TProfile* SingleMu_dEdxMProfLumi167807         = (TProfile*)GetObjectFromPath(InputFileLumi167807, "HscpPathSingleMudEdxMProf");
-   TProfile* SingleMu_dEdxMProfLumi167898         = (TProfile*)GetObjectFromPath(InputFileLumi167898, "HscpPathSingleMudEdxMProf");
+   TProfile* SingleMu_dEdxMProfLumi166380         = (TProfile*)GetObjectFromPath(InputFileLumi166380, "HLT_Mu50dEdxMProf");
+   TProfile* SingleMu_dEdxMProfLumi166512         = (TProfile*)GetObjectFromPath(InputFileLumi166512, "HLT_Mu50dEdxMProf");
+   TProfile* SingleMu_dEdxMProfLumi167807         = (TProfile*)GetObjectFromPath(InputFileLumi167807, "HLT_Mu50dEdxMProf");
+   TProfile* SingleMu_dEdxMProfLumi167898         = (TProfile*)GetObjectFromPath(InputFileLumi167898, "HLT_Mu50dEdxMProf");
 */
 
    if(LoadLumiToRun()){
@@ -196,8 +210,8 @@ void MakedEdxPlot()
    }
 
 
-   for(unsigned int i=0;i<SingleMu_PtProf->GetXaxis()->GetNbins();i++){
-      if((i+3)%4==0)continue;
+   for(int i=0;i<SingleMu_PtProf->GetXaxis()->GetNbins();i++){
+//      if((i+3)%4==0)continue;
       SingleMu_PtProf->GetXaxis()->SetBinLabel(i,"");
       SingleMu_dEdxProf->GetXaxis()->SetBinLabel(i,"");
       SingleMu_dEdxMProf->GetXaxis()->SetBinLabel(i,"");
@@ -206,54 +220,54 @@ void MakedEdxPlot()
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = SingleMu_NVertProf;                 legend.push_back("SingleMu40");
+   Histos[0] = SingleMu_NVertProf;                 legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "<#Reco Vertices>", 0,0, 0,0);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,"pictures/","dEdx_Profile_NVert");
    delete c1;
 
  
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = SingleMu_PtProf;                    legend.push_back("SingleMu40");
+   Histos[0] = SingleMu_PtProf;                    legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "p_{T} (GeV/c)", 0,0, 0,0);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,"pictures/","dEdx_Profile_Pt");
    delete c1;
 
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = SingleMu_dEdxProf;                  legend.push_back("SingleMu40");
+   Histos[0] = SingleMu_dEdxProf;                  legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{as}", 0,0, 0.02,0.06);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,"pictures/","dEdx_Profile_dEdx");
    delete c1;
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = SingleMu_dEdxMProf;                  legend.push_back("SingleMu40");
+   Histos[0] = SingleMu_dEdxMProf;                  legend.push_back("SingleMu50");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h}", 0,0, 3.2,3.4);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,"pictures/","dEdx_Profile_dEdxM");
    delete c1;
 
 /*
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = SingleMu_dEdxMProfLumi166380;       legend.push_back("SingleMu40 - Run166380");
-   Histos[1] = SingleMu_dEdxMProfLumi166512;       legend.push_back("SingleMu40 - Run166512");
-   Histos[2] = SingleMu_dEdxMProfLumi167807;       legend.push_back("SingleMu40 - Run167807");
-   Histos[3] = SingleMu_dEdxMProfLumi167898;       legend.push_back("SingleMu40 - Run167898");
+   Histos[0] = SingleMu_dEdxMProfLumi166380;       legend.push_back("SingleMu50 - Run166380");
+   Histos[1] = SingleMu_dEdxMProfLumi166512;       legend.push_back("SingleMu50 - Run166512");
+   Histos[2] = SingleMu_dEdxMProfLumi167807;       legend.push_back("SingleMu50 - Run167807");
+   Histos[3] = SingleMu_dEdxMProfLumi167898;       legend.push_back("SingleMu50 - Run167898");
    DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "Lumi", "I_{h}", 0,0, 3.2,3.4);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,"pictures/","dEdx_Profile_dEdxMRun");
    delete c1;
 */
@@ -261,9 +275,91 @@ void MakedEdxPlot()
 
 }
 
+void GetMeanAndRMS(TFile* InputFile, string path, double& mean, double& rms, bool gaussianFit=false){
+   TH1D* histo = (TH1D*)GetObjectFromPath(InputFile, path);
+   if(!histo){
+      mean = -999;
+      rms  = -999;
+   }else{
+      mean = histo->GetMean();
+      rms  = histo->GetMeanError();
+
+      if(histo->GetEntries()>10 && gaussianFit){
+         rms  = histo->GetRMS(); 
+         TF1* fit = new TF1("MyFit","gaus", mean-2*rms, mean+2*rms);
+         fit->SetParameters(histo->GetEntries(),  histo->GetMean(), histo->GetRMS());
+         histo->Fit(fit, "0QR"); 
+         mean = fit->GetParameter(1);
+         rms  = fit->GetParError(1);
+         delete fit;
+      }
+      delete histo;
+   }
+}
+
+TGraphErrors* getStabilityGraph(std::vector<string>& runList, TFile* InputFile, string HistoName, bool gaussianFit=false, unsigned int color=4, unsigned int marker=20){
+   TGraphErrors* graph = new TGraphErrors(runList.size()); 
+   graph->SetName(HistoName.c_str());
+
+   double mean, rms;
+   for(unsigned int r=0;r<runList.size();r++){
+      char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
+      GetMeanAndRMS(InputFile, name, mean, rms); graph->SetPoint(r, r+0.5, mean);   graph->SetPointError(r, 0, rms);
+   }
+   graph->SetLineWidth(2);
+   graph->SetLineColor(color);
+   graph->SetFillColor(1);
+   graph->SetMarkerSize(0.5);
+   graph->SetMarkerStyle(marker);
+   graph->SetMarkerColor(color);
+   return graph;
+}
 
 
+void overlay(std::vector<string>& runList, TFile* InputFile, string HistoName, double xMin, double xMax, string savePath){
+   TCanvas* c = new TCanvas("c","c,",600,600);     
 
+   TH1D* frame = new TH1D("frame", "frame", 1, xMin, xMax);
+   frame->SetTitle("");
+   frame->SetStats(kFALSE);
+   frame->GetXaxis()->SetNdivisions(505);
+   frame->GetXaxis()->SetTitle("");
+   frame->GetYaxis()->SetTitleOffset(0.95);
+   frame->Draw("AXIS");
+
+   double yMax=-1E100;
+   double yMin= 1E100;
+
+   std::vector<TH1D*> histoVec;
+   std::vector<double> entriesVec;
+
+   for(unsigned int r=0;r<runList.size();r++){
+      char name[1024]; sprintf(name, "%s/%s", runList[r].c_str(), HistoName.c_str());
+      TH1D* histo = (TH1D*)GetObjectFromPath(InputFile, name);  
+      if(!histo)continue;
+      entriesVec.push_back(histo->GetEntries());
+      histoVec.push_back(histo);
+   }
+
+   std::sort(entriesVec.begin(), entriesVec.end());
+   unsigned int NPlotToShow = 10;
+   double MinEntryCut = entriesVec.size()<NPlotToShow?0:entriesVec[9];
+   
+   for(unsigned int r=0;r<histoVec.size();r++){
+      if(histoVec[r]->GetEntries()<MinEntryCut)continue;
+      histoVec[r]->Scale(1.0/histoVec[r]->Integral());
+      histoVec[r]->SetLineColor(gStyle->GetColorPalette(int(r*(255.0/NPlotToShow))));
+      histoVec[r]->SetLineWidth(1);
+      histoVec[r]->Draw("same");
+
+      yMax = std::max(yMax, histoVec[r]->GetMaximum());
+      yMin = std::min(yMin, histoVec[r]->GetMinimum());
+   }
+   frame->SetMaximum(yMax*1.1);
+   frame->SetMinimum(std::max(1E-3, yMin));
+   c->SetLogy(true);
+   SaveCanvas(c,"pictures/",savePath);
+}
 
 void MakePlot()
 {
@@ -275,385 +371,262 @@ void MakePlot()
    gStyle->SetTitleSize(0.04, "XYZ");
    gStyle->SetTitleXOffset(1.1);
    gStyle->SetTitleYOffset(1.35);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(55);  //Rainbow --> deifne the color of all plots
    gStyle->SetNdivisions(505);
 
-      TCanvas* c1;
+   system("mkdir -p pictures");
+
+
+   TCanvas* c1;
    TObject** Histos = new TObject*[10];
    std::vector<string> legend;
 
    TFile* InputFile = new TFile("pictures/Histos.root");
-
-   TProfile* Any_PtProf                = (TProfile*)GetObjectFromPath(InputFile, "AnyPtProf");
-   TProfile* SingleMu_PtProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuPtProf");
-   TProfile* PFMet_PtProf              = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetPtProf");
-
-   TProfile* Any_dEdxProf              = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxProf");
-   TProfile* SingleMu_dEdxProf         = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxProf");
-   TProfile* PFMet_dEdxProf            = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxProf");
-
-   TProfile* Any_dEdxMProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMProf");
-   TProfile* SingleMu_dEdxMProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMProf");
-   TProfile* PFMet_dEdxMProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMProf");
-
-   TProfile* Any_dEdxMSProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMSProf");
-   TProfile* SingleMu_dEdxMSProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMSProf");
-   TProfile* PFMet_dEdxMSProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMSProf");
-
-   TProfile* Any_dEdxMPProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMPProf");
-   TProfile* SingleMu_dEdxMPProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMPProf");
-   TProfile* PFMet_dEdxMPProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMPProf");
-
-   TProfile* Any_dEdxMSCProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMSCProf");
-   TProfile* SingleMu_dEdxMSCProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMSCProf");
-   TProfile* PFMet_dEdxMSCProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMSCProf");
-
-   TProfile* Any_dEdxMPCProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMPCProf");
-   TProfile* SingleMu_dEdxMPCProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMPCProf");
-   TProfile* PFMet_dEdxMPCProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMPCProf");
-
-   TProfile* Any_dEdxMSFProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMSFProf");
-   TProfile* SingleMu_dEdxMSFProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMSFProf");
-   TProfile* PFMet_dEdxMSFProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMSFProf");
-
-   TProfile* Any_dEdxMPFProf             = (TProfile*)GetObjectFromPath(InputFile, "AnydEdxMPFProf");
-   TProfile* SingleMu_dEdxMPFProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMudEdxMPFProf");
-   TProfile* PFMet_dEdxMPFProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetdEdxMPFProf");
-
-   TProfile* Any_TOFProf               = (TProfile*)GetObjectFromPath(InputFile, "AnyTOFProf");
-   TProfile* SingleMu_TOFProf          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuTOFProf");
-   TProfile* PFMet_TOFProf             = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetTOFProf");
-
-   TProfile* Any_TOFDTProf             = (TProfile*)GetObjectFromPath(InputFile, "AnyTOFDTProf");
-   TProfile* SingleMu_TOFDTProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuTOFDTProf");
-   TProfile* PFMet_TOFDTProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetTOFDTProf");
-
-   TProfile* Any_TOFCSCProf            = (TProfile*)GetObjectFromPath(InputFile, "AnyTOFCSCProf");
-   TProfile* SingleMu_TOFCSCProf       = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuTOFCSCProf");
-   TProfile* PFMet_TOFCSCProf          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetTOFCSCProf");
-
-   TProfile* Any_VertexProf               = (TProfile*)GetObjectFromPath(InputFile, "AnyVertexProf");
-   TProfile* SingleMu_VertexProf          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuVertexProf");
-   TProfile* PFMet_VertexProf             = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetVertexProf");
-
-   TProfile* Any_VertexDTProf             = (TProfile*)GetObjectFromPath(InputFile, "AnyVertexDTProf");
-   TProfile* SingleMu_VertexDTProf        = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuVertexDTProf");
-   TProfile* PFMet_VertexDTProf           = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetVertexDTProf");
-
-   TProfile* Any_VertexCSCProf            = (TProfile*)GetObjectFromPath(InputFile, "AnyVertexCSCProf");
-   TProfile* SingleMu_VertexCSCProf       = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuVertexCSCProf");
-   TProfile* PFMet_VertexCSCProf          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetVertexCSCProf");
-
-   TProfile* Any_HdEdx                 = (TProfile*)GetObjectFromPath(InputFile, "AnyHdEdx");
-   TProfile* SingleMu_HdEdx          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuHdEdx");
-   TProfile* PFMet_HdEdx             = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetHdEdx");
-
-   TProfile* Any_HPt                 = (TProfile*)GetObjectFromPath(InputFile, "AnyHPt");
-   TProfile* SingleMu_HPt          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuHPt");
-   TProfile* PFMet_HPt             = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetHPt");
-
-   TProfile* Any_HTOF                 = (TProfile*)GetObjectFromPath(InputFile, "AnyHTOF");
-   TProfile* SingleMu_HTOF          = (TProfile*)GetObjectFromPath(InputFile, "HscpPathSingleMuHTOF");
-   TProfile* PFMet_HTOF             = (TProfile*)GetObjectFromPath(InputFile, "HscpPathPFMetHTOF");
-
-   for(unsigned int i=0;i<SingleMu_PtProf->GetXaxis()->GetNbins();i++){
-      if((i+3)%12==0)continue;
-      Any_PtProf         ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_PtProf    ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_PtProf       ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxProf       ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxProf  ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxProf     ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMProf      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMProf ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMProf    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMSProf      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMSProf ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMSProf    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMPProf      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMPProf ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMPProf    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMSCProf     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMSCProf->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMSCProf   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMPCProf     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMPCProf->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMPCProf   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMSFProf     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMSFProf->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMSFProf   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_dEdxMPFProf     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_dEdxMPFProf->GetXaxis()->SetBinLabel(i,"");
-      PFMet_dEdxMPFProf   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFProf        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFProf   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFProf      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFDTProf      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFDTProf ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFDTProf    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_TOFCSCProf     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_TOFCSCProf->GetXaxis()->SetBinLabel(i,"");
-      PFMet_TOFCSCProf   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexProf        ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexProf   ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexProf      ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexDTProf      ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexDTProf ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexDTProf    ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_VertexCSCProf     ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_VertexCSCProf->GetXaxis()->SetBinLabel(i,"");
-      PFMet_VertexCSCProf   ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HdEdx          ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HdEdx     ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HdEdx        ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HPt            ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HPt       ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HPt          ->GetXaxis()->SetBinLabel(i,"");
-
-      Any_HTOF           ->GetXaxis()->SetBinLabel(i,"");
-      SingleMu_HTOF      ->GetXaxis()->SetBinLabel(i,"");
-      PFMet_HTOF         ->GetXaxis()->SetBinLabel(i,"");
-   }  
+   std::vector<string> runList;
+   TList* ObjList = InputFile->GetListOfKeys();
+   for(int i=0;i<ObjList->GetSize();i++){
+      TObject* tmp = GetObjectFromPath(InputFile,ObjList->At(i)->GetName(),false);
+      if(tmp->InheritsFrom("TDirectory")){
+         runList.push_back(ObjList->At(i)->GetName());
+         printf("Add a new run: %s\n", ObjList->At(i)->GetName() );
+      }
+      delete tmp;
+   }
+   unsigned int N= runList.size();
 
 
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_PtProf;                         legend.push_back("Any");
-   //Histos[1] = SingleMu_PtProf;                    legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_PtProf;                       legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "p_{T} (GeV/c)", 0,0, 0,150);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_Pt");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxProf;                       legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxProf;                  legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxProf;                     legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{as}", 0,0, 0.02,0.05);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdx");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h}", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxM");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMSProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMSProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMSProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} S", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMS");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMPProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMPProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMPProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} P", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMP");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMSCProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMSCProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMSCProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} SC", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMSC");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMPCProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMPCProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMPCProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} PC", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMPC");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMSFProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMSFProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMSFProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} SF", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMSF");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_dEdxMPFProf;                      legend.push_back("Any");
-   //Histos[1] = SingleMu_dEdxMPFProf;                 legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_dEdxMPFProf;                    legend.push_back("PFMHT150");
-
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} PF", 0,0, 3.1,3.6);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMPF");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_TOFProf;                        legend.push_back("Any");
-   //Histos[1] = SingleMu_TOFProf;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_TOFProf;                      legend.push_back("PFMHT150");
    
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "1/#beta_{TOF}", 0,0, 0.95,1.05);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_TOF");
-   delete c1;
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_TOFDTProf;                        legend.push_back("Any");
-   //Histos[1] = SingleMu_TOFDTProf;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_TOFDTProf;                      legend.push_back("PFMHT150");
 
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "1/#beta_{TOF_DT}", 0,0, 0.95,1.05);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_TOFDT");
-   delete c1;
+   TH1D* frameR = new TH1D("frameR", "frameR", N, 0, N);
+   frameR->SetTitle("");
+   frameR->SetStats(kFALSE);
+   frameR->GetXaxis()->SetNdivisions(505);
+   frameR->GetXaxis()->SetTitle("");
+   frameR->GetYaxis()->SetTitleOffset(0.95);
+   for(unsigned int r=0;r<N;r++){frameR->GetXaxis()->SetBinLabel(r+1, ((r+0)%2==0)?runList[r].c_str():"");}  //plot only a label every 2
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_TOFCSCProf;                        legend.push_back("Any");
-   //Histos[1] = SingleMu_TOFCSCProf;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_TOFCSCProf;                      legend.push_back("PFMHT150");
 
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "1/#beta_{TOF_CSC}", 0,0, 0.95,1.05);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_TOFCSC");
-   delete c1;
+//   std::string triggers[] = {"Any", "HLT_Mu50", "HLT_PFMET170_NoiseCleaned"};
+   std::string triggers[] = {"HLT_Mu50"};
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_VertexProf;                        legend.push_back("Any");
-   //Histos[1] = SingleMu_VertexProf;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_VertexProf;                      legend.push_back("PFMHT150");
-   
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "Vertex time [ns]", 0,0, -2,2);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_Vertex");
-   delete c1;
+/*
+   TGraphErrors* Any_NVert             = getStabilityGraph(runList, InputFile, "AnyNVert");
+   TGraphErrors* SingleMu_NVert        = getStabilityGraph(runList, InputFile, "HLT_Mu50NVert");
+   TGraphErrors* PFMet_NVert           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedNVert");
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_VertexDTProf;                        legend.push_back("Any");
-   //Histos[1] = SingleMu_VertexDTProf;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_VertexDTProf;                      legend.push_back("PFMHT150");
 
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "Vertex Time DT [ns]", 0,0, -2,2);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_VertexDT");
-   delete c1;
+   TGraphErrors* Any_Pt                = getStabilityGraph(runList, InputFile, "AnyPt");
+   TGraphErrors* SingleMu_Pt           = getStabilityGraph(runList, InputFile, "HLT_Mu50Pt");
+   TGraphErrors* PFMet_Pt              = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedPt");
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   Histos[0] = Any_VertexCSCProf;                        legend.push_back("Any");
-   //Histos[1] = SingleMu_VertexCSCProf;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_VertexCSCProf;                      legend.push_back("PFMHT150");
+   TGraphErrors* Any_dEdxMin           = getStabilityGraph(runList, InputFile, "AnydEdxMin");
+   TGraphErrors* SingleMu_dEdxMin      = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMin");
+   TGraphErrors* PFMet_dEdxMin         = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMin");
 
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "Vertex Time CSC [ns]", 0,0, -2,2);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_Profile_VertexCSC");
-   delete c1;
+   TGraphErrors* Any_dEdxAOD              = getStabilityGraph(runList, InputFile, "AnydEdxAOD");
+   TGraphErrors* SingleMu_dEdxAOD         = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxAOD");
+   TGraphErrors* PFMet_dEdxAOD            = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxAOD");
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   //Histos[0] = Any_HdEdx;                        legend.push_back("Any");
-   Histos[0] = Any_HdEdx;                        legend.push_back("I_{as} > 0.15");
-   //Histos[1] = SingleMu_HdEdx;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_HdEdx;                      legend.push_back("PFMHT150");
-   
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "I_{h} ROT", 0,0, 0,0.05);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_ROT_dEdx");
-   delete c1;
+   TGraphErrors* Any_dEdxMAOD             = getStabilityGraph(runList, InputFile, "AnydEdxMAOD");
+   TGraphErrors* SingleMu_dEdxMAOD        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMAOD");
+   TGraphErrors* PFMet_dEdxMAOD           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMAOD");
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   //Histos[0] = Any_HPt;                        legend.push_back("Any");
-   Histos[0] = Any_HPt;                        legend.push_back("p_{T} > 60 GeV/c");
-   //Histos[1] = SingleMu_HPt;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_HPt;                      legend.push_back("PFMHT150");
-   
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "Pt ROT", 0,0, 0.15,0.5);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_ROT_Pt");
-   delete c1;
 
-   c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-   //Histos[0] = Any_HTOF;                        legend.push_back("Any");
-   Histos[0] = Any_HTOF;                        legend.push_back("1/#beta > 1.1");
-   //Histos[1] = SingleMu_HTOF;                   legend.push_back("SingleMu40");
-   //Histos[2] = PFMet_HTOF;                      legend.push_back("PFMHT150");
-   
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "1/#beta_{TOF} ROT", 0,0, 0,0.2);
-   for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
-   //DrawLegend(Histos,legend,"","P");
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,"pictures/","Summary_ROT_TOF");
-   delete c1;
+   TGraphErrors* Any_dEdx              = getStabilityGraph(runList, InputFile, "AnydEdx");
+   TGraphErrors* SingleMu_dEdx         = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdx");
+   TGraphErrors* PFMet_dEdx            = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdx");
 
-   MakedEdxPlot();
+   overlay(runList, InputFile, "HLT_Mu50dEdxMT", 0.0, 10.0, "overlay_dEdxMT");
+   overlay(runList, InputFile, "HLT_Mu50dEdxM" , 0.0, 10.0, "overlay_dEdxM");
+
+   TGraphErrors* Any_dEdxMT            = getStabilityGraph(runList, InputFile, "AnydEdxMT");
+   TGraphErrors* SingleMu_dEdxMT       = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMT");
+   TGraphErrors* PFMet_dEdxMT          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMT");
+
+   TGraphErrors* Any_dEdxM             = getStabilityGraph(runList, InputFile, "AnydEdxM");
+   TGraphErrors* SingleMu_dEdxM        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxM");
+   TGraphErrors* PFMet_dEdxM           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxM");
+
+   TGraphErrors* Any_dEdxMS             = getStabilityGraph(runList, InputFile, "AnydEdxMS");
+   TGraphErrors* SingleMu_dEdxMS        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMS");
+   TGraphErrors* PFMet_dEdxMS           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMS");
+
+   TGraphErrors* Any_dEdxMP             = getStabilityGraph(runList, InputFile, "AnydEdxMP");
+   TGraphErrors* SingleMu_dEdxMP        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMP");
+   TGraphErrors* PFMet_dEdxMP           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMP");
+
+   TGraphErrors* Any_dEdxMSC             = getStabilityGraph(runList, InputFile, "AnydEdxMSC");
+   TGraphErrors* SingleMu_dEdxMSC        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMSC");
+   TGraphErrors* PFMet_dEdxMSC           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMSC");
+
+   TGraphErrors* Any_dEdxMPC             = getStabilityGraph(runList, InputFile, "AnydEdxMPC");
+   TGraphErrors* SingleMu_dEdxMPC        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMPC");
+   TGraphErrors* PFMet_dEdxMPC           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMPC");
+
+   TGraphErrors* Any_dEdxMSF             = getStabilityGraph(runList, InputFile, "AnydEdxMSF");
+   TGraphErrors* SingleMu_dEdxMSF        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMSF");
+   TGraphErrors* PFMet_dEdxMSF           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMSF");
+
+   TGraphErrors* Any_dEdxMPF             = getStabilityGraph(runList, InputFile, "AnydEdxMPF");
+   TGraphErrors* SingleMu_dEdxMPF        = getStabilityGraph(runList, InputFile, "HLT_Mu50dEdxMPF");
+   TGraphErrors* PFMet_dEdxMPF           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleaneddEdxMPF");
+
+
+   TGraphErrors* Any_TOFAOD               = getStabilityGraph(runList, InputFile, "AnyTOFAOD", true);
+   TGraphErrors* SingleMu_TOFAOD          = getStabilityGraph(runList, InputFile, "HLT_Mu50TOFAOD", true);
+   TGraphErrors* PFMet_TOFAOD             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedTOFAOD", true);
+
+   TGraphErrors* Any_TOFAODDT             = getStabilityGraph(runList, InputFile, "AnyTOFAODDT", true);
+   TGraphErrors* SingleMu_TOFAODDT        = getStabilityGraph(runList, InputFile, "HLT_Mu50TOFAODDT", true);
+   TGraphErrors* PFMet_TOFAODDT           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedTOFAODDT", true);
+
+   TGraphErrors* Any_TOFAODCSC            = getStabilityGraph(runList, InputFile, "AnyTOFAODCSC", true);
+   TGraphErrors* SingleMu_TOFAODCSC       = getStabilityGraph(runList, InputFile, "HLT_Mu50TOFAODCSC", true);
+   TGraphErrors* PFMet_TOFAODCSC          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedTOFAODCSC", true);
+
+   TGraphErrors* Any_VertexAOD               = getStabilityGraph(runList, InputFile, "AnyVertexAOD", true);
+   TGraphErrors* SingleMu_VertexAOD          = getStabilityGraph(runList, InputFile, "HLT_Mu50VertexAOD", true);
+   TGraphErrors* PFMet_VertexAOD             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertexAOD", true);
+
+   TGraphErrors* Any_VertexAODDT             = getStabilityGraph(runList, InputFile, "AnyVertexAODDT", true);
+   TGraphErrors* SingleMu_VertexAODDT        = getStabilityGraph(runList, InputFile, "HLT_Mu50VertexAODDT", true);
+   TGraphErrors* PFMet_VertexAODDT           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertexAODDT", true);
+
+   TGraphErrors* Any_VertexAODCSC            = getStabilityGraph(runList, InputFile, "AnyVertexAODCSC", true);
+   TGraphErrors* SingleMu_VertexAODCSC       = getStabilityGraph(runList, InputFile, "HLT_Mu50VertexAODCSC", true);
+   TGraphErrors* PFMet_VertexAODCSC          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertexAODCSC", true);
+
+   TGraphErrors* Any_TOF               = getStabilityGraph(runList, InputFile, "AnyTOF", true);
+   TGraphErrors* SingleMu_TOF          = getStabilityGraph(runList, InputFile, "HLT_Mu50TOF", true);
+   TGraphErrors* PFMet_TOF             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedTOF", true);
+
+   TGraphErrors* Any_TOFDT             = getStabilityGraph(runList, InputFile, "AnyTOFDT", true);
+   TGraphErrors* SingleMu_TOFDT        = getStabilityGraph(runList, InputFile, "HLT_Mu50TOFDT", true);
+   TGraphErrors* PFMet_TOFDT           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedTOFDT", true);
+
+   TGraphErrors* Any_TOFCSC            = getStabilityGraph(runList, InputFile, "AnyTOFCSC", true);
+   TGraphErrors* SingleMu_TOFCSC       = getStabilityGraph(runList, InputFile, "HLT_Mu50TOFCSC", true);
+   TGraphErrors* PFMet_TOFCSC          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedTOFCSC", true);
+
+   TGraphErrors* Any_Vertex               = getStabilityGraph(runList, InputFile, "AnyVertex", true);
+   TGraphErrors* SingleMu_Vertex          = getStabilityGraph(runList, InputFile, "HLT_Mu50Vertex", true);
+   TGraphErrors* PFMet_Vertex             = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertex", true);
+
+   TGraphErrors* Any_VertexDT             = getStabilityGraph(runList, InputFile, "AnyVertexDT", true);
+   TGraphErrors* SingleMu_VertexDT        = getStabilityGraph(runList, InputFile, "HLT_Mu50VertexDT", true);
+   TGraphErrors* PFMet_VertexDT           = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertexDT", true);
+
+   TGraphErrors* Any_VertexCSC            = getStabilityGraph(runList, InputFile, "AnyVertexCSC", true);
+   TGraphErrors* SingleMu_VertexCSC       = getStabilityGraph(runList, InputFile, "HLT_Mu50VertexCSC", true);
+   TGraphErrors* PFMet_VertexCSC          = getStabilityGraph(runList, InputFile, "HLT_PFMET170_NoiseCleanedVertexCSC", true);
+*/
+
+   for(unsigned int T=0;T<sizeof(triggers)/sizeof(string);T++){
+      string trigger = triggers[T];
+      TGraphErrors *g1, *g2, *g3;
+      TLegend* LEG;
+
+      c1 = new TCanvas("c1","c1,",1200,600);        
+      frameR->GetYaxis()->SetTitle("<#Vertices>");       frameR->SetMinimum(0.0);   frameR->SetMaximum(20);  frameR->Draw("AXIS");
+      g1 = getStabilityGraph(runList, InputFile, trigger+"NVert");  g1->Draw("0 P same");
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_NVert");
+      delete c1;
+
+
+      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      frameR->GetYaxis()->SetTitle("p_{T} (GeV/c)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(150.0);  frameR->Draw("AXIS");
+      g1 = getStabilityGraph(runList, InputFile, trigger+"Pt");  g1->Draw("0 P same");
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_Pt");
+      delete c1;
+
+      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxMin");  g1->Draw("0 P same");
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMin");
+      delete c1;
+
+
+
+      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      frameR->GetYaxis()->SetTitle("I_{as}");   frameR->SetMinimum(0.012);   frameR->SetMaximum(0.022);  frameR->Draw("AXIS");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdx", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_dEdx");
+      delete c1;
+
+      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxM", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxMAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxM");
+      delete c1;
+
+      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxMT", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+//      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxMTAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMT");
+      delete c1;
+
+      c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+      frameR->GetYaxis()->SetTitle("I_{h}");   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+      LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+      g1 = getStabilityGraph(runList, InputFile, trigger+"dEdxMin", false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+//      g2 = getStabilityGraph(runList, InputFile, trigger+"dEdxMinAOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+      LEG->Draw();
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+      SaveCanvas(c1,"pictures/","Summary_Profile_dEdxMin");
+      delete c1;
+
+      std::string dEdxVariables[] = {"dEdxMS", "dEdxMP", "dEdxMSC", "dEdxMPC", "dEdxMSF", "dEdxMPF"};
+      std::string dEdxLegends[]   = {"I_{h} StripOnly", "I_{h} PixelOnly", "I_{h} StripOnly Barrel", "I_{h} PixelOnly Barrel", "I_{h} StripOnly Endcap", "I_{h} PixelOnly Endcap"};
+      for(unsigned int S=0;S<sizeof(dEdxVariables)/sizeof(string);S++){
+         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         frameR->GetYaxis()->SetTitle(dEdxLegends[S].c_str());   frameR->SetMinimum(2.5);   frameR->SetMaximum(4.0);  frameR->Draw("AXIS");
+         LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+         g1 = getStabilityGraph(runList, InputFile, trigger+dEdxVariables[S], false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+//         g2 = getStabilityGraph(runList, InputFile, trigger+dEdxVariables[S]+"AOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+         LEG->Draw();
+         DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+         SaveCanvas(c1,"pictures/","Summary_Profile_"+dEdxVariables[S]);
+         delete c1;
+     }
+
+      std::string TOFVariables[] = {"TOF", "TOFDT", "TOFCSC", "Vertex", "VertexDT", "VertexCSC"};
+      std::string TOFLegends[]   = {"1/#beta_{TOF}", "1/#beta_{TOF DT}", "1/#beta_{TOF CSC}", "Vertex time [ns]", "Vertex time from DT [ns]", "Vertex time from CSC  [ns]" };
+      for(unsigned int T=0;T<sizeof(TOFVariables)/sizeof(string);T++){
+         c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
+         if(TOFVariables[T].find("Vertex")!=std::string::npos){
+         frameR->GetYaxis()->SetTitle(TOFLegends[T].c_str());   frameR->SetMinimum(-5.0);   frameR->SetMaximum(5.0);  frameR->Draw("AXIS");
+         }else{
+         frameR->GetYaxis()->SetTitle(TOFLegends[T].c_str());   frameR->SetMinimum(0.85);   frameR->SetMaximum(1.15);  frameR->Draw("AXIS");
+         }
+         LEG = new TLegend(0.70,0.80,0.90,0.90);      LEG->SetFillColor(0);      LEG->SetFillStyle(0);      LEG->SetBorderSize(0);
+         g1 = getStabilityGraph(runList, InputFile, trigger+TOFVariables[T], false);            g1->Draw("0 P same");  LEG->AddEntry(g1, "Calibrated" ,"P");
+         g2 = getStabilityGraph(runList, InputFile, trigger+TOFVariables[T]+"AOD", false, 1, 24);  g2->Draw("0 P same");  LEG->AddEntry(g2, "Prompt" ,"P");
+         LEG->Draw();
+         DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
+         SaveCanvas(c1,"pictures/","Summary_Profile_"+TOFVariables[T]);
+         delete c1;
+      }
+
+
+   }//end of trigger loop
+
+//   MakedEdxPlot();
 }
 
 

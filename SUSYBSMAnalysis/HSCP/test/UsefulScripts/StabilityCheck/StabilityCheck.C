@@ -19,7 +19,6 @@
 #include "TGraphAsymmErrors.h"
 #include "TProfile.h"
 #include "TPaveText.h"
-#include "tdrstyle.C"
 
 
 namespace reco    { class Vertex; class Track; class GenParticle; class DeDxData; class MuonTimeExtra;}
@@ -54,10 +53,7 @@ using namespace edm;
 using namespace trigger;
 
 
-#include "../../ICHEP_Analysis/Analysis_PlotFunction.h"
-#include "../../ICHEP_Analysis/Analysis_Samples.h"
-#include "../../ICHEP_Analysis/Analysis_Global.h"
-
+#include "../../AnalysisCode/Analysis_Step1_EventLoop.C"
 
 #endif
 
@@ -86,27 +82,41 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData& d
 //   if(tof && tof->inverseBeta()<GlobalMinTOF)return false;
 //   if(tof && tof->inverseBetaErr()>GlobalMaxTOFErr)return false;
 
+
+
    fwlite::Handle< std::vector<reco::Vertex> > vertexCollHandle;
    vertexCollHandle.getByLabel(ev,"offlinePrimaryVertices");
    if(!vertexCollHandle.isValid()){printf("Vertex Collection NotFound\n");return false;}
    const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
    if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
 
-   double dz  = track->dz (vertexColl[0].position());
-   double dxy = track->dxy(vertexColl[0].position());
-   for(unsigned int i=1;i<vertexColl.size();i++){
-      if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
-         dz  = track->dz (vertexColl[i].position());
-         dxy = track->dxy(vertexColl[i].position());
-      }
-   }
+
+   int highestPtGoodVertex = -1;
+   int goodVerts=0;
+   for(unsigned int i=0;i<vertexColl.size();i++){
+     if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
+     goodVerts++;
+     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+//     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
+//       dz  = track->dz (vertexColl[i].position());
+//       dxy = track->dxy(vertexColl[i].position());
+//     }
+   }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
+
+   double dz  = track->dz (vertexColl[highestPtGoodVertex].position());
+   double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
+
    double v3d = sqrt(dz*dz+dxy*dxy);
    if(v3d>GlobalMaxV3D )return false;
 
    fwlite::Handle<HSCPIsolationValueMap> IsolationH;
-   IsolationH.getByLabel(ev, "HSCPIsolation03");
-   if(!IsolationH.isValid()){printf("Invalid IsolationH\n");return false;}
-   const ValueMap<HSCPIsolation>& IsolationMap = *IsolationH.product();
+   IsolationH.getByLabel(ev, "HSCPIsolation", "R03"); //New format used for data since 17-07-2015
+   if(!IsolationH.isValid()){
+     IsolationH.getByLabel(ev, "HSCPIsolation03");//Old format used for first 2015B data, Signal and MC Backgrounds
+     if(!IsolationH.isValid()){printf("Invalid IsolationH\n");return false;}
+   }
+  const ValueMap<HSCPIsolation>& IsolationMap = *IsolationH.product();
+
 
    HSCPIsolation hscpIso = IsolationMap.get((size_t)track.key());
     if(hscpIso.Get_TK_SumEt()>GlobalMaxTIsol)return false;
@@ -121,31 +131,36 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData& d
 
 
 bool PassingTrigger(const fwlite::ChainEvent& ev, const std::string& TriggerName){
-      edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
-      if(!tr.isValid())return false;
+   edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
+   if(!tr.isValid())         tr = ev.triggerResultsByName("MergeHLT");
+   if(!tr.isValid())return false;
 
-      bool Accept = false;
-      if(TriggerName=="Any"){
-         Accept = true;
-      }else{
-         Accept = tr.accept(tr.triggerIndex(TriggerName.c_str()));
-      }
-
-   return Accept;
+   if(TriggerName=="Any"){
+      if(passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*"))return true;
+      if(passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*"))return true;
+      if(passTriggerPatterns(tr, "HLT_Mu50_v*"))return true;
+   }else{
+      if(passTriggerPatterns(tr, (TriggerName + "_v*").c_str()))return true;
+   }
+   return false;
 }
 
 
 
 
-void StabilityCheck(string MODE="COMPILE")
+void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", string JobIndexStr="0", string NJobsStr="1")
 {
-  if(MODE=="COMPILE") return;
+  printf("DIRNAME = %s\n", DIRNAME.c_str());
+  if(DIRNAME=="COMPILE") return;
+  OUTDIRNAME+="/";
+
+  int JobIndex;  sscanf(JobIndexStr.c_str(),"%d",&JobIndex);
+  int NJobs;     sscanf(NJobsStr   .c_str(),"%d",&NJobs);
 
    Event_Weight = 1;
    MaxEntry = -1;
 
-
-   system("mkdir pictures");
+   system((string("mkdir -p ") + OUTDIRNAME).c_str());
 
    setTDRStyle();
    gStyle->SetPadTopMargin   (0.06);
@@ -162,787 +177,325 @@ void StabilityCheck(string MODE="COMPILE")
    std::map<unsigned int, unsigned int> RunBinIndex;
    unsigned int NextIndex=0;
 
-   vector<string> DataFileName;
-   GetInputFiles(DataFileName, "Data");
-//   DataFileName.push_back(" /storage/data/cms/users/quertenmont/HSCP/CMSSW_3_8_6/10_01_11/Data_135821_141887.root");
-//   DataFileName.push_back(" /storage/data/cms/users/quertenmont/HSCP/CMSSW_3_8_6/10_01_11/Data_141888_144114.root");
-//   DataFileName.push_back(" /storage/data/cms/users/quertenmont/HSCP/CMSSW_3_8_6/10_01_11/Data_146240_148000.root");
-//   DataFileName.push_back(" /storage/data/cms/users/quertenmont/HSCP/CMSSW_3_8_6/10_01_11/Data_148001_149711.root");
+   InitBaseDirectory();
+   GetSampleDefinition(samples , DIRNAME+"/../../AnalysisCode/Analysis_Samples.txt");
+   int sampleIdStart, sampleIdEnd; sscanf(JobIndexStr.c_str(),"%d",&sampleIdStart); sampleIdEnd=sampleIdStart;
+   keepOnlyTheXtoYSamples(samples,sampleIdStart,sampleIdEnd);
+   keepOnlyValidSamples(samples);
+   printf("----------------------------------------------------------------------------------------------------------------------------------------------------\n");
+   printf("Run on the following samples:\n");
+   for(unsigned int s=0;s<samples.size();s++){samples[s].print();}
+   printf("----------------------------------------------------------------------------------------------------------------------------------------------------\n\n");
 
+   vector<string> DataFileName;
+   for(unsigned int s=0;s<samples.size();s++){
+      if(samples[s].Type!=0)continue; //only data sample is considered
+      GetInputFiles(samples[s], BaseDirectory, DataFileName, 0);
+   }
+//   DataFileName.clear();
+//   DataFileName.push_back("root://eoscms//eos/cms/store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/Data_Run2015B_251253_251883.root");
+
+   for(unsigned int f=0;f<DataFileName.size();f++){printf("file %i : %s\n", f, DataFileName[f].c_str());}
 
    std::vector<string> triggers;
    triggers.push_back("Any");
-//   triggers.push_back("HscpPathMu");
-//   triggers.push_back("HscpPathMet");
+   triggers.push_back("HLT_Mu45_eta2p1");
+   triggers.push_back("HLT_Mu50");
+   triggers.push_back("HLT_PFMET170_NoiseCleaned");
 
-   triggers.push_back("HscpPathSingleMu");
-//   triggers.push_back("HscpPathDoubleMu");
-   triggers.push_back("HscpPathPFMet");
-//   triggers.push_back("HscpPathCaloMet");
+   TH1D** NVert = new TH1D*[triggers.size()];;
+   TH1D** dEdxAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMTAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMin = new TH1D*[triggers.size()];;
+   TH1D** dEdx = new TH1D*[triggers.size()];;
+   TH1D** dEdxMT = new TH1D*[triggers.size()];;
+   TH1D** dEdxM = new TH1D*[triggers.size()];;
+   TH1D** dEdxMS = new TH1D*[triggers.size()];;
+   TH1D** dEdxMP = new TH1D*[triggers.size()];;
+   TH1D** dEdxMSC = new TH1D*[triggers.size()];;
+   TH1D** dEdxMPC = new TH1D*[triggers.size()];;
+   TH1D** dEdxMSF = new TH1D*[triggers.size()];;
+   TH1D** dEdxMPF = new TH1D*[triggers.size()];;
+   TH1D** Pt   = new TH1D*[triggers.size()];;
+   TH1D** TOFAOD   = new TH1D*[triggers.size()];;
+   TH1D** TOFAODDT   = new TH1D*[triggers.size()];;
+   TH1D** TOFAODCSC   = new TH1D*[triggers.size()];;
+   TH1D** TOF   = new TH1D*[triggers.size()];;
+   TH1D** TOFDT   = new TH1D*[triggers.size()];;
+   TH1D** TOFCSC   = new TH1D*[triggers.size()];;
+   TH1D** VertexAOD   = new TH1D*[triggers.size()];;
+   TH1D** VertexAODDT   = new TH1D*[triggers.size()];;
+   TH1D** VertexAODCSC   = new TH1D*[triggers.size()];;
+   TH1D** Vertex   = new TH1D*[triggers.size()];;
+   TH1D** VertexDT   = new TH1D*[triggers.size()];;
+   TH1D** VertexCSC = new TH1D*[triggers.size()];;
 
-
-/*   triggers.push_back("HLT_MET100");
-   triggers.push_back("HLT_Jet140U");
-   triggers.push_back("HLT_DiJetAve140U");
-   triggers.push_back("HLT_QuadJet25U");
-   triggers.push_back("HLT_QuadJet30U");
-   triggers.push_back("HLT_QuadJet35U");
-   triggers.push_back("HLT_Mu15");
-   triggers.push_back("HLT_DoubleMu3");
-*/
-
-   TProfile** NVertProf = new TProfile*[triggers.size()];
-   TProfile** dEdxProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMSProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMPProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMSCProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMPCProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMSFProf = new TProfile*[triggers.size()];
-   TProfile** dEdxMPFProf = new TProfile*[triggers.size()];
-   TProfile** PtProf   = new TProfile*[triggers.size()];
-   TProfile** TOFProf   = new TProfile*[triggers.size()];
-   TProfile** TOFDTProf   = new TProfile*[triggers.size()];
-   TProfile** TOFCSCProf   = new TProfile*[triggers.size()];
-   TProfile** TOFOverMinProf   = new TProfile*[triggers.size()];
-   TProfile** TOFDTOverMinProf   = new TProfile*[triggers.size()];
-   TProfile** TOFCSCOverMinProf   = new TProfile*[triggers.size()];
-   TProfile** VertexProf   = new TProfile*[triggers.size()];
-   TProfile** VertexDTProf   = new TProfile*[triggers.size()];
-   TProfile** VertexCSCProf   = new TProfile*[triggers.size()];
-   TH1D**     Count    = new TH1D*    [triggers.size()];
-   TH1D**     CountMu  = new TH1D*    [triggers.size()];
-   TH1D**     HdEdx    = new TH1D*    [triggers.size()];
-   TH1D**     HPt      = new TH1D*    [triggers.size()];
-   TH1D**     HTOF      = new TH1D*    [triggers.size()];
-
-
-
-   system("mkdir pictures/");
-   TFile* OutputHisto = new TFile((string("pictures/") + "/Histos.root").c_str(),"RECREATE");
-   for(unsigned int i=0;i<triggers.size();i++){
-      NVertProf[i] = new TProfile((triggers[i] + "NVertProf").c_str(), "NVertProf", 10000 ,0, 10000);
-      dEdxProf[i] = new TProfile((triggers[i] + "dEdxProf").c_str(), "dEdxProf", 10000 ,0, 10000);
-      dEdxMProf[i] = new TProfile((triggers[i] + "dEdxMProf").c_str(), "dEdxMProf", 10000 ,0, 10000);
-      dEdxMSProf[i] = new TProfile((triggers[i] + "dEdxMSProf").c_str(), "dEdxMSProf", 10000 ,0, 10000);
-      dEdxMPProf[i] = new TProfile((triggers[i] + "dEdxMPProf").c_str(), "dEdxMPProf", 10000 ,0, 10000);
-      dEdxMSCProf[i] = new TProfile((triggers[i] + "dEdxMSCProf").c_str(), "dEdxMSCProf", 10000 ,0, 10000);
-      dEdxMPCProf[i] = new TProfile((triggers[i] + "dEdxMPCProf").c_str(), "dEdxMPCProf", 10000 ,0, 10000);
-      dEdxMSFProf[i] = new TProfile((triggers[i] + "dEdxMSFProf").c_str(), "dEdxMSFProf", 10000 ,0, 10000);
-      dEdxMPFProf[i] = new TProfile((triggers[i] + "dEdxMPFProf").c_str(), "dEdxMPFProf", 10000 ,0, 10000);
-
-      PtProf  [i] = new TProfile((triggers[i] + "PtProf"  ).c_str(), "PtProf"  , 10000 ,0, 10000);
-      TOFProf  [i] = new TProfile((triggers[i] + "TOFProf"  ).c_str(), "TOFProf"  , 10000 ,0, 10000);
-      TOFDTProf  [i] = new TProfile((triggers[i] + "TOFDTProf"  ).c_str(), "TOFDTProf"  , 10000 ,0, 10000);
-      TOFCSCProf  [i] = new TProfile((triggers[i] + "TOFCSCProf"  ).c_str(), "TOFCSCProf"  , 10000 ,0, 10000);
-
-      TOFOverMinProf  [i] = new TProfile((triggers[i] + "TOFOverMinProf"  ).c_str(), "TOFOverMinProf"  , 10000 ,0, 10000);
-      TOFDTOverMinProf  [i] = new TProfile((triggers[i] + "TOFDTOverMinProf"  ).c_str(), "TOFDTOverMinProf"  , 10000 ,0, 10000);
-      TOFCSCOverMinProf  [i] = new TProfile((triggers[i] + "TOFCSCOverMinProf"  ).c_str(), "TOFCSCOverMinProf"  , 10000 ,0, 10000);
-
-      VertexProf  [i] = new TProfile((triggers[i] + "VertexProf"  ).c_str(), "VertexProf"  , 10000 ,0, 10000);
-      VertexDTProf  [i] = new TProfile((triggers[i] + "VertexDTProf"  ).c_str(), "VertexDTProf"  , 10000 ,0, 10000);
-      VertexCSCProf  [i] = new TProfile((triggers[i] + "VertexCSCProf"  ).c_str(), "VertexCSCProf"  , 10000 ,0, 10000);
-
-      Count   [i] = new TH1D(    (triggers[i] + "Count"   ).c_str(), "Count"   , 10000 ,0, 10000);  Count  [i]->Sumw2();
-      CountMu [i] = new TH1D(    (triggers[i] + "CountMu" ).c_str(), "CountMu" , 10000 ,0, 10000);  CountMu[i]->Sumw2();
-      HdEdx   [i] = new TH1D(    (triggers[i] + "HdEdx"   ).c_str(), "HdEdx"   , 10000 ,0, 10000);  HdEdx  [i]->Sumw2();
-      HPt     [i] = new TH1D(    (triggers[i] + "HPt"     ).c_str(), "HPt"     , 10000 ,0, 10000);  HPt    [i]->Sumw2();
-      HTOF     [i] = new TH1D(    (triggers[i] + "HTOF"     ).c_str(), "HTOF"     , 10000 ,0, 10000);  HTOF    [i]->Sumw2();
-   }
-
+ 
+   char OutputFileName[1024];  sprintf(OutputFileName, "%s/Histos_%i.root", OUTDIRNAME.c_str(), JobIndex);
+   TFile* OutputHisto = new TFile(OutputFileName,"RECREATE");
    TypeMode      = 0;
 
-   fwlite::ChainEvent tree(DataFileName);
+   dedxGainCorrector trackerCorrector;
+   double dEdxSF [2];
+   dEdxSF [0] = 1.00000;
+   dEdxSF [1] = 1.21836;
+   TH3F* dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+
+   if(true){    trackerCorrector.LoadDeDxCalibration("../../../data/Data13TeVGains_v2.root");
+   }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
+   }
+ 
+   moduleGeom::loadGeometry("../../../data/CMS_GeomTree.root");
+   muonTimingCalculator tofCalculator;
+   tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
+   unsigned int CurrentRun = 0;
+
+   fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Looping on Tree              :");
-   int TreeStep = tree.size()/50;if(TreeStep==0)TreeStep=1;
-   for(Long64_t e=0;e<tree.size();e++){
-//      if(e>10)break;
-      tree.to(e); 
-      if(e%TreeStep==0){printf(".");fflush(stdout);}
-//      if(!PassTrigger(tree))continue;
 
-      if(RunBinIndex.find(tree.eventAuxiliary().run()) == RunBinIndex.end()){
-         RunBinIndex[tree.eventAuxiliary().run()] = NextIndex;
-         for(unsigned int i=0;i<triggers.size();i++){
-            int Bin = HdEdx[i]->GetXaxis()->FindBin(NextIndex);
-            char Label[2048]; sprintf(Label,"%6i",tree.eventAuxiliary().run());
-            HdEdx[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            HPt[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            HTOF[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            Count[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            NVertProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxProf[i]->GetXaxis()->SetBinLabel(Bin, Label);      
-            dEdxMProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxMSProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxMPProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxMSCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxMPCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxMSFProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            dEdxMPFProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            PtProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            TOFProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            TOFDTProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            TOFCSCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            TOFOverMinProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            TOFDTOverMinProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            TOFCSCOverMinProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            VertexProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            VertexDTProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
-            VertexCSCProf[i]->GetXaxis()->SetBinLabel(Bin, Label);
+   int NEvents = ev.size();// / NJobs;
+   int FirstEvent = 0;//JobIndex * NEvents;
+   int TreeStep = NEvents/50;if(TreeStep==0)TreeStep=1;
+   for(Long64_t e=FirstEvent;e<FirstEvent+NEvents;e++){
+      ev.to(e); 
+      if(e%TreeStep==0){printf(".");fflush(stdout);}
+
+      //if run change, update conditions
+      if(CurrentRun != ev.eventAuxiliary().run()){
+         CurrentRun = ev.eventAuxiliary().run();
+         tofCalculator.setRun(CurrentRun);
+         trackerCorrector.setRun(CurrentRun);
+
+         TDirectory* dir = OutputHisto;
+         char DIRECTORY[2048]; sprintf(DIRECTORY,"%6i",ev.eventAuxiliary().run());
+         TDirectory::AddDirectory(kTRUE);
+         TH1::AddDirectory(kTRUE);
+         dir = (TDirectory*)OutputHisto->Get(DIRECTORY);
+         if(dir==NULL){
+            dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
+            dir->cd();
+
+            for(unsigned int i=0;i<triggers.size();i++){
+               NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
+               Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
+
+               dEdxAOD[i]    = new TH1D((triggers[i] + "dEdxAOD"   ).c_str(), "dEdxAOD"   , 100, 0.0, 1.0);
+               dEdxMTAOD[i]  = new TH1D((triggers[i] + "dEdxMTAOD" ).c_str(), "dEdxMTAOD" , 200, 0.0,10.0);
+               dEdxMAOD[i]   = new TH1D((triggers[i] + "dEdxMAOD"  ).c_str(), "dEdxMAOD"  , 200, 0.0,10.0);
+
+               dEdxMin[i] = new TH1D((triggers[i] + "dEdxMin").c_str(), "dEdxMin", 200, 0.0,10.0);
+
+               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 1.0);
+               dEdxMT[i]  = new TH1D((triggers[i] + "dEdxMT" ).c_str(), "dEdxMT" , 200, 0.0,10.0);
+               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 200, 0.0,10.0);
+               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 200, 0.0,10.0);
+               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 200, 0.0,10.0);
+               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 200, 0.0,10.0);
+               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 200, 0.0,10.0);
+               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 200, 0.0,10.0);
+               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 200, 0.0,10.0);
+
+               TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
+               TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
+               TOFAODCSC[i] = new TH1D((triggers[i] + "TOFAODCSC"  ).c_str(), "TOFAODCSC", 100, -1.0, 3.0);
+
+               TOF      [i] = new TH1D((triggers[i] + "TOF"  ).c_str(), "TOF"            , 100, -1.0, 3.0);
+               TOFDT    [i] = new TH1D((triggers[i] + "TOFDT"  ).c_str(), "TOFDT"        , 100, -1.0, 3.0);
+               TOFCSC   [i] = new TH1D((triggers[i] + "TOFCSC"  ).c_str(), "TOFCSC"      , 100, -1.0, 3.0);
+
+               VertexAOD   [i] = new TH1D((triggers[i] + "VertexAOD"  ).c_str(), "VertexAOD"      , 100, -10.0, 10.0);
+               VertexAODDT [i] = new TH1D((triggers[i] + "VertexAODDT"  ).c_str(), "VertexAODDT"  , 100, -10.0, 10.0);
+               VertexAODCSC[i] = new TH1D((triggers[i] + "VertexAODCSC"  ).c_str(), "VertexAODCSC", 100, -10.0, 10.0);
+
+               Vertex      [i] = new TH1D((triggers[i] + "Vertex"  ).c_str(), "Vertex"            , 100, -10.0, 10.0);
+               VertexDT    [i] = new TH1D((triggers[i] + "VertexDT"  ).c_str(), "VertexDT"        , 100, -10.0, 10.0);
+               VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
+            }
+         }else{
+            for(unsigned int i=0;i<triggers.size();i++){
+               NVert[i] = (TH1D*)dir->Get("NVert");
+               Pt  [i]  = (TH1D*)dir->Get("Pt");
+
+               dEdxAOD[i]    = (TH1D*)dir->Get("dEdxAOD");
+               dEdxMTAOD[i]   = (TH1D*)dir->Get("dEdxMTAOD");
+               dEdxMAOD[i]   = (TH1D*)dir->Get("dEdxMAOD");
+
+               dEdxMin[i]  = (TH1D*)dir->Get("dEdxMin");
+
+               dEdx[i]    = (TH1D*)dir->Get("dEdx");
+               dEdxMT[i]   = (TH1D*)dir->Get("dEdxMT");
+               dEdxM[i]   = (TH1D*)dir->Get("dEdxM");
+               dEdxMS[i]  = (TH1D*)dir->Get("dEdxMS");
+               dEdxMP[i]  = (TH1D*)dir->Get("dEdxMP");
+               dEdxMSC[i] = (TH1D*)dir->Get("dEdxMSC");
+               dEdxMPC[i] = (TH1D*)dir->Get("dEdxMPC");
+               dEdxMSF[i] = (TH1D*)dir->Get("dEdxMSF");
+               dEdxMPF[i] = (TH1D*)dir->Get("dEdxMPF");
+
+               TOFAOD   [i] = (TH1D*)dir->Get("TOFAOD");
+               TOFAODDT [i] = (TH1D*)dir->Get("TOFAODDT");
+               TOFAODCSC[i] = (TH1D*)dir->Get("TOFAODCSC");
+
+               TOF      [i] = (TH1D*)dir->Get("TOF");
+               TOFDT    [i] = (TH1D*)dir->Get("TOFDT");
+               TOFCSC   [i] = (TH1D*)dir->Get("TOFCSC");
+
+               VertexAOD   [i] = (TH1D*)dir->Get("VertexAOD");
+               VertexAODDT [i] = (TH1D*)dir->Get("VertexAODDT");
+               VertexAODCSC[i] = (TH1D*)dir->Get("VertexAODCSC");
+
+               Vertex      [i] = (TH1D*)dir->Get("Vertex");
+               VertexDT    [i] = (TH1D*)dir->Get("VertexDT");
+               VertexCSC   [i] = (TH1D*)dir->Get("VertexCSC");
+            }
          }
-         NextIndex++;
       }
-      unsigned int CurrentRunIndex = RunBinIndex[tree.eventAuxiliary().run()];
-        
+
+      if(!PassingTrigger(ev,"Any")){continue;} //need to pass at least one of the trigger, otherwise save time
+
       fwlite::Handle<susybsm::HSCParticleCollection> hscpCollHandle;
-      hscpCollHandle.getByLabel(tree,"HSCParticleProducer");
+      hscpCollHandle.getByLabel(ev,"HSCParticleProducer");
       if(!hscpCollHandle.isValid()){printf("HSCP Collection NotFound\n");continue;}
       susybsm::HSCParticleCollection hscpColl = *hscpCollHandle;
 
-      fwlite::Handle<DeDxDataValueMap> dEdxSCollH;
-      dEdxSCollH.getByLabel(tree, dEdxS_Label.c_str());
-      if(!dEdxSCollH.isValid()){printf("Invalid dEdx Selection collection\n");continue;}
-
-      fwlite::Handle<DeDxDataValueMap> dEdxMCollH;
-      dEdxMCollH.getByLabel(tree, dEdxM_Label.c_str());
-      if(!dEdxMCollH.isValid()){printf("Invalid dEdx Mass collection\n");continue;}
-
-      fwlite::Handle<DeDxDataValueMap> dEdxMSCollH;
-      dEdxMSCollH.getByLabel(tree, "dedxNPHarm2");
-      if(!dEdxMSCollH.isValid()){printf("Invalid dEdx Mass collection\n");continue;}
-
-      fwlite::Handle<DeDxDataValueMap> dEdxMPCollH;
-      dEdxMPCollH.getByLabel(tree, "dedxNSHarm2");
-      if(!dEdxMPCollH.isValid()){printf("Invalid dEdx Mass collection\n");continue;}
-
+      fwlite::Handle<DeDxHitInfoAss> dedxCollH;
+      dedxCollH.getByLabel(ev, "dedxHitInfo");
+      if(!dedxCollH.isValid()){printf("Invalid dedxCollH\n");continue;}
 
       fwlite::Handle<MuonTimeExtraMap> TOFCollH;
-      TOFCollH.getByLabel(tree, "muontiming",TOF_Label.c_str());
+      TOFCollH.getByLabel(ev, "muons",TOF_Label.c_str());
       if(!TOFCollH.isValid()){printf("Invalid TOF collection\n");return;}
 
-
       fwlite::Handle<MuonTimeExtraMap> TOFDTCollH;
-      TOFDTCollH.getByLabel(tree, "muontiming",TOFdt_Label.c_str());
+      TOFDTCollH.getByLabel(ev, "muons",TOFdt_Label.c_str());
       if(!TOFDTCollH.isValid()){printf("Invalid DT TOF collection\n");continue;}
 
       fwlite::Handle<MuonTimeExtraMap> TOFCSCCollH;
-      TOFCSCCollH.getByLabel(tree, "muontiming",TOFcsc_Label.c_str());
+      TOFCSCCollH.getByLabel(ev, "muons",TOFcsc_Label.c_str());
       if(!TOFCSCCollH.isValid()){printf("Invalid CSCTOF collection\n");continue;}
 
       fwlite::Handle< std::vector<reco::Vertex> > vertexCollHandle;
-      vertexCollHandle.getByLabel(tree,"offlinePrimaryVertices");
+      vertexCollHandle.getByLabel(ev,"offlinePrimaryVertices");
       if(!vertexCollHandle.isValid()){printf("Vertex Collection NotFound\n");continue;}
       const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
 
+      fwlite::Handle<CSCSegmentCollection> CSCSegmentCollHandle;
+      fwlite::Handle<DTRecSegment4DCollection> DTSegmentCollHandle;            
+      if(true){ //do not reocmpute TOF on MC background
+         CSCSegmentCollHandle.getByLabel(ev, "cscSegments");
+         if(!CSCSegmentCollHandle.isValid()){printf("CSC Segment Collection not found!\n"); continue;}
+
+         DTSegmentCollHandle.getByLabel(ev, "dt4DSegments");
+         if(!DTSegmentCollHandle.isValid()){printf("DT Segment Collection not found!\n"); continue;}
+      }
 
       for(unsigned int c=0;c<hscpColl.size();c++){
          susybsm::HSCParticle hscp  = hscpColl[c];
          reco::TrackRef track = hscp.trackRef();
          if(track.isNull())continue;
+         reco::MuonRef muon = hscp.muonRef();         
+         if(muon.isNull())continue; 
+         if(!hscp.muonRef()->isStandAloneMuon())continue;
 
-         const DeDxData& dedxSObj  = dEdxSCollH->get(track.key());
-         const DeDxData& dedxMObj  = dEdxMCollH->get(track.key());
-         const DeDxData& dedxMSObj  = dEdxMSCollH->get(track.key());
-         const DeDxData& dedxMPObj  = dEdxMPCollH->get(track.key());
+         const DeDxHitInfo* dedxHits = NULL;
+         if(TypeMode!=3 && !track.isNull()) {
+            DeDxHitInfoRef dedxHitsRef = dedxCollH->get(track.key());		 
+            if(!dedxHitsRef.isNull())dedxHits = &(*dedxHitsRef);
+         }
+
+         bool useClusterCleaning = true;
+         DeDxData dedxSObjaod = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, NULL, true, true, 99, false, 1);
+         DeDxData dedxMObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1);
+         DeDxData dedxMTObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, NULL, true, true, 99, false, 1);
+
+         DeDxData dedxMinObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, true);
+
+         DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+         DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+         DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+         DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+         DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, false, true, 99, false, 1);
+
+         const reco::MuonTimeExtra* tofaod = NULL;
+         const reco::MuonTimeExtra* dttofaod = NULL;
+         const reco::MuonTimeExtra* csctofaod = NULL;
+         if(!hscp.muonRef().isNull()){ tofaod  = &TOFCollH->get(hscp.muonRef().key()); dttofaod  = &TOFDTCollH->get(hscp.muonRef().key()); csctofaod  = &TOFCSCCollH->get(hscp.muonRef().key());}
+
          const reco::MuonTimeExtra* tof = NULL;
          const reco::MuonTimeExtra* dttof = NULL;
          const reco::MuonTimeExtra* csctof = NULL;
-         if(!hscp.muonRef().isNull()){ tof  = &TOFCollH->get(hscp.muonRef().key()); dttof  = &TOFDTCollH->get(hscp.muonRef().key()); csctof  = &TOFCSCCollH->get(hscp.muonRef().key());}
+         if(!hscp.muonRef().isNull() && hscp.muonRef()->isStandAloneMuon() ){
+            const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+            const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+            tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
+            tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
+         }          
 
+         if(!PassPreselection(hscp, dedxSObj, dedxMObj, tof, dttof, csctof, ev)){continue;}
 
-         if(!PassPreselection(hscp, dedxSObj, dedxMObj, tof, dttof, csctof, tree))continue;
+//         printf("AOD %i %i %iOR%i %i\n", tofaod!=NULL?1:0, tofaod->nDof()>=GlobalMinNDOF?1:0,  dttofaod->nDof()>=GlobalMinNDOFDT?1:0 , csctofaod->nDof()>=GlobalMinNDOFCSC?1:0, tofaod->inverseBetaErr()<=GlobalMaxTOFErr?1:0  );
+//         printf("OTF %i %i %iOR%i %i\n", tof   !=NULL?1:0, tof   ->nDof()>=GlobalMinNDOF?1:0,  dttof   ->nDof()>=GlobalMinNDOFDT?1:0 , csctof   ->nDof()>=GlobalMinNDOFCSC?1:0, tof   ->inverseBetaErr()<=GlobalMaxTOFErr?1:0  );
 
          for(unsigned int i=0;i<triggers.size();i++){
-            if(!PassingTrigger(tree,triggers[i]))continue;
+            if(!PassingTrigger(ev,triggers[i])){continue;}
 
-            NVertProf[i]->Fill(CurrentRunIndex, vertexColl.size()); 
+            NVert[i]->Fill(vertexColl.size()); 
+             
 
-            if(tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr){
-               if(tof->inverseBeta()>=GlobalMinTOF)CountMu[i]->Fill(CurrentRunIndex);
-               if(tof->inverseBeta()>=GlobalMinTOF)TOFOverMinProf[i]->Fill(CurrentRunIndex, tof->inverseBeta());
-               if(dttof->inverseBeta()>=GlobalMinTOF)TOFDTOverMinProf[i]->Fill(CurrentRunIndex, dttof->inverseBeta());
-               if(csctof->inverseBeta()>=GlobalMinTOF)TOFCSCOverMinProf[i]->Fill(CurrentRunIndex, csctof->inverseBeta());
-               TOFProf[i]->Fill(CurrentRunIndex, tof->inverseBeta());
-               if(dttof->nDof()>=GlobalMinNDOFDT) TOFDTProf[i]->Fill(CurrentRunIndex, dttof->inverseBeta());
-               if(csctof->nDof()>=GlobalMinNDOFCSC) TOFCSCProf[i]->Fill(CurrentRunIndex, csctof->inverseBeta());
-               if(tof->inverseBeta() > 1.1 ) HTOF[i]->Fill(CurrentRunIndex);            
-               VertexProf[i]->Fill(CurrentRunIndex, tof->timeAtIpInOut());
-               if(dttof->nDof()>=GlobalMinNDOFDT) VertexDTProf[i]->Fill(CurrentRunIndex, dttof->timeAtIpInOut());
-               if(csctof->nDof()>=GlobalMinNDOFCSC) VertexCSCProf[i]->Fill(CurrentRunIndex, csctof->timeAtIpInOut());
+            if(tofaod && tofaod->nDof()>=GlobalMinNDOF && (dttofaod->nDof()>=GlobalMinNDOFDT || csctofaod->nDof()>=GlobalMinNDOFCSC) && tofaod->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttofaod->inverseBeta()-1)<50){
+               TOFAOD[i]->Fill(tofaod->inverseBeta());
+               if(dttofaod->nDof()>=GlobalMinNDOFDT) TOFAODDT[i]->Fill(dttofaod->inverseBeta());
+               if(csctofaod->nDof()>=GlobalMinNDOFCSC) TOFAODCSC[i]->Fill(csctofaod->inverseBeta());
+               VertexAOD[i]->Fill(tofaod->timeAtIpInOut());
+               if(dttofaod->nDof()>=GlobalMinNDOFDT) VertexAODDT[i]->Fill(dttofaod->timeAtIpInOut());
+               if(csctofaod->nDof()>=GlobalMinNDOFCSC) VertexAODCSC[i]->Fill(csctofaod->timeAtIpInOut());
             }
 
-            if(hscp.trackRef()->pt() >60 ) HPt[i]->Fill(CurrentRunIndex);
-            if(dedxSObj.dEdx() > 0.15 ) HdEdx[i]->Fill(CurrentRunIndex);
-            Count[i]->Fill(CurrentRunIndex);
+            if(tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttof->inverseBeta()-1)<50){
+               TOF[i]->Fill(tof->inverseBeta());
+               if(dttof->nDof()>=GlobalMinNDOFDT) TOFDT[i]->Fill(dttof->inverseBeta());
+               if(csctof->nDof()>=GlobalMinNDOFCSC) TOFCSC[i]->Fill(csctof->inverseBeta());
+               Vertex[i]->Fill(tof->timeAtIpInOut());
+               if(dttof->nDof()>=GlobalMinNDOFDT) VertexDT[i]->Fill(dttof->timeAtIpInOut());
+               if(csctof->nDof()>=GlobalMinNDOFCSC) VertexCSC[i]->Fill(csctof->timeAtIpInOut());
+            }  
 
-            dEdxProf[i]->Fill(CurrentRunIndex, dedxSObj.dEdx());
-            dEdxMProf[i]->Fill(CurrentRunIndex, dedxMObj.dEdx());
-            dEdxMSProf[i]->Fill(CurrentRunIndex, dedxMSObj.dEdx());
-            dEdxMPProf[i]->Fill(CurrentRunIndex, dedxMPObj.dEdx());
+/*            if(i==0 && tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttof->inverseBeta()-1)>50){
+               printf("Large values %f+-%f vs %f+-%f (aod)\n", dttof->inverseBeta(), dttof->inverseBetaErr(), dttofaod->inverseBeta(), dttofaod->inverseBetaErr());
+               printf("%i vs %i  (Min=%f)\n", dttof->nDof(), dttofaod->nDof(), GlobalMinNDOFDT);
+               const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+               const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+               tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1, true ); //apply T0 correction on data but not on signal MC
+            }
+*/
+
+
+            dEdxAOD[i]->Fill(dedxSObjaod.dEdx());
+            dEdxMTAOD[i]->Fill(dedxMTObjaod.dEdx());
+            dEdxMAOD[i]->Fill(dedxMObjaod.dEdx());
+
+            dEdxMin[i]->Fill(dedxMinObj.dEdx());
+
+
+            dEdx[i]->Fill(dedxSObj.dEdx());
+            dEdxMT[i]->Fill(dedxMTObj.dEdx());
+            dEdxM[i]->Fill(dedxMObj.dEdx());
+            dEdxMS[i]->Fill(dedxMSObj.dEdx());
+            dEdxMP[i]->Fill(dedxMPObj.dEdx());
             if(fabs(track->eta())<0.5){
-            dEdxMSCProf[i]->Fill(CurrentRunIndex, dedxMSObj.dEdx());
-            dEdxMPCProf[i]->Fill(CurrentRunIndex, dedxMPObj.dEdx());
+            dEdxMSC[i]->Fill(dedxMSObj.dEdx());
+            dEdxMPC[i]->Fill(dedxMPObj.dEdx());
             }
             if(fabs(track->eta())>1.5){
-            dEdxMSFProf[i]->Fill(CurrentRunIndex, dedxMSObj.dEdx());
-            dEdxMPFProf[i]->Fill(CurrentRunIndex, dedxMPObj.dEdx());
+            dEdxMSF[i]->Fill(dedxMSObj.dEdx());
+            dEdxMPF[i]->Fill(dedxMPObj.dEdx());
             }
-            PtProf[i]->Fill(CurrentRunIndex, hscp.trackRef()->pt());
+            Pt[i]->Fill(hscp.trackRef()->pt());
          }
-
       }
    }printf("\n");
-
-   TCanvas* c1;
-   TLegend* leg;
-
-   for(unsigned int i=0;i<triggers.size();i++){
-   c1 = new TCanvas("c1","c1",600,600);
-   HdEdx[i]->Divide(Count[i]);
-   HdEdx[i]->LabelsDeflate("X");
-   HdEdx[i]->LabelsOption("av","X");
-   HdEdx[i]->GetXaxis()->SetNdivisions(505);
-   HdEdx[i]->SetTitle("");
-   HdEdx[i]->SetStats(kFALSE);
-   HdEdx[i]->GetXaxis()->SetTitle("");
-   HdEdx[i]->GetYaxis()->SetTitle("Ratio over Threshold");
-   HdEdx[i]->GetYaxis()->SetTitleOffset(0.9);
-   HdEdx[i]->GetXaxis()->SetLabelSize(0.04);
-   HdEdx[i]->SetLineColor(Color[0]);
-   HdEdx[i]->SetFillColor(Color[0]);
-   HdEdx[i]->SetMarkerSize(0.4);
-   HdEdx[i]->SetMarkerStyle(Marker[0]);
-   HdEdx[i]->SetMarkerColor(Color[0]);
-   HdEdx[i]->Draw("E1");
-
-   leg = new TLegend(0.55,0.86,0.79,0.93,NULL,"brNDC");
-   leg->SetBorderSize(0);
-   leg->SetFillColor(0);
-   leg->AddEntry(HdEdx[i],"I_{as} > 0.15","P");
-   leg->Draw();
-
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"ROT_Is");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   HPt[i]->Divide(Count[i]);
-   HPt[i]->LabelsDeflate("X");
-   HPt[i]->LabelsOption("av","X");
-   HPt[i]->GetXaxis()->SetNdivisions(505);
-   HPt[i]->SetTitle("");
-   HPt[i]->SetStats(kFALSE);
-   HPt[i]->GetXaxis()->SetTitle("");
-   HPt[i]->GetYaxis()->SetTitle("Ratio over Threshold");
-   HPt[i]->GetYaxis()->SetTitleOffset(0.9);
-   HPt[i]->GetXaxis()->SetLabelSize(0.04);
-   HPt[i]->SetLineColor(Color[0]);
-   HPt[i]->SetFillColor(Color[0]);
-   HPt[i]->SetMarkerSize(0.4);
-   HPt[i]->SetMarkerStyle(Marker[0]);
-   HPt[i]->SetMarkerColor(Color[0]);
-   HPt[i]->Draw("E1");
-
-   leg = new TLegend(0.55,0.86,0.79,0.93,NULL,"brNDC");
-   leg->SetBorderSize(0);
-   leg->SetFillColor(0);
-   leg->AddEntry(HPt[i],"p_{T} > 60 GeV/c","P");
-   leg->Draw();
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"ROT_Pt");
-   delete c1;
-
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   HTOF[i]->Divide(CountMu[i]);
-   HTOF[i]->LabelsDeflate("X");
-   HTOF[i]->LabelsOption("av","X");
-   HTOF[i]->GetXaxis()->SetNdivisions(505);
-   HTOF[i]->SetTitle("");
-   HTOF[i]->SetStats(kFALSE);
-   HTOF[i]->GetXaxis()->SetTitle("");
-   HTOF[i]->GetYaxis()->SetTitle("Ratio over Threshold");
-   HTOF[i]->GetYaxis()->SetTitleOffset(0.9);
-   HTOF[i]->GetXaxis()->SetLabelSize(0.04);
-   HTOF[i]->SetLineColor(Color[0]);
-   HTOF[i]->SetFillColor(Color[0]);
-   HTOF[i]->SetMarkerSize(0.4);
-   HTOF[i]->SetMarkerStyle(Marker[0]);
-   HTOF[i]->SetMarkerColor(Color[0]);
-   HTOF[i]->Draw("E1");
-
-   leg = new TLegend(0.55,0.86,0.79,0.93,NULL,"brNDC");
-   leg->SetBorderSize(0);
-   leg->SetFillColor(0);
-   leg->AddEntry(HTOF[i],"1/#beta > 1.1","P");
-   leg->Draw();
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"ROT_TOF");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   c1->SetLogy(true);
-   Count[i]->LabelsDeflate("X");
-   Count[i]->LabelsOption("av","X");
-   Count[i]->GetXaxis()->SetNdivisions(505);
-   Count[i]->SetTitle("");
-   Count[i]->SetStats(kFALSE);
-   Count[i]->GetXaxis()->SetTitle("");
-   Count[i]->GetYaxis()->SetTitle("#Tracks");
-   Count[i]->GetYaxis()->SetTitleOffset(0.9);
-   Count[i]->GetXaxis()->SetLabelSize(0.04);
-   Count[i]->SetLineColor(Color[0]);
-   Count[i]->SetFillColor(Color[0]);
-   Count[i]->SetMarkerSize(0.4);
-   Count[i]->SetMarkerStyle(Marker[0]);
-   Count[i]->SetMarkerColor(Color[0]);
-   Count[i]->Draw("E1");
-
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Count");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   NVertProf[i]->LabelsDeflate("X");
-   NVertProf[i]->LabelsOption("av","X");
-   NVertProf[i]->GetXaxis()->SetNdivisions(505);
-   NVertProf[i]->SetTitle("");
-   NVertProf[i]->SetStats(kFALSE);
-   NVertProf[i]->GetXaxis()->SetTitle("");
-   NVertProf[i]->GetYaxis()->SetTitle("#RecoVertex");
-   NVertProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   NVertProf[i]->GetXaxis()->SetLabelSize(0.04);
-   NVertProf[i]->SetLineColor(Color[0]);
-   NVertProf[i]->SetFillColor(Color[0]);
-   NVertProf[i]->SetMarkerSize(0.4);
-   NVertProf[i]->SetMarkerStyle(Marker[0]);
-   NVertProf[i]->SetMarkerColor(Color[0]);
-   NVertProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_NVert");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxProf[i]->LabelsDeflate("X");
-   dEdxProf[i]->LabelsOption("av","X");
-   dEdxProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxProf[i]->SetTitle("");
-   dEdxProf[i]->SetStats(kFALSE);
-   dEdxProf[i]->GetXaxis()->SetTitle("");
-   dEdxProf[i]->GetYaxis()->SetTitle("dE/dx discriminator");
-   dEdxProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxProf[i]->SetLineColor(Color[0]);
-   dEdxProf[i]->SetFillColor(Color[0]);
-   dEdxProf[i]->SetMarkerSize(0.4);
-   dEdxProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxProf[i]->SetMarkerColor(Color[0]);
-   dEdxProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_Is");
-   delete c1;
-
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMProf[i]->LabelsDeflate("X");
-   dEdxMProf[i]->LabelsOption("av","X");
-   dEdxMProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMProf[i]->SetTitle("");
-   dEdxMProf[i]->SetStats(kFALSE);
-   dEdxMProf[i]->GetXaxis()->SetTitle("");
-   dEdxMProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMProf[i]->SetLineColor(Color[0]);
-   dEdxMProf[i]->SetFillColor(Color[0]);
-   dEdxMProf[i]->SetMarkerSize(0.4);
-   dEdxMProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMProf[i]->SetMarkerColor(Color[0]);
-   dEdxMProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_Im");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMSProf[i]->LabelsDeflate("X");
-   dEdxMSProf[i]->LabelsOption("av","X");
-   dEdxMSProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMSProf[i]->SetTitle("");
-   dEdxMSProf[i]->SetStats(kFALSE);
-   dEdxMSProf[i]->GetXaxis()->SetTitle("");
-   dEdxMSProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMSProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMSProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMSProf[i]->SetLineColor(Color[0]);
-   dEdxMSProf[i]->SetFillColor(Color[0]);
-   dEdxMSProf[i]->SetMarkerSize(0.4);
-   dEdxMSProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMSProf[i]->SetMarkerColor(Color[0]);
-   dEdxMSProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_ImS");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMPProf[i]->LabelsDeflate("X");
-   dEdxMPProf[i]->LabelsOption("av","X");
-   dEdxMPProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMPProf[i]->SetTitle("");
-   dEdxMPProf[i]->SetStats(kFALSE);
-   dEdxMPProf[i]->GetXaxis()->SetTitle("");
-   dEdxMPProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMPProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMPProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMPProf[i]->SetLineColor(Color[0]);
-   dEdxMPProf[i]->SetFillColor(Color[0]);
-   dEdxMPProf[i]->SetMarkerSize(0.4);
-   dEdxMPProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMPProf[i]->SetMarkerColor(Color[0]);
-   dEdxMPProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_ImP");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMSCProf[i]->LabelsDeflate("X");
-   dEdxMSCProf[i]->LabelsOption("av","X");
-   dEdxMSCProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMSCProf[i]->SetTitle("");
-   dEdxMSCProf[i]->SetStats(kFALSE);
-   dEdxMSCProf[i]->GetXaxis()->SetTitle("");
-   dEdxMSCProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMSCProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMSCProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMSCProf[i]->SetLineColor(Color[0]);
-   dEdxMSCProf[i]->SetFillColor(Color[0]);
-   dEdxMSCProf[i]->SetMarkerSize(0.4);
-   dEdxMSCProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMSCProf[i]->SetMarkerColor(Color[0]);
-   dEdxMSCProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_ImSC");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMPCProf[i]->LabelsDeflate("X");
-   dEdxMPCProf[i]->LabelsOption("av","X");
-   dEdxMPCProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMPCProf[i]->SetTitle("");
-   dEdxMPCProf[i]->SetStats(kFALSE);
-   dEdxMPCProf[i]->GetXaxis()->SetTitle("");
-   dEdxMPCProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMPCProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMPCProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMPCProf[i]->SetLineColor(Color[0]);
-   dEdxMPCProf[i]->SetFillColor(Color[0]);
-   dEdxMPCProf[i]->SetMarkerSize(0.4);
-   dEdxMPCProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMPCProf[i]->SetMarkerColor(Color[0]);
-   dEdxMPCProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_ImPC");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMSFProf[i]->LabelsDeflate("X");
-   dEdxMSFProf[i]->LabelsOption("av","X");
-   dEdxMSFProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMSFProf[i]->SetTitle("");
-   dEdxMSFProf[i]->SetStats(kFALSE);
-   dEdxMSFProf[i]->GetXaxis()->SetTitle("");
-   dEdxMSFProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMSFProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMSFProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMSFProf[i]->SetLineColor(Color[0]);
-   dEdxMSFProf[i]->SetFillColor(Color[0]);
-   dEdxMSFProf[i]->SetMarkerSize(0.4);
-   dEdxMSFProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMSFProf[i]->SetMarkerColor(Color[0]);
-   dEdxMSFProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_ImSF");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   dEdxMPFProf[i]->LabelsDeflate("X");
-   dEdxMPFProf[i]->LabelsOption("av","X");
-   dEdxMPFProf[i]->GetXaxis()->SetNdivisions(505);
-   dEdxMPFProf[i]->SetTitle("");
-   dEdxMPFProf[i]->SetStats(kFALSE);
-   dEdxMPFProf[i]->GetXaxis()->SetTitle("");
-   dEdxMPFProf[i]->GetYaxis()->SetTitle("dE/dx estimator");
-   dEdxMPFProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   dEdxMPFProf[i]->GetXaxis()->SetLabelSize(0.04);
-   dEdxMPFProf[i]->SetLineColor(Color[0]);
-   dEdxMPFProf[i]->SetFillColor(Color[0]);
-   dEdxMPFProf[i]->SetMarkerSize(0.4);
-   dEdxMPFProf[i]->SetMarkerStyle(Marker[0]);
-   dEdxMPFProf[i]->SetMarkerColor(Color[0]);
-   dEdxMPFProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_ImPF");
-   delete c1;
-
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   PtProf[i]->LabelsDeflate("X");
-   PtProf[i]->LabelsOption("av","X");
-   PtProf[i]->GetXaxis()->SetNdivisions(505);
-   PtProf[i]->SetTitle("");
-   PtProf[i]->SetStats(kFALSE);
-   PtProf[i]->GetXaxis()->SetTitle("");
-   PtProf[i]->GetYaxis()->SetTitle("p_{T} (GeV/c)");
-   PtProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   PtProf[i]->GetXaxis()->SetLabelSize(0.04);
-   PtProf[i]->SetLineColor(Color[0]);
-   PtProf[i]->SetFillColor(Color[0]);
-   PtProf[i]->SetMarkerSize(0.4);
-   PtProf[i]->SetMarkerStyle(Marker[0]);
-   PtProf[i]->SetMarkerColor(Color[0]);
-   PtProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_Pt");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   TOFProf[i]->LabelsDeflate("X");
-   TOFProf[i]->LabelsOption("av","X");
-   TOFProf[i]->GetXaxis()->SetNdivisions(505);
-   TOFProf[i]->SetTitle("");
-   TOFProf[i]->SetStats(kFALSE);
-   TOFProf[i]->GetXaxis()->SetTitle("");
-   TOFProf[i]->GetYaxis()->SetTitle("1/#beta");
-   TOFProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   TOFProf[i]->GetXaxis()->SetLabelSize(0.04);
-   TOFProf[i]->SetLineColor(Color[0]);
-   TOFProf[i]->SetFillColor(Color[0]);
-   TOFProf[i]->SetMarkerSize(0.4);
-   TOFProf[i]->SetMarkerStyle(Marker[0]);
-   TOFProf[i]->SetMarkerColor(Color[0]);
-   TOFProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_TOF");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   TOFDTProf[i]->LabelsDeflate("X");
-   TOFDTProf[i]->LabelsOption("av","X");
-   TOFDTProf[i]->GetXaxis()->SetNdivisions(505);
-   TOFDTProf[i]->SetTitle("");
-   TOFDTProf[i]->SetStats(kFALSE);
-   TOFDTProf[i]->GetXaxis()->SetTitle("");
-   TOFDTProf[i]->GetYaxis()->SetTitle("1/#beta");
-   TOFDTProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   TOFDTProf[i]->GetXaxis()->SetLabelSize(0.04);
-   TOFDTProf[i]->SetLineColor(Color[0]);
-   TOFDTProf[i]->SetFillColor(Color[0]);
-   TOFDTProf[i]->SetMarkerSize(0.4);
-   TOFDTProf[i]->SetMarkerStyle(Marker[0]);
-   TOFDTProf[i]->SetMarkerColor(Color[0]);
-   TOFDTProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_TOFDT");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   TOFCSCProf[i]->LabelsDeflate("X");
-   TOFCSCProf[i]->LabelsOption("av","X");
-   TOFCSCProf[i]->GetXaxis()->SetNdivisions(505);
-   TOFCSCProf[i]->SetTitle("");
-   TOFCSCProf[i]->SetStats(kFALSE);
-   TOFCSCProf[i]->GetXaxis()->SetTitle("");
-   TOFCSCProf[i]->GetYaxis()->SetTitle("1/#beta");
-   TOFCSCProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   TOFCSCProf[i]->GetXaxis()->SetLabelSize(0.04);
-   TOFCSCProf[i]->SetLineColor(Color[0]);
-   TOFCSCProf[i]->SetFillColor(Color[0]);
-   TOFCSCProf[i]->SetMarkerSize(0.4);
-   TOFCSCProf[i]->SetMarkerStyle(Marker[0]);
-   TOFCSCProf[i]->SetMarkerColor(Color[0]);
-   TOFCSCProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_TOFCSC");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   TOFOverMinProf[i]->LabelsDeflate("X");
-   TOFOverMinProf[i]->LabelsOption("av","X");
-   TOFOverMinProf[i]->GetXaxis()->SetNdivisions(505);
-   TOFOverMinProf[i]->SetTitle("");
-   TOFOverMinProf[i]->SetStats(kFALSE);
-   TOFOverMinProf[i]->GetXaxis()->SetTitle("");
-   TOFOverMinProf[i]->GetYaxis()->SetTitle("1/#beta");
-   TOFOverMinProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   TOFOverMinProf[i]->GetXaxis()->SetLabelSize(0.04);
-   TOFOverMinProf[i]->SetLineColor(Color[0]);
-   TOFOverMinProf[i]->SetFillColor(Color[0]);
-   TOFOverMinProf[i]->SetMarkerSize(0.4);
-   TOFOverMinProf[i]->SetMarkerStyle(Marker[0]);
-   TOFOverMinProf[i]->SetMarkerColor(Color[0]);
-   TOFOverMinProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_TOFOverMin");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   TOFDTOverMinProf[i]->LabelsDeflate("X");
-   TOFDTOverMinProf[i]->LabelsOption("av","X");
-   TOFDTOverMinProf[i]->GetXaxis()->SetNdivisions(505);
-   TOFDTOverMinProf[i]->SetTitle("");
-   TOFDTOverMinProf[i]->SetStats(kFALSE);
-   TOFDTOverMinProf[i]->GetXaxis()->SetTitle("");
-   TOFDTOverMinProf[i]->GetYaxis()->SetTitle("1/#beta");
-   TOFDTOverMinProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   TOFDTOverMinProf[i]->GetXaxis()->SetLabelSize(0.04);
-   TOFDTOverMinProf[i]->SetLineColor(Color[0]);
-   TOFDTOverMinProf[i]->SetFillColor(Color[0]);
-   TOFDTOverMinProf[i]->SetMarkerSize(0.4);
-   TOFDTOverMinProf[i]->SetMarkerStyle(Marker[0]);
-   TOFDTOverMinProf[i]->SetMarkerColor(Color[0]);
-   TOFDTOverMinProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_TOFDTOverMin");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   TOFCSCOverMinProf[i]->LabelsDeflate("X");
-   TOFCSCOverMinProf[i]->LabelsOption("av","X");
-   TOFCSCOverMinProf[i]->GetXaxis()->SetNdivisions(505);
-   TOFCSCOverMinProf[i]->SetTitle("");
-   TOFCSCOverMinProf[i]->SetStats(kFALSE);
-   TOFCSCOverMinProf[i]->GetXaxis()->SetTitle("");
-   TOFCSCOverMinProf[i]->GetYaxis()->SetTitle("1/#beta");
-   TOFCSCOverMinProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   TOFCSCOverMinProf[i]->GetXaxis()->SetLabelSize(0.04);
-   TOFCSCOverMinProf[i]->SetLineColor(Color[0]);
-   TOFCSCOverMinProf[i]->SetFillColor(Color[0]);
-   TOFCSCOverMinProf[i]->SetMarkerSize(0.4);
-   TOFCSCOverMinProf[i]->SetMarkerStyle(Marker[0]);
-   TOFCSCOverMinProf[i]->SetMarkerColor(Color[0]);
-   TOFCSCOverMinProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_TOFCSCOverMin");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   VertexProf[i]->LabelsDeflate("X");
-   VertexProf[i]->LabelsOption("av","X");
-   VertexProf[i]->GetXaxis()->SetNdivisions(505);
-   VertexProf[i]->SetTitle("");
-   VertexProf[i]->SetStats(kFALSE);
-   VertexProf[i]->GetXaxis()->SetTitle("");
-   VertexProf[i]->GetYaxis()->SetTitle("1/#beta");
-   VertexProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   VertexProf[i]->GetXaxis()->SetLabelSize(0.04);
-   VertexProf[i]->SetLineColor(Color[0]);
-   VertexProf[i]->SetFillColor(Color[0]);
-   VertexProf[i]->SetMarkerSize(0.4);
-   VertexProf[i]->SetMarkerStyle(Marker[0]);
-   VertexProf[i]->SetMarkerColor(Color[0]);
-   VertexProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_Vertex");
-   delete c1;
-
-
-   c1 = new TCanvas("c1","c1",600,600);
-   VertexDTProf[i]->LabelsDeflate("X");
-   VertexDTProf[i]->LabelsOption("av","X");
-   VertexDTProf[i]->GetXaxis()->SetNdivisions(505);
-   VertexDTProf[i]->SetTitle("");
-   VertexDTProf[i]->SetStats(kFALSE);
-   VertexDTProf[i]->GetXaxis()->SetTitle("");
-   VertexDTProf[i]->GetYaxis()->SetTitle("1/#beta");
-   VertexDTProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   VertexDTProf[i]->GetXaxis()->SetLabelSize(0.04);
-   VertexDTProf[i]->SetLineColor(Color[0]);
-   VertexDTProf[i]->SetFillColor(Color[0]);
-   VertexDTProf[i]->SetMarkerSize(0.4);
-   VertexDTProf[i]->SetMarkerStyle(Marker[0]);
-   VertexDTProf[i]->SetMarkerColor(Color[0]);
-   VertexDTProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_VertexDT");
-   delete c1;
-
-   c1 = new TCanvas("c1","c1",600,600);
-   VertexCSCProf[i]->LabelsDeflate("X");
-   VertexCSCProf[i]->LabelsOption("av","X");
-   VertexCSCProf[i]->GetXaxis()->SetNdivisions(505);
-   VertexCSCProf[i]->SetTitle("");
-   VertexCSCProf[i]->SetStats(kFALSE);
-   VertexCSCProf[i]->GetXaxis()->SetTitle("");
-   VertexCSCProf[i]->GetYaxis()->SetTitle("1/#beta");
-   VertexCSCProf[i]->GetYaxis()->SetTitleOffset(0.9);
-   VertexCSCProf[i]->GetXaxis()->SetLabelSize(0.04);
-   VertexCSCProf[i]->SetLineColor(Color[0]);
-   VertexCSCProf[i]->SetFillColor(Color[0]);
-   VertexCSCProf[i]->SetMarkerSize(0.4);
-   VertexCSCProf[i]->SetMarkerStyle(Marker[0]);
-   VertexCSCProf[i]->SetMarkerColor(Color[0]);
-   VertexCSCProf[i]->Draw("E1");
-   c1->Modified();
-   c1->SetGridx(true);
-   DrawPreliminary(IntegratedLuminosity);
-   SaveCanvas(c1,string("pictures/") + triggers[i],"Profile_VertexCSC");
-   delete c1;
-   }
-
 
    OutputHisto->Write();
    OutputHisto->Close();  
