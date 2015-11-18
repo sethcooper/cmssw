@@ -1,7 +1,8 @@
 root -l -b << EOF
   TString makeshared(gSystem->GetMakeSharedLib());
-  TString dummy = makeshared.ReplaceAll("-W ", "-Wno-deprecated-declarations -Wno-deprecated -D__USE_XOPEN2K8 ");
-  TString dummy = makeshared.ReplaceAll("-Wshadow ", " -std=c++0x ");
+  makeshared.ReplaceAll("-W ", "-Wno-deprecated-declarations -Wno-deprecated -Wno-unused-local-typedefs -Wno-attributes ");
+  makeshared.ReplaceAll("-Woverloaded-virtual ", " ");
+  makeshared.ReplaceAll("-Wshadow ", " -std=c++0x -D__USE_XOPEN2K8 ");
   cout << "Compilling with the following arguments: " << makeshared << endl;
   gSystem->SetMakeSharedLib(makeshared);
   gSystem->Load("libFWCoreFWLite");
@@ -12,7 +13,6 @@ root -l -b << EOF
   gSystem->Load("libDataFormatsCommon.so");
   gSystem->Load("libDataFormatsHepMCCandidate.so");
   gSystem->Load("libPhysicsToolsUtilities.so");
-  gSystem->Load("libDataFormatsTrackerRecHit2D.so");
- .x DumpInfo.C++("Results/Type4/", 263,-1);
+ .x DumpInfo.C++("../../AnalysisCode/Results/Type0/", 4,-1);
 EOF
 
