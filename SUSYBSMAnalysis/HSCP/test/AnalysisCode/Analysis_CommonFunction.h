@@ -472,7 +472,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, bool dropLowerDeDxValue=false);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, TH1* histoToFill=NULL);
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 void printClusterCleaningMessage (uint8_t exitCode);
@@ -620,11 +620,14 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
 }
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, bool dropLowerDeDxValue){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, TH1* histoToFill){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
      std::vector<double> vect;
+     std::vector<double> vectStrip;
+     std::vector<double> vectPixel;
+
      unsigned int NSat=0;
      unsigned int SiStripNOM = 0;
      double lowerStripDeDx=1000;
@@ -691,13 +694,23 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
            double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
            double ChargeOverPathlength = scaleFactor*Norm*ClusterCharge/dedxHits->pathlength(h);
            vect.push_back(ChargeOverPathlength); //save charge
-           if(ChargeOverPathlength<lowerStripDeDx){lowerStripDeDx=ChargeOverPathlength; lowerStripDeDxIndex=vect.size()-1;  }
-
+           if(detid.subdetId()< 3)vectPixel.push_back(ChargeOverPathlength);
+           if(detid.subdetId()>=3)vectStrip.push_back(ChargeOverPathlength);
 //           printf("%i - %f / %f = %f\n", h, scaleFactor*Norm*dedxHits->charge(h), dedxHits->pathlength(h), ChargeOverPathlength);
         }
      }
 
-     if(dropLowerDeDxValue && lowerStripDeDxIndex>=0){vect.erase(vect.begin()+lowerStripDeDxIndex);}
+     if(dropLowerDeDxValue>0){
+         vect.clear();
+         for(unsigned int p=0;p<vectPixel.size();p++){vect.push_back(vectPixel[p]);}
+         std::sort(vectStrip.begin(), vectStrip.end(), std::greater<double>() );
+         int nTrunc = vectStrip.size()*dropLowerDeDxValue;
+         for(unsigned int s=0;s+nTrunc<vectStrip.size();s++){vect.push_back(vectStrip[s]);}
+     }
+
+     if(histoToFill){
+         for(unsigned int h=0;h<vect.size();h++){histoToFill->Fill(vect[h]);}
+     }
 
      double result;
      int size = vect.size();
