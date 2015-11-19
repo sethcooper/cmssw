@@ -152,7 +152,7 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
    fprintf(pFile,"Candidate Type = %i --> Mass : %7.2f\n",hscp.type(),Mass);
    fprintf(pFile,"------------------------------------------ EVENT INFO ---------------------------------------------\n");
    fprintf(pFile,"Run=%i Lumi=%i Event=%llu BX=%i  Orbit=%i Store=%i\n",ev.eventAuxiliary().run(),ev.eventAuxiliary().luminosityBlock(),ev.eventAuxiliary().event(),ev.eventAuxiliary().luminosityBlock(),ev.eventAuxiliary().orbitNumber(),ev.eventAuxiliary().storeNumber());
-   edm::TriggerResultsByName tr = ev.triggerResultsByName("MergeHLT");
+   edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
    for(unsigned int i=0;i<tr.size();i++){
      fprintf(pFile, "Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
    }
@@ -160,7 +160,7 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
    if(!track.isNull()) {
 	   fprintf(pFile,"------------------------------------------ INNER TRACKER ------------------------------------------\n");
 	   fprintf(pFile,"Quality = %i Chi2/NDF=%6.2f dz=+%6.2f dxy=%+6.2f V3D=%+6.2f (nGoodVert=%i) charge:%+i\n",track->qualityMask(), track->chi2()/track->ndof(), dz, dxy, v3d, goodVerts, track->charge());
-	   fprintf(pFile,"P=%7.2f  Pt=%7.2f+-%6.2f (Cut=%6.2f) Eta=%+6.2f  Phi=%+6.2f  NOH=%2i\n",track->p(),track->pt(), track->ptError(), PtCut, track->eta(), track->phi(), track->found() );
+	   fprintf(pFile,"P=%7.2f  Pt=%7.2f+-%6.2f [%6.2f%%] (Cut=%6.2f) Eta=%+6.2f  Phi=%+6.2f  NOH=%2i\n",track->p(),track->pt(), track->ptError(), track->ptError()/track->pt(), PtCut, track->eta(), track->phi(), track->found() );
 
 	   fprintf(pFile,"------------------------------------------ DEDX INFO ----------------------------------------------\n");
 	   fprintf(pFile,"dEdx for selection     :%6.2f (Cut=%6.2f) NOM %2i NOS %2i\n",dedxSObj->dEdx(),ICut,dedxSObj->numberOfMeasurements(),dedxSObj->numberOfSaturatedMeasurements());
@@ -172,13 +172,13 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
 
 	   for(unsigned int h=0;h<dedxHits->size();h++){
 	      DetId detid(dedxHits->detId(h));
-	      if(detid.subdetId()<3){printf("Pixel Hit\n");
+	      if(detid.subdetId()<3){fprintf(pFile,"DetId = %7i --> Pixel Hit\n", detid.rawId());
 	      }else{printStripCluster(pFile, dedxHits->stripCluster(h), dedxHits->detId(h));      
 	      }
 	   }
    }
 
-   if(!muon.isNull()){
+   if(!muon.isNull() && tof!=NULL){
       fprintf(pFile,"------------------------------------------ MUON INFO ----------------------------------------------\n");
       double TOFMass;
       if(TypeMode!=3) TOFMass = GetTOFMass(track->p(),tof->inverseBeta());
@@ -215,20 +215,29 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
    }
 
    fprintf(pFile,"------------------------------------------ ISOL INFO ----------------------------------------------\n");
-   fwlite::Handle<HSCPIsolationValueMap> IsolationH05;
-   IsolationH05.getByLabel(ev, "HSCPIsolation05");
-   if(!IsolationH05.isValid()){printf("Invalid IsolationH\n");return;}
-   const ValueMap<HSCPIsolation>& IsolationMap05 = *IsolationH05.product();
+     fwlite::Handle<HSCPIsolationValueMap> IsolationH05;
+     IsolationH05.getByLabel(ev, "HSCPIsolation", "R05"); //New format used for data since 17-07-2015
+     if(!IsolationH05.isValid()){
+        IsolationH05.getByLabel(ev, "HSCPIsolation05");//Old format used for first 2015B data, Signal and MC Backgrounds
+        if(!IsolationH05.isValid()){printf("Invalid IsolationH\n");return;}
+     }
+     const ValueMap<HSCPIsolation>& IsolationMap05 = *IsolationH05.product();
 
-   fwlite::Handle<HSCPIsolationValueMap> IsolationH03;
-   IsolationH03.getByLabel(ev, "HSCPIsolation03");
-   if(!IsolationH03.isValid()){printf("Invalid IsolationH\n");return;}
-   const ValueMap<HSCPIsolation>& IsolationMap03 = *IsolationH03.product();
+     fwlite::Handle<HSCPIsolationValueMap> IsolationH03;
+     IsolationH03.getByLabel(ev, "HSCPIsolation", "R03"); //New format used for data since 17-07-2015
+     if(!IsolationH03.isValid()){
+        IsolationH03.getByLabel(ev, "HSCPIsolation03");//Old format used for first 2015B data, Signal and MC Backgrounds
+        if(!IsolationH03.isValid()){printf("Invalid IsolationH\n");return;}
+     }
+     const ValueMap<HSCPIsolation>& IsolationMap03 = *IsolationH03.product();
 
-   fwlite::Handle<HSCPIsolationValueMap> IsolationH01;
-   IsolationH01.getByLabel(ev, "HSCPIsolation01");
-   if(!IsolationH01.isValid()){printf("Invalid IsolationH\n");return;}
-   const ValueMap<HSCPIsolation>& IsolationMap01 = *IsolationH01.product();
+     fwlite::Handle<HSCPIsolationValueMap> IsolationH01;
+     IsolationH01.getByLabel(ev, "HSCPIsolation", "R01"); //New format used for data since 17-07-2015
+     if(!IsolationH01.isValid()){
+        IsolationH01.getByLabel(ev, "HSCPIsolation01");//Old format used for first 2015B data, Signal and MC Backgrounds
+        if(!IsolationH01.isValid()){printf("Invalid IsolationH\n");return;}
+     }
+     const ValueMap<HSCPIsolation>& IsolationMap01 = *IsolationH01.product();
 
    if(!track.isNull()) {
       HSCPIsolation hscpIso05 = IsolationMap05.get((size_t)track.key());
@@ -242,9 +251,12 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
 }
 
 
-void DumpInfo(string DIRNAME, string Pattern, int CutIndex=0, double MassMin=-1)
+void DumpInfo(string DIRNAME, string Pattern, string CutIndexStr="0", string MassCutStr="-1")
 {
-   double MassCut = MassMin;
+   int CutIndex;
+   double MassCut;
+   sscanf(CutIndexStr.c_str(),"%d", &CutIndex);
+   sscanf(MassCutStr.c_str(), "%lf", &MassCut); 
 
    InitBaseDirectory();
    GetSampleDefinition(samples , DIRNAME+"/../../AnalysisCode/Analysis_Samples.txt");
@@ -271,6 +283,24 @@ void DumpInfo(string DIRNAME, string Pattern, int CutIndex=0, double MassMin=-1)
    ICut   = HCuts_I  ->GetBinContent(CutIndex+1);
    TOFCut = HCuts_TOF->GetBinContent(CutIndex+1);
 
+   unsigned int CurrentRun = 0;
+   tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
+      if(isData){ 
+         dEdxSF [0] = 1.00000;
+         dEdxSF [1] = 1.21836;
+         dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+      }else{  
+         dEdxSF [0] = 1.09708;
+         dEdxSF [1] = 1.01875;
+         dEdxTemplates = loadDeDxTemplate("../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+      }
+
+      if(isData){    trackerCorrector.LoadDeDxCalibration("../../../data/Data13TeVGains_v2.root"); 
+      }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
+      }
+
+
+
    TTree* tree           = (TTree*)GetObjectFromPath(InputFile, Data + "/HscpCandidates");
    printf("Tree Entries=%lli\n",tree->GetEntries());
    cout << "Cut Pt " << PtCut << " Cut I " << ICut << " TOFCut " << TOFCut << endl;
@@ -280,7 +310,7 @@ void DumpInfo(string DIRNAME, string Pattern, int CutIndex=0, double MassMin=-1)
    fwlite::ChainEvent ev(FileName);
 
    unsigned int    Run, Event, HscpI;
-   float  Pt,  I,    TOF;
+   float  Pt,  I,    TOF, Mass;
   
    tree->SetBranchAddress("Run"  ,&Run);
    tree->SetBranchAddress("Event",&Event);
@@ -288,6 +318,7 @@ void DumpInfo(string DIRNAME, string Pattern, int CutIndex=0, double MassMin=-1)
    tree->SetBranchAddress("Pt"   ,&Pt);
    tree->SetBranchAddress("I"    ,&I);
    tree->SetBranchAddress("TOF"  ,&TOF);
+   tree->SetBranchAddress("Mass", &Mass);
 
    FILE* pFile = fopen("DumpInfo.txt","w");
    fprintf(pFile, "A = %6.2E\n",H_A->GetBinContent(CutIndex+1));
@@ -304,30 +335,13 @@ void DumpInfo(string DIRNAME, string Pattern, int CutIndex=0, double MassMin=-1)
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Scanning D                   :");
 
-   unsigned int CurrentRun = 0;
-   tofCalculator.loadTimeOffset("../../data/MuonTimeOffset.txt");
-      if(isData){ 
-         dEdxSF [0] = 1.00000;
-         dEdxSF [1] = 1.21836;
-         dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
-      }else{  
-         dEdxSF [0] = 1.09708;
-         dEdxSF [1] = 1.01875;
-         dEdxTemplates = loadDeDxTemplate("../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
-      }
-
-      if(isData){    trackerCorrector.LoadDeDxCalibration("../../../data/Data13TeVGains_v2.root"); 
-      }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
-      }
-
-
    int TreeStep = tree->GetEntries()/50;if(TreeStep==0)TreeStep=1;
    for (Int_t i=0;i<tree->GetEntries();i++){
      if(i%TreeStep==0){printf(".");fflush(stdout);}
       tree->GetEntry(i);
 //      printf("%6i %9i %1i  %6.2f %6.2f %6.2f\n",Run,Event,HscpI,Pt,I,TOF);
 
-      if(Pt<=PtCut || (ICut>-1 && I<=ICut) || (TOFCut>-1 && TOF<=TOFCut))continue;
+      if(Pt<=PtCut || (ICut>-1 && I<=ICut) || (TOFCut>-1 && TOF<=TOFCut) || (MassCut>-1 && Mass<=MassCut))continue;
       ev.to(Run, Event);
       fprintf(pickEvent, "%i:%i:%i,\n",Run,ev.eventAuxiliary().luminosityBlock(), Event);
 
