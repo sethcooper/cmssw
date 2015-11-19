@@ -90,17 +90,20 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData& d
    const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
    if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
 
-
    int highestPtGoodVertex = -1;
    int goodVerts=0;
+   double dzMin=10000;
    for(unsigned int i=0;i<vertexColl.size();i++){
      if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
      goodVerts++;
-     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
-//     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
+
+//     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+     if(fabs(track->dz (vertexColl[i].position())) < fabs(dzMin) ){
+         dzMin = fabs(track->dz (vertexColl[i].position()));
+         highestPtGoodVertex = i;
 //       dz  = track->dz (vertexColl[i].position());
 //       dxy = track->dxy(vertexColl[i].position());
-//     }
+     }
    }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
 
    double dz  = track->dz (vertexColl[highestPtGoodVertex].position());
@@ -204,10 +207,28 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    triggers.push_back("HLT_PFMET170_NoiseCleaned");
 
    TH1D** NVert = new TH1D*[triggers.size()];;
+   TH1D** dEdxHitStripAOD= new TH1D*[triggers.size()];;
+   TH1D** dEdxHitPixelAOD= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin1AOD= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin2AOD= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin3AOD= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin4AOD= new TH1D*[triggers.size()];;
    TH1D** dEdxAOD = new TH1D*[triggers.size()];;
    TH1D** dEdxMTAOD = new TH1D*[triggers.size()];;
    TH1D** dEdxMAOD = new TH1D*[triggers.size()];;
-   TH1D** dEdxMin = new TH1D*[triggers.size()];;
+   TH1D** dEdxMSAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMPAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMSCAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMPCAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMSFAOD = new TH1D*[triggers.size()];;
+   TH1D** dEdxMPFAOD = new TH1D*[triggers.size()];;
+
+   TH1D** dEdxHitStrip= new TH1D*[triggers.size()];;
+   TH1D** dEdxHitPixel= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin1= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin2= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin3= new TH1D*[triggers.size()];;
+   TH1D** dEdxMin4= new TH1D*[triggers.size()];;
    TH1D** dEdx = new TH1D*[triggers.size()];;
    TH1D** dEdxMT = new TH1D*[triggers.size()];;
    TH1D** dEdxM = new TH1D*[triggers.size()];;
@@ -281,11 +302,30 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
                Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
 
+               dEdxHitStripAOD[i] = new TH1D((triggers[i] + "dEdxHitStripAOD").c_str(), "dEdxHitStripAOD", 400, 0.0,20.0);
+               dEdxHitPixelAOD[i] = new TH1D((triggers[i] + "dEdxHitPixelAOD").c_str(), "dEdxHitPixelAOD", 400, 0.0,20.0);
+               dEdxMin1AOD[i] = new TH1D((triggers[i] + "dEdxMin1AOD").c_str(), "dEdxMin1", 200, 0.0,10.0);
+               dEdxMin2AOD[i] = new TH1D((triggers[i] + "dEdxMin2AOD").c_str(), "dEdxMin2", 200, 0.0,10.0);
+               dEdxMin3AOD[i] = new TH1D((triggers[i] + "dEdxMin3AOD").c_str(), "dEdxMin3", 200, 0.0,10.0);
+               dEdxMin4AOD[i] = new TH1D((triggers[i] + "dEdxMin4AOD").c_str(), "dEdxMin4", 200, 0.0,10.0);
+
                dEdxAOD[i]    = new TH1D((triggers[i] + "dEdxAOD"   ).c_str(), "dEdxAOD"   , 100, 0.0, 1.0);
                dEdxMTAOD[i]  = new TH1D((triggers[i] + "dEdxMTAOD" ).c_str(), "dEdxMTAOD" , 200, 0.0,10.0);
                dEdxMAOD[i]   = new TH1D((triggers[i] + "dEdxMAOD"  ).c_str(), "dEdxMAOD"  , 200, 0.0,10.0);
+               dEdxMSAOD[i]  = new TH1D((triggers[i] + "dEdxMSAOD" ).c_str(), "dEdxMSAOD" , 200, 0.0,10.0);
+               dEdxMPAOD[i]  = new TH1D((triggers[i] + "dEdxMPAOD" ).c_str(), "dEdxMPAOD" , 200, 0.0,10.0);
+               dEdxMSCAOD[i] = new TH1D((triggers[i] + "dEdxMSCAOD").c_str(), "dEdxMSCAOD", 200, 0.0,10.0);
+               dEdxMPCAOD[i] = new TH1D((triggers[i] + "dEdxMPCAOD").c_str(), "dEdxMPCAOD", 200, 0.0,10.0);
+               dEdxMSFAOD[i] = new TH1D((triggers[i] + "dEdxMSFAOD").c_str(), "dEdxMSFAOD", 200, 0.0,10.0);
+               dEdxMPFAOD[i] = new TH1D((triggers[i] + "dEdxMPFAOD").c_str(), "dEdxMPFAOD", 200, 0.0,10.0);
 
-               dEdxMin[i] = new TH1D((triggers[i] + "dEdxMin").c_str(), "dEdxMin", 200, 0.0,10.0);
+
+               dEdxHitStrip[i] = new TH1D((triggers[i] + "dEdxHitStrip").c_str(), "dEdxHitStrip", 400, 0.0,20.0);
+               dEdxHitPixel[i] = new TH1D((triggers[i] + "dEdxHitPixel").c_str(), "dEdxHitPixel", 400, 0.0,20.0);
+               dEdxMin1[i] = new TH1D((triggers[i] + "dEdxMin1").c_str(), "dEdxMin1", 200, 0.0,10.0);
+               dEdxMin2[i] = new TH1D((triggers[i] + "dEdxMin2").c_str(), "dEdxMin2", 200, 0.0,10.0);
+               dEdxMin3[i] = new TH1D((triggers[i] + "dEdxMin3").c_str(), "dEdxMin3", 200, 0.0,10.0);
+               dEdxMin4[i] = new TH1D((triggers[i] + "dEdxMin4").c_str(), "dEdxMin4", 200, 0.0,10.0);
 
                dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 1.0);
                dEdxMT[i]  = new TH1D((triggers[i] + "dEdxMT" ).c_str(), "dEdxMT" , 200, 0.0,10.0);
@@ -315,40 +355,59 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             }
          }else{
             for(unsigned int i=0;i<triggers.size();i++){
-               NVert[i] = (TH1D*)dir->Get("NVert");
-               Pt  [i]  = (TH1D*)dir->Get("Pt");
+               NVert[i] = (TH1D*)dir->Get((triggers[i] + "NVert").c_str());
+               Pt  [i]  = (TH1D*)dir->Get((triggers[i] + "Pt").c_str());
 
-               dEdxAOD[i]    = (TH1D*)dir->Get("dEdxAOD");
-               dEdxMTAOD[i]   = (TH1D*)dir->Get("dEdxMTAOD");
-               dEdxMAOD[i]   = (TH1D*)dir->Get("dEdxMAOD");
+               dEdxHitStripAOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxHitStripAOD").c_str());
+               dEdxHitPixelAOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxHitPixelAOD").c_str());
+               dEdxMin1AOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin1AOD").c_str());
+               dEdxMin2AOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin2AOD").c_str());
+               dEdxMin3AOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin3AOD").c_str());
+               dEdxMin4AOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin4AOD").c_str());
 
-               dEdxMin[i]  = (TH1D*)dir->Get("dEdxMin");
+               dEdxAOD[i]    = (TH1D*)dir->Get((triggers[i] + "dEdxAOD").c_str());
+               dEdxMTAOD[i]   = (TH1D*)dir->Get((triggers[i] + "dEdxMTAOD").c_str());
+               dEdxMAOD[i]   = (TH1D*)dir->Get((triggers[i] + "dEdxMAOD").c_str());
+               dEdxMSAOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMSAOD").c_str());
+               dEdxMPAOD[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMPAOD").c_str());
+               dEdxMSCAOD[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMSCAOD").c_str());
+               dEdxMPCAOD[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMPCAOD").c_str());
+               dEdxMSFAOD[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMSFAOD").c_str());
+               dEdxMPFAOD[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMPFAOD").c_str());
 
-               dEdx[i]    = (TH1D*)dir->Get("dEdx");
-               dEdxMT[i]   = (TH1D*)dir->Get("dEdxMT");
-               dEdxM[i]   = (TH1D*)dir->Get("dEdxM");
-               dEdxMS[i]  = (TH1D*)dir->Get("dEdxMS");
-               dEdxMP[i]  = (TH1D*)dir->Get("dEdxMP");
-               dEdxMSC[i] = (TH1D*)dir->Get("dEdxMSC");
-               dEdxMPC[i] = (TH1D*)dir->Get("dEdxMPC");
-               dEdxMSF[i] = (TH1D*)dir->Get("dEdxMSF");
-               dEdxMPF[i] = (TH1D*)dir->Get("dEdxMPF");
 
-               TOFAOD   [i] = (TH1D*)dir->Get("TOFAOD");
-               TOFAODDT [i] = (TH1D*)dir->Get("TOFAODDT");
-               TOFAODCSC[i] = (TH1D*)dir->Get("TOFAODCSC");
+               dEdxHitStrip[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxHitStrip").c_str());
+               dEdxHitPixel[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxHitPixel").c_str());
+               dEdxMin1[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin1").c_str());
+               dEdxMin2[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin2").c_str());
+               dEdxMin3[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin3").c_str());
+               dEdxMin4[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMin4").c_str());
 
-               TOF      [i] = (TH1D*)dir->Get("TOF");
-               TOFDT    [i] = (TH1D*)dir->Get("TOFDT");
-               TOFCSC   [i] = (TH1D*)dir->Get("TOFCSC");
+               dEdx[i]    = (TH1D*)dir->Get((triggers[i] + "dEdx").c_str());
+               dEdxMT[i]   = (TH1D*)dir->Get((triggers[i] + "dEdxMT").c_str());
+               dEdxM[i]   = (TH1D*)dir->Get((triggers[i] + "dEdxM").c_str());
+               dEdxMS[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMS").c_str());
+               dEdxMP[i]  = (TH1D*)dir->Get((triggers[i] + "dEdxMP").c_str());
+               dEdxMSC[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMSC").c_str());
+               dEdxMPC[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMPC").c_str());
+               dEdxMSF[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMSF").c_str());
+               dEdxMPF[i] = (TH1D*)dir->Get((triggers[i] + "dEdxMPF").c_str());
 
-               VertexAOD   [i] = (TH1D*)dir->Get("VertexAOD");
-               VertexAODDT [i] = (TH1D*)dir->Get("VertexAODDT");
-               VertexAODCSC[i] = (TH1D*)dir->Get("VertexAODCSC");
+               TOFAOD   [i] = (TH1D*)dir->Get((triggers[i] + "TOFAOD").c_str());
+               TOFAODDT [i] = (TH1D*)dir->Get((triggers[i] + "TOFAODDT").c_str());
+               TOFAODCSC[i] = (TH1D*)dir->Get((triggers[i] + "TOFAODCSC").c_str());
 
-               Vertex      [i] = (TH1D*)dir->Get("Vertex");
-               VertexDT    [i] = (TH1D*)dir->Get("VertexDT");
-               VertexCSC   [i] = (TH1D*)dir->Get("VertexCSC");
+               TOF      [i] = (TH1D*)dir->Get((triggers[i] + "TOF").c_str());
+               TOFDT    [i] = (TH1D*)dir->Get((triggers[i] + "TOFDT").c_str());
+               TOFCSC   [i] = (TH1D*)dir->Get((triggers[i] + "TOFCSC").c_str());
+
+               VertexAOD   [i] = (TH1D*)dir->Get((triggers[i] + "VertexAOD").c_str());
+               VertexAODDT [i] = (TH1D*)dir->Get((triggers[i] + "VertexAODDT").c_str());
+               VertexAODCSC[i] = (TH1D*)dir->Get((triggers[i] + "VertexAODCSC").c_str());
+
+               Vertex      [i] = (TH1D*)dir->Get((triggers[i] + "Vertex").c_str());
+               VertexDT    [i] = (TH1D*)dir->Get((triggers[i] + "VertexDT").c_str());
+               VertexCSC   [i] = (TH1D*)dir->Get((triggers[i] + "VertexCSC").c_str());
             }
          }
       }
@@ -406,17 +465,26 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          }
 
          bool useClusterCleaning = true;
-         DeDxData dedxSObjaod = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, NULL, true, true, 99, false, 1);
-         DeDxData dedxMObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1);
-         DeDxData dedxMTObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, NULL, true, true, 99, false, 1);
+         DeDxData dedxMin1AODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1, 0.1);
+         DeDxData dedxMin2AODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1, 0.2);
+         DeDxData dedxMin3AODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1, 0.3);
+         DeDxData dedxMin4AODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1, 0.4);
+         DeDxData dedxSAODObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, NULL, true, true, 99, false, 1);
+         DeDxData dedxMAODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1);
+         DeDxData dedxMTAODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, NULL, true, true, 99, false, 1);
+         DeDxData dedxMSAODObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, NULL, true, true, 99, false, 1, 0.0, dEdxHitStripAOD[2]);
+         DeDxData dedxMPAODObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, false, true, 99, false, 1, 0.0, dEdxHitPixelAOD[2]);
 
-         DeDxData dedxMinObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, true);
 
+         DeDxData dedxMin1Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.1);
+         DeDxData dedxMin2Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.2);
+         DeDxData dedxMin3Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.3);
+         DeDxData dedxMin4Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.4);
          DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
          DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
          DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-         DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-         DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, false, true, 99, false, 1);
+         DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, dEdxHitStrip[2]);
+         DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, false, true, 99, false, 1, 0.0, dEdxHitPixel[2]);
 
          const reco::MuonTimeExtra* tofaod = NULL;
          const reco::MuonTimeExtra* dttofaod = NULL;
@@ -472,13 +540,28 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 */
 
 
-            dEdxAOD[i]->Fill(dedxSObjaod.dEdx());
-            dEdxMTAOD[i]->Fill(dedxMTObjaod.dEdx());
-            dEdxMAOD[i]->Fill(dedxMObjaod.dEdx());
+            dEdxMin1AOD[i]->Fill(dedxMin1AODObj.dEdx());
+            dEdxMin2AOD[i]->Fill(dedxMin2AODObj.dEdx());
+            dEdxMin3AOD[i]->Fill(dedxMin3AODObj.dEdx());
+            dEdxMin4AOD[i]->Fill(dedxMin4AODObj.dEdx());
+            dEdxAOD[i]->Fill(dedxSAODObj.dEdx());
+            dEdxMTAOD[i]->Fill(dedxMTAODObj.dEdx());
+            dEdxMAOD[i]->Fill(dedxMAODObj.dEdx());
+            dEdxMSAOD[i]->Fill(dedxMSAODObj.dEdx());
+            dEdxMPAOD[i]->Fill(dedxMPAODObj.dEdx());
+            if(fabs(track->eta())<0.5){
+            dEdxMSCAOD[i]->Fill(dedxMSAODObj.dEdx());
+            dEdxMPCAOD[i]->Fill(dedxMPAODObj.dEdx());
+            }
+            if(fabs(track->eta())>1.5){
+            dEdxMSFAOD[i]->Fill(dedxMSAODObj.dEdx());
+            dEdxMPFAOD[i]->Fill(dedxMPAODObj.dEdx());
+            }
 
-            dEdxMin[i]->Fill(dedxMinObj.dEdx());
-
-
+            dEdxMin1[i]->Fill(dedxMin1Obj.dEdx());
+            dEdxMin2[i]->Fill(dedxMin2Obj.dEdx());
+            dEdxMin3[i]->Fill(dedxMin3Obj.dEdx());
+            dEdxMin4[i]->Fill(dedxMin4Obj.dEdx());
             dEdx[i]->Fill(dedxSObj.dEdx());
             dEdxMT[i]->Fill(dedxMTObj.dEdx());
             dEdxM[i]->Fill(dedxMObj.dEdx());

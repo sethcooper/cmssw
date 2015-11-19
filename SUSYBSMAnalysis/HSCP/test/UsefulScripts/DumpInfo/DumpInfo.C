@@ -153,9 +153,12 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
    fprintf(pFile,"------------------------------------------ EVENT INFO ---------------------------------------------\n");
    fprintf(pFile,"Run=%i Lumi=%i Event=%llu BX=%i  Orbit=%i Store=%i\n",ev.eventAuxiliary().run(),ev.eventAuxiliary().luminosityBlock(),ev.eventAuxiliary().event(),ev.eventAuxiliary().luminosityBlock(),ev.eventAuxiliary().orbitNumber(),ev.eventAuxiliary().storeNumber());
    edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
-   for(unsigned int i=0;i<tr.size();i++){
-     fprintf(pFile, "Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
-   }
+//   for(unsigned int i=0;i<tr.size();i++){
+//     fprintf(pFile, "Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
+//   }
+   fprintf(pFile, "Path %50s --> %1i\n","HLT_PFMET170_NoiseCleaned_v*", (int) passTriggerPatterns(tr, "HLT_PFMET170_NoiseCleaned_v*"));
+   fprintf(pFile, "Path %50s --> %1i\n","HLT_Mu45_eta2p1_v*"          , (int) passTriggerPatterns(tr, "HLT_Mu45_eta2p1_v*"));
+   fprintf(pFile, "Path %50s --> %1i\n","HLT_Mu50_v*"                 , (int) passTriggerPatterns(tr, "HLT_Mu50_v*"));
 
    if(!track.isNull()) {
 	   fprintf(pFile,"------------------------------------------ INNER TRACKER ------------------------------------------\n");

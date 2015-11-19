@@ -134,34 +134,6 @@
 "CMSSW_7_4", 0, "Data13TeV"                         , "Run2015_260593"                         , "Data "                                   , "NoPU"  ,      0,  0.0000000000E+00, 0, 0.000, 0.000, 0.000
 "CMSSW_7_4", 0, "Data13TeV"                         , "Run2015_260627"                         , "Data "                                   , "NoPU"  ,      0,  0.0000000000E+00, 0, 0.000, 0.000, 0.000
 #
-### BACKGROUND SAMPLES:
-#
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu"                       , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_1"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_2"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_3"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_4"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_5"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_6"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_7"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_8"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_9"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu"                     , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_1"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this  
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_2"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_3"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_4"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_5"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_6"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_7"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_8"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_9"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_10"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_11"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_12"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_13"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_14"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
-#
 ### SIGNAL SAMPLES:
 #
 #"CMSSW_7_4", 2, "Gluino_13TeV_M100_f10"              , "Gluino_13TeV_M100"                     , "MC: #tilde{g} 100 GeV"                   , "S15"   ,    100, 8.1700000000E+04, 0, 1.000, 1.000, 1.000 #CENTRAL SAMPLE IS CURRENTLY MISSING
@@ -305,6 +277,38 @@
 "CMSSW_7_4", 2, "DY_13TeV_M1800_Q2"                  , "DY_13TeV_M1800_Q6"                     , "MC: Q=2e 1800 GeV/#font[12]{c}^{2}"      , "S15"   ,   1800, 3.9346950000E-06, 1, 1.000, 1.000, 1.000 
 "CMSSW_7_4", 2, "DY_13TeV_M2200_Q2"                  , "DY_13TeV_M2200_Q6"                     , "MC: Q=2e 2200 GeV/#font[12]{c}^{2}"      , "S15"   ,   2200, 5.5863300000E-07, 1, 1.000, 1.000, 1.000 
 "CMSSW_7_4", 2, "DY_13TeV_M2600_Q2"                  , "DY_13TeV_M2600_Q6"                     , "MC: Q=2e 2600 GeV/#font[12]{c}^{2}"      , "S15"   ,   2600, 7.3973180000E-08, 1, 1.000, 1.000, 1.000 
+#
+#
+#
+#
+### BACKGROUND SAMPLES:
+#
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu"                       , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_1"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_2"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_3"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_4"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_5"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_6"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_7"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_8"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_WToLNu"                    , "MC_13TeV_WToLNu_9"                     , "MC: WToLNu"                              , "NoPU"  ,      0,  4.476256000E+04, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu"                     , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_1"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this  
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_2"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_3"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_4"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_5"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_6"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_7"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_8"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this 
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_9"                   , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_10"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_11"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_12"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_13"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+"CMSSW_7_4", 1, "MC_13TeV_DYToMuMu"                  , "MC_13TeV_DYToMuMu_14"                  , "MC: DYToMuMu"                            , "NoPU"  ,      0,  1.338900000E+03, 0, 0.000, 0.000, 0.000 #FIXME no PU in this
+#
 #
 #
 #

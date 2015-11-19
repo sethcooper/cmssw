@@ -355,16 +355,24 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
 
    int highestPtGoodVertex = -1;
    int goodVerts=0;
+   double dzMin=10000;
    for(unsigned int i=0;i<vertexColl.size();i++){
      if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
      goodVerts++;
      if(st) st->BS_dzAll->Fill( track->dz (vertexColl[i].position()),Event_Weight);
      if(st) st->BS_dxyAll->Fill(track->dxy(vertexColl[i].position()),Event_Weight);
-     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
-//     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
+//     if(highestPtGoodVertex<0){
+//        printf("debug Nvert=%3i vertIndex=%3i dxy=%+6.2f dz=%+6.2f\n", (int)vertexColl.size(), (int) i, track->dxy (vertexColl[i].position()), track->dz (vertexColl[i].position()));
+//     }
+
+
+//     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+     if(fabs(track->dz (vertexColl[i].position())) < fabs(dzMin) ){
+         dzMin = fabs(track->dz (vertexColl[i].position()));
+         highestPtGoodVertex = i;
 //       dz  = track->dz (vertexColl[i].position());
 //       dxy = track->dxy(vertexColl[i].position());
-//     }
+     }
    }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
 
    if(st){st->BS_NVertex->Fill(vertexColl.size(), Event_Weight);
@@ -1259,7 +1267,7 @@ std::cout<<"G\n";
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
                DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.2);
                DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
