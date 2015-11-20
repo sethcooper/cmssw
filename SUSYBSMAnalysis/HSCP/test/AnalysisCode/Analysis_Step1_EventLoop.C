@@ -1281,9 +1281,9 @@ std::cout<<"G\n";
                if(isSignal){
                   //FIXME to be measured on 2015 data, currently assume 2012
                   bool   PRescale = true;
-                  double IRescale = 0.05; // added to the Ias value
-                  double MRescale = 1.03;
-		  double TRescale = 0.015; //-0.005 (used in 2012); // added to the 1/beta value
+                  double IRescale =-0.05; // added to the Ias value
+                  double MRescale = 0.95;
+		  double TRescale =-0.015; //-0.005 (used in 2012); // added to the 1/beta value
 		  
 		  double genpT = -1.0;
 		  for(unsigned int g=0;g<genColl.size();g++) {
