@@ -48,7 +48,7 @@ bool isMC   = !isData;
 
 muonTimingCalculator tofCalculator;
 
-void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEvent& ev, FILE* pFile)
+void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEvent& ev, FILE* pFile, double treeMass)
 {
    reco::MuonRef  muon  = hscp.muonRef();
    reco::TrackRef track = hscp.trackRef();
@@ -128,7 +128,7 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
 
    double Mass=0;
    if(!track.isNull() && dedxMObj) Mass = GetMass(track->p(),dedxMObj->dEdx(), false);   
-   if(CutMass>=0 && Mass<CutMass)return;
+//   if(CutMass>=0 && Mass<CutMass)return;
 
    double v3d=0;
    double dxy=0;
@@ -149,7 +149,7 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
 
    fprintf(pFile,"\n");
    fprintf(pFile,"---------------------------------------------------------------------------------------------------\n");
-   fprintf(pFile,"Candidate Type = %i --> Mass : %7.2f\n",hscp.type(),Mass);
+   fprintf(pFile,"Candidate Type = %i --> Mass : %7.2f (recompute-->%7.2f)\n",hscp.type(),treeMass, Mass);
    fprintf(pFile,"------------------------------------------ EVENT INFO ---------------------------------------------\n");
    fprintf(pFile,"Run=%i Lumi=%i Event=%llu BX=%i  Orbit=%i Store=%i\n",ev.eventAuxiliary().run(),ev.eventAuxiliary().luminosityBlock(),ev.eventAuxiliary().event(),ev.eventAuxiliary().luminosityBlock(),ev.eventAuxiliary().orbitNumber(),ev.eventAuxiliary().storeNumber());
    edm::TriggerResultsByName tr = ev.triggerResultsByName("HLT");
@@ -363,7 +363,7 @@ void DumpInfo(string DIRNAME, string Pattern, string CutIndexStr="0", string Mas
       const susybsm::HSCParticleCollection& hscpColl = *hscpCollHandle;
 
       susybsm::HSCParticle hscp  = hscpColl[HscpI];
-      DumpCandidateInfo(hscp, ev, pFile);
+      DumpCandidateInfo(hscp, ev, pFile, Mass);
 
       for(unsigned int h=0;h<hscpColl.size();h++){
          if(h==HscpI)continue;
@@ -375,6 +375,7 @@ void DumpInfo(string DIRNAME, string Pattern, string CutIndexStr="0", string Mas
              fprintf(pFile,"other tracks muontracks\n");
          }
       }
+      fflush(pFile);
    }printf("\n");
    fclose(pFile);
    fclose(pickEvent);

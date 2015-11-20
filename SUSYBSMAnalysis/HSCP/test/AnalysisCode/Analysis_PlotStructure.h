@@ -55,6 +55,13 @@ struct stPlots {
    TH2F*  MassComb_SystPU;
    TH2F*  MaxEventMass_SystPU;
 
+   TH2F*  Mass_SystH;
+   TH2F*  MassTOF_SystH;
+   TH2F*  MassComb_SystH;
+   TH2F*  MaxEventMass_SystH;
+
+
+
    TH2F*  Mass_Flip;
    TH2F*  MassTOF_Flip;
    TH2F*  MassComb_Flip;
@@ -95,6 +102,7 @@ struct stPlots {
    TH1F* HSCPE_SystM;
    TH1F* HSCPE_SystT;
    TH1F* HSCPE_SystPU;
+   TH1F* HSCPE_SystH;
 
    TH1F* Beta_Gen;
    TH1F* Beta_GenCharged;
@@ -369,6 +377,7 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
    Name = "HSCPE_SystM";    st.HSCPE_SystM  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystM    ->Sumw2();
    Name = "HSCPE_SystT";    st.HSCPE_SystT  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystT    ->Sumw2();
    Name = "HSCPE_SystPU";   st.HSCPE_SystPU = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystPU    ->Sumw2();
+   Name = "HSCPE_SystH";    st.HSCPE_SystH  = new TH1F(Name.c_str(), Name.c_str(),  NCuts, 0,  NCuts);    st.HSCPE_SystH    ->Sumw2();
 
    Name = "Mass";     st.Mass     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass    ->Sumw2();
    Name = "MassTOF";  st.MassTOF  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF ->Sumw2();
@@ -399,6 +408,13 @@ void stPlots_Init(TFile* HistoFile, stPlots& st, std::string BaseName, unsigned 
    Name = "MassTOF_SystPU"; st.MassTOF_SystPU  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystPU ->Sumw2();
    Name = "MassComb_SystPU";st.MassComb_SystPU = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystPU->Sumw2();
    Name = "MaxEventMass_SystPU";  st.MaxEventMass_SystPU = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystPU->Sumw2();
+
+   Name = "Mass_SystH";     st.Mass_SystH     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_SystH    ->Sumw2();
+   Name = "MassTOF_SystH";  st.MassTOF_SystH  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_SystH ->Sumw2();
+   Name = "MassComb_SystH"; st.MassComb_SystH = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassComb_SystH->Sumw2();
+   Name = "MaxEventMass_SystH";     st.MaxEventMass_SystH = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);st.MaxEventMass_SystH->Sumw2();
+
+
 
    Name = "Mass_Flip";     st.Mass_Flip     = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.Mass_Flip    ->Sumw2();
    Name = "MassTOF_Flip";  st.MassTOF_Flip  = new TH2F(Name.c_str(), Name.c_str(),NCuts,0,NCuts, MassNBins, 0, MassHistoUpperBound);   st.MassTOF_Flip ->Sumw2();
@@ -732,6 +748,7 @@ bool stPlots_InitFromFile(TFile* HistoFile, stPlots& st, std::string BaseName)
    st.HSCPE_SystM       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystM");
    st.HSCPE_SystT       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystT");
    st.HSCPE_SystPU      = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystPU");
+   st.HSCPE_SystH       = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/HSCPE_SystH");
 
    st.Mass              = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass");
    st.MassTOF           = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF");
@@ -757,6 +774,12 @@ bool stPlots_InitFromFile(TFile* HistoFile, stPlots& st, std::string BaseName)
    st.MassTOF_SystPU     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystPU");
    st.MassComb_SystPU    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystPU");
    st.MaxEventMass_SystPU= (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystPU");
+
+   st.Mass_SystH        = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Mass_SystH");
+   st.MassTOF_SystH     = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassTOF_SystH");
+   st.MassComb_SystH    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MassComb_SystH");
+   st.MaxEventMass_SystH    = (TH2F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/MaxEventMass_SystH");
+
 
    st.Beta_Gen          = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Beta_Gen");
    st.Beta_GenCharged   = (TH1F*)GetObjectFromPath(st.Directory, HistoFile,  BaseName + "/Beta_GenCharged");

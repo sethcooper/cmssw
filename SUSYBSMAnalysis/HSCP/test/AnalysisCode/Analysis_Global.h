@@ -89,7 +89,7 @@ double             GlobalMaxPterr     =   0.25;//0.25;   // cut on error on trac
 double             GlobalMaxTIsol     =  50;      // cut on tracker isolation (SumPt)
 double             GlobalMaxRelTIsol  =  9999999; // cut on relative tracker isolation (SumPt/Pt)
 double             GlobalMaxEIsol     =  0.30;    // cut on calorimeter isolation (E/P)
-double             GlobalMinPt        =  50.00;   // cut on pT    at PRE-SELECTION
+double             GlobalMinPt        =  55.00;   // cut on pT    at PRE-SELECTION
 double             GlobalMinIs        =   0.0;    // cut on dEdxS at PRE-SELECTION (dEdxS is generally a  discriminator)
 double             GlobalMinIm        =   0.0;    // cut on dEdxM at PRE-SELECTION (dEdxM is generally an estimator    )
 double             GlobalMinTOF       =   1.0;    // cut on TOF   at PRE-SELECTION
@@ -108,11 +108,17 @@ std::string        dEdxM_Legend    = "I_{h} (MeV/cm)";
 //double             dEdxC_Data      = 2.879;
 //double             dEdxK_MC        = 2.683;
 //double             dEdxC_MC        = 2.453;
-// below are the new constants computed with harm2_SO_in for both MC and Data
+// below are the new constants computed with harm2_SP_in for both MC and Data
 double             dEdxK_Data      = 2.535;
 double             dEdxC_Data      = 3.339;
 double             dEdxK_MC        = 2.535;
 double             dEdxC_MC        = 3.339;
+
+//below is for harm2_SP where 20% of the lower dEdx hits are drop
+//double             dEdxK_Data      = 2.40;
+//double             dEdxC_Data      = 3.45;
+//double             dEdxK_MC        = 2.78;
+//double             dEdxC_MC        = 3.35;
 
 // TOF object to be used for combined, DT and CSC TOF measurement
 std::string        TOF_Label       = "combined";

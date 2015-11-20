@@ -1044,12 +1044,14 @@ std::cout<<"F\n";
       bool* HSCPTk_SystT    = new bool[CutPt.size()];
       bool* HSCPTk_SystM    = new bool[CutPt.size()];
       bool* HSCPTk_SystPU   = new bool[CutPt.size()];
+      bool* HSCPTk_SystH    = new bool[CutPt.size()];
       double* MaxMass       = new double[CutPt.size()];
       double* MaxMass_SystP = new double[CutPt.size()];
       double* MaxMass_SystI = new double[CutPt.size()];
       double* MaxMass_SystT = new double[CutPt.size()];
       double* MaxMass_SystM = new double[CutPt.size()];
       double* MaxMass_SystPU= new double[CutPt.size()];
+      double* MaxMass_SystH = new double[CutPt.size()];
 
       moduleGeom::loadGeometry("../../data/CMS_GeomTree.root");
       muonTimingCalculator tofCalculator;
@@ -1212,6 +1214,7 @@ std::cout<<"G\n";
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystT [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystM [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystPU[CutIndex] = -1; }
+            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystH [CutIndex] = -1; }
 
             //loop on HSCP candidates
             for(unsigned int c=0;c<hscpColl.size();c++){
@@ -1266,10 +1269,12 @@ std::cout<<"G\n";
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.2);
+               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, false);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, false);
+               DeDxData dedxMUObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, !isData);
                DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
+               DeDxData* dedxMUObj = dedxMUObjTmp.numberOfMeasurements()>0?&dedxMUObjTmp:NULL;
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
                //compute systematic uncertainties on signal
@@ -1362,6 +1367,9 @@ std::cout<<"G\n";
                         }
                      }
                   }
+
+
+
 
                   // compute systematic due to Mass shift
                   if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){
@@ -1476,6 +1484,14 @@ std::cout<<"G\n";
 	       if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5 ) ;
 	       if(dedxMObj) MassComb = Mass;
 	       if(tof)MassComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
+
+               double MassU    = -1; if(dedxMUObj) MassU=GetMass(track->p(),dedxMUObj->dEdx(),!isData);
+               double MassUComb = -1;
+               if(tof && dedxMUObj)MassUComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMUObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5 ) ;
+               if(dedxMUObj) MassUComb = MassU;
+               if(tof)MassUComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
                bool PassNonTrivialSelection=false;
 
                //loop on all possible selection (one of them, the optimal one, will be used later)
@@ -1486,7 +1502,10 @@ std::cout<<"G\n";
 
                   if(CutIndex!=0)PassNonTrivialSelection=true;
                   HSCPTk[CutIndex] = true;
+                  HSCPTk_SystH[CutIndex] = true;
+
                   if(Mass>MaxMass[CutIndex]) MaxMass[CutIndex]=Mass;
+                  if(MassU>MaxMass_SystH[CutIndex]) MaxMass_SystH[CutIndex]=Mass;
 
                   //Fill Mass Histograms
                   if(isMC)MCTrPlots->Mass->Fill(CutIndex, Mass,Event_Weight);
@@ -1497,6 +1516,17 @@ std::cout<<"G\n";
                   }
                   if(isMC)MCTrPlots->MassComb->Fill(CutIndex, MassComb, Event_Weight);
                   SamplePlots      ->MassComb->Fill(CutIndex, MassComb, Event_Weight);
+
+
+                  //Fill Mass Histograms for different Ih syst
+
+                           SamplePlots->Mass_SystH->Fill(CutIndex, MassU,Event_Weight);
+                           if(tof){
+                              SamplePlots->MassTOF_SystH ->Fill(CutIndex, MassTOF , Event_Weight);
+                           }
+                           SamplePlots->MassComb_SystH->Fill(CutIndex, MassUComb, Event_Weight);
+ 
+
                } //end of Cut loop
                if(PassNonTrivialSelection) stPlots_FillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(), c, track->pt(), dedxSObj ? dedxSObj->dEdx() : -1, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), -1);
             }// end of Track Loop
@@ -1531,6 +1561,11 @@ std::cout<<"G\n";
                  SamplePlots->HSCPE_SystPU       ->Fill(CutIndex,Event_Weight*PUSystFactor);
                  SamplePlots->MaxEventMass_SystPU->Fill(CutIndex,MaxMass_SystPU[CutIndex], Event_Weight*PUSystFactor);
               }
+              if(HSCPTk_SystH[CutIndex]){
+                 SamplePlots->HSCPE_SystH       ->Fill(CutIndex,Event_Weight);
+                 SamplePlots->MaxEventMass_SystH->Fill(CutIndex,MaxMass_SystH[CutIndex], Event_Weight);
+              }
+
            }
          }printf("\n");// end of Event Loop
       }//end of period loop
@@ -1540,12 +1575,14 @@ std::cout<<"G\n";
       delete [] HSCPTk_SystT;
       delete [] HSCPTk_SystM;
       delete [] HSCPTk_SystPU;
+      delete [] HSCPTk_SystH;
       delete [] MaxMass;
       delete [] MaxMass_SystP;
       delete [] MaxMass_SystI;
       delete [] MaxMass_SystT;
       delete [] MaxMass_SystM;
       delete [] MaxMass_SystPU;
+      delete [] MaxMass_SystH;
 
       stPlots_Clear(SamplePlots, true);
       if(isMC)stPlots_Clear(MCTrPlots, true);
