@@ -64,8 +64,11 @@
 #endif
 
 vector<string> JetMetSD_triggers;
+vector<string> JetMetSD_triggersL;
 vector<string> MuSD_triggers;
+vector<string> MuSD_triggersL;
 vector<string> All_triggers;
+vector<string> All_triggersL;
 map<string,bool> All_mask;
 
 class stPlot{
@@ -78,18 +81,18 @@ class stPlot{
    TH1D* BetaJet;
 
    stPlot(string SignalName){
-      int numberofbins=JetMetSD_triggers.size()+MuSD_triggers.size()+1;
+      int numberofbins=JetMetSD_triggersL.size()+MuSD_triggersL.size()+1;
       Histo    = new TH1D((SignalName + "Abs").c_str(),(SignalName + "Abs").c_str(),numberofbins,0,numberofbins);
       HistoInc = new TH1D((SignalName + "Inc").c_str(),(SignalName + "Inc").c_str(),numberofbins,0,numberofbins);
 
-      for(unsigned int i=0;i<MuSD_triggers.size();i++)    { Histo->GetXaxis()->SetBinLabel(i+1,MuSD_triggers[i].c_str());   }
-      for(unsigned int i=0;i<JetMetSD_triggers.size();i++){ Histo->GetXaxis()->SetBinLabel(MuSD_triggers.size()+1+i,JetMetSD_triggers[i].c_str());   }
+      for(unsigned int i=0;i<MuSD_triggersL.size();i++)    { Histo->GetXaxis()->SetBinLabel(i+1,MuSD_triggersL[i].c_str());   }
+      for(unsigned int i=0;i<JetMetSD_triggersL.size();i++){ Histo->GetXaxis()->SetBinLabel(MuSD_triggersL.size()+1+i,JetMetSD_triggersL[i].c_str());   }
 //      Histo->GetXaxis()->SetBinLabel(numberofbins-2,"Mu Paths");
 //      Histo->GetXaxis()->SetBinLabel(numberofbins-1,"JetMET Paths");
       Histo->GetXaxis()->SetBinLabel(numberofbins,"Total");
 
-      for(unsigned int i=0;i<MuSD_triggers.size();i++)    { HistoInc->GetXaxis()->SetBinLabel(i+1,MuSD_triggers[i].c_str());   }
-      for(unsigned int i=0;i<JetMetSD_triggers.size();i++){ HistoInc->GetXaxis()->SetBinLabel(MuSD_triggers.size()+1+i,JetMetSD_triggers[i].c_str());   }
+      for(unsigned int i=0;i<MuSD_triggersL.size();i++)    { HistoInc->GetXaxis()->SetBinLabel(i+1,MuSD_triggersL[i].c_str());   }
+      for(unsigned int i=0;i<JetMetSD_triggersL.size();i++){ HistoInc->GetXaxis()->SetBinLabel(MuSD_triggersL.size()+1+i,JetMetSD_triggersL[i].c_str());   }
 //      HistoInc->GetXaxis()->SetBinLabel(numberofbins-2,"Mu Paths");
 //      HistoInc->GetXaxis()->SetBinLabel(numberofbins-1,"JetMET Paths");
       HistoInc->GetXaxis()->SetBinLabel(numberofbins,"Total");
@@ -148,10 +151,10 @@ void TriggerStudy()
    MaxEntry = 5000;
 
    ///////////////////////////////////////////////////////
-   JetMetSD_triggers.push_back("HLT_PFMET170_NoiseCleaned_v*");
+   JetMetSD_triggers.push_back("HLT_PFMET170_NoiseCleaned_v*");   JetMetSD_triggersL.push_back("MET170");
 
-   MuSD_triggers.push_back("HLT_Mu45_eta2p1_v*");
-   MuSD_triggers.push_back("HLT_Mu50_v*");
+   MuSD_triggers.push_back("HLT_Mu50_v*");			  MuSD_triggersL.push_back("Mu50");
+   MuSD_triggers.push_back("HLT_Mu45_eta2p1_v*");		  MuSD_triggersL.push_back("Mu45 |#eta|<2.1");
    //MuSD_triggers.push_back("HLT_Mu17_Mu8_DZ_v*");
    //MuSD_triggers.push_back("HLT_Mu17_TkMu8_DZ_v*");
 
@@ -159,6 +162,9 @@ void TriggerStudy()
    for(unsigned int i=0;i<MuSD_triggers.size();i++)All_triggers.push_back(MuSD_triggers[i]);
    for(unsigned int i=0;i<JetMetSD_triggers.size();i++)All_triggers.push_back(JetMetSD_triggers[i]);
    for(unsigned int i=0;i<All_triggers.size();i++)All_mask[All_triggers[i]] = true;
+   for(unsigned int i=0;i<MuSD_triggersL.size();i++)All_triggersL.push_back(MuSD_triggersL[i]);
+   for(unsigned int i=0;i<JetMetSD_triggersL.size();i++)All_triggersL.push_back(JetMetSD_triggersL[i]);
+
    ///////////////////////////////////////////////////////
    FILE* pFile = fopen("Results.txt","w");
 
@@ -167,6 +173,7 @@ void TriggerStudy()
       if(samples[i].Type!=2)continue;
       plots[i] = new stPlot(samples[i].Name);
       if(! (samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M1600_f10" || samples[i].Name=="Gluino_13TeV_M2600_f10"  
+      || samples[i].Name=="Gluino_13TeV_M600N_f10" || samples[i].Name=="Gluino_13TeV_M1600N_f10" || samples[i].Name=="Gluino_13TeV_M2600N_f10"  
       || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" || samples[i].Name=="GMStau_13TeV_M1218" 
       || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871" || samples[i].Name=="PPStau_13TeV_M1218"  
       ))continue;
@@ -177,22 +184,30 @@ void TriggerStudy()
    int Id;                              vector<stPlot*> objs;        vector<string> leg;
 
                                         objs.clear();                leg.clear();
-   Id = JobIdToIndex("Gluino_13TeV_M600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("Gluino_13TeV_M1600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("Gluino_13TeV_M2600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+   Id = JobIdToIndex("Gluino_13TeV_M600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("Gluino_13TeV_M1600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("Gluino_13TeV_M2600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
    layout(objs, leg, "summary_Gluino");
 
                                         objs.clear();                leg.clear();
+   Id = JobIdToIndex("Gluino_13TeV_M600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("Gluino_13TeV_M1600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("Gluino_13TeV_M2600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   layout(objs, leg, "summary_GluinoN");
+
+
+
                                         objs.clear();                leg.clear();
-   Id = JobIdToIndex("GMStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("GMStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("GMStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+                                        objs.clear();                leg.clear();
+   Id = JobIdToIndex("GMStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("GMStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("GMStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
    layout(objs, leg, "summary_GMStau");
 
                                         objs.clear();                leg.clear();
-   Id = JobIdToIndex("PPStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("PPStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("PPStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+   Id = JobIdToIndex("PPStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("PPStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+   Id = JobIdToIndex("PPStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
    layout(objs, leg, "summary_PPStau");
 
    fflush(pFile);
@@ -282,8 +297,8 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
             Accept2 = IncreasedTreshold(trEv, InputTag("hltPFMET170Filter","","HLT"),190 , 99, 1, false);
          }
 
-         if(Accept                    ){plot->Histo   ->Fill(All_triggers[i].c_str(),Event_Weight);}       
-         if(Accept && !AlreadyAccepted){plot->HistoInc->Fill(All_triggers[i].c_str(),Event_Weight);}
+         if(Accept                    ){plot->Histo   ->Fill(All_triggersL[i].c_str(),Event_Weight);}       
+         if(Accept && !AlreadyAccepted){plot->HistoInc->Fill(All_triggersL[i].c_str(),Event_Weight);}
 
          if     (whereJetMetSD!=JetMetSD_triggers.end()){ JetMetSD |= Accept; if(!AlreadyAccepted)JetMetSDInc |= Accept;}
          else if(whereMuSD    !=MuSD_triggers.end())    { MuSD     |= Accept; if(!AlreadyAccepted)MuSDInc     |= Accept;}
@@ -358,11 +373,11 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
    TCanvas* c1;
    
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
-   c1->SetBottomMargin(0.5);
+   c1->SetBottomMargin(0.15);
    Histos[0] = (TH1*)plot->BetaMuon;                    legend.push_back("Muon");
    Histos[1] = (TH1*)plot->BetaTotal;                   legend.push_back("Overall");
    DrawSuperposedHistos((TH1**)Histos, legend, "HIST E1",  "#beta of the fastest HSCP", "Trigger Efficiency (%)", 0,1, 0,100);
-   DrawLegend((TObject**)Histos,legend,"Trigger:","LP",0.35, 0.93, 0.18, 0.04);
+   DrawLegend((TObject**)Histos,legend,"Trigger:","LP",0.35, 0.93, 0.20, 0.06);
    c1->Modified();
    DrawPreliminary("Simulation", 13.0, "", true);
    SaveCanvas(c1,"pictures/",sample.Name);
@@ -384,15 +399,15 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
    TCanvas* c1 = new TCanvas("MyC","Histo",600,600);
    legend.clear();
    c1->SetGrid();
-   c1->SetBottomMargin(0.5);
+   c1->SetBottomMargin(0.3);
 
    for(unsigned int i=0;i<plots.size();i++){
       Histos1[i]=plots[i]->Histo; legend.push_back(sigs[i]);
    }
 //   DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,100);  
-   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,30);
-   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,100);
-   DrawLegend(Histos1,legend,"","P", 0.98, 0.90, 0.13, 0.07);
+   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,70);
+   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,120);
+   DrawLegend(Histos1,legend,"","P", 0.48, 0.92, 0.16, 0.03);
    DrawPreliminary("Simulation", 13.0, "", true);
 
    for(unsigned int i=0;i<plots.size();i++){
@@ -407,14 +422,14 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
    c1 = new TCanvas("MyC","Histo",600,600);
    legend.clear();
    c1->SetGrid();
-   c1->SetBottomMargin(0.5);
+   c1->SetBottomMargin(0.3);
 
    for(unsigned int i=0;i<plots.size();i++){
       Histos1[i]=plots[i]->HistoInc; legend.push_back(sigs[i]);
    }
-   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,30);
-   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,100);
-   DrawLegend(Histos1,legend,"","P", 0.98, 0.90, 0.13, 0.07);
+   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,70);
+   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,120);
+   DrawLegend(Histos1,legend,"","P", 0.48, 0.92, 0.16, 0.03);
    DrawPreliminary("Simulation", 13.0, "", true);
 
    for(unsigned int i=0;i<plots.size();i++){
