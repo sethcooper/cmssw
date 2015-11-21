@@ -145,13 +145,15 @@ void TriggerStudy()
    GetSampleDefinition(samples , "../../AnalysisCode/Analysis_Samples.txt");
    keepOnlyValidSamples(samples);
 
+   MaxEntry = 5000;
+
    ///////////////////////////////////////////////////////
    JetMetSD_triggers.push_back("HLT_PFMET170_NoiseCleaned_v*");
 
    MuSD_triggers.push_back("HLT_Mu45_eta2p1_v*");
    MuSD_triggers.push_back("HLT_Mu50_v*");
-   MuSD_triggers.push_back("HLT_Mu17_Mu8_DZ_v*");
-   MuSD_triggers.push_back("HLT_Mu17_TkMu8_DZ_v*");
+   //MuSD_triggers.push_back("HLT_Mu17_Mu8_DZ_v*");
+   //MuSD_triggers.push_back("HLT_Mu17_TkMu8_DZ_v*");
 
    All_triggers.clear();
    for(unsigned int i=0;i<MuSD_triggers.size();i++)All_triggers.push_back(MuSD_triggers[i]);
@@ -162,35 +164,35 @@ void TriggerStudy()
 
    stPlot** plots = new stPlot*[samples.size()];  
    for(unsigned int i=0;i<samples.size();i++){
+      if(samples[i].Type!=2)continue;
       plots[i] = new stPlot(samples[i].Name);
-//      if(! (samples[i].Name=="Gluino_13TeV_M200_f10" || samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M2000_f10"  
-//      || samples[i].Name=="GMStau_13TeV_M200" || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" 
-//      || samples[i].Name=="PPStau_13TeV_M200" || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871"  
-//      ))continue;
+      if(! (samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M1600_f10" || samples[i].Name=="Gluino_13TeV_M2600_f10"  
+      || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" || samples[i].Name=="GMStau_13TeV_M1218" 
+      || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871" || samples[i].Name=="PPStau_13TeV_M1218"  
+      ))continue;
       printf("Process %20s sample\n", samples[i].Name.c_str());
       TriggerStudy_Core(samples[i], pFile, plots[i]);
    }
 
-
    int Id;                              vector<stPlot*> objs;        vector<string> leg;
 
                                         objs.clear();                leg.clear();
-   Id = JobIdToIndex("Gluino_13TeV_M200_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    Id = JobIdToIndex("Gluino_13TeV_M600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
-   Id = JobIdToIndex("Gluino_13TeV_M2000_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+   Id = JobIdToIndex("Gluino_13TeV_M1600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+   Id = JobIdToIndex("Gluino_13TeV_M2600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    layout(objs, leg, "summary_Gluino");
 
                                         objs.clear();                leg.clear();
                                         objs.clear();                leg.clear();
-   Id = JobIdToIndex("GMStau_13TeV_M200",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    Id = JobIdToIndex("GMStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    Id = JobIdToIndex("GMStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+   Id = JobIdToIndex("GMStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    layout(objs, leg, "summary_GMStau");
 
                                         objs.clear();                leg.clear();
-   Id = JobIdToIndex("PPStau_13TeV_M200",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    Id = JobIdToIndex("PPStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    Id = JobIdToIndex("PPStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
+   Id = JobIdToIndex("PPStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Name);
    layout(objs, leg, "summary_PPStau");
 
    fflush(pFile);
@@ -240,13 +242,13 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
       if(!tr.isValid()){printf("Trigger is invalid\n"); continue;}
 
       ////USE THIS TO DUMP AVAILABLE TRIGGER PATHS
-//      for(unsigned int i=0;i<tr.size();i++){
-//         printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
-//      }fflush(stdout);exit(0);
+      //for(unsigned int i=0;i<tr.size();i++){
+      //   printf("Path %3i %50s --> %1i\n",i, tr.triggerName(i).c_str(),tr.accept(i));
+      //}fflush(stdout);exit(0);
 
-      //fwlite::Handle< trigger::TriggerEvent > trEvHandle;
-      //trEvHandle.getByLabel(ev,"hltTriggerSummaryAOD");
-      //trigger::TriggerEvent trEv = *trEvHandle;
+      fwlite::Handle< trigger::TriggerEvent > trEvHandle;
+      trEvHandle.getByLabel(ev,"hltTriggerSummaryAOD");
+      trigger::TriggerEvent trEv = *trEvHandle;
 
       //for(unsigned int i=0;i<trEvHandle->sizeFilters();i++){
       //   if(strncmp(trEvHandle->filterTag(i).label().c_str(),"hltL1",5)==0)continue;
@@ -274,9 +276,11 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
          bool Accept = false;
          bool Accept2 = false;
 
-         Accept = passTriggerPatterns(tr,"HLT_PFMHT150_v*");
+         Accept = passTriggerPatterns(tr, All_triggers[i]);
          Accept2 = Accept;
-        //Accept2 = IncreasedTreshold(trEv, InputTag("hltPFMHT150Filter","","HLT"),160 , 2.4, 1, false);
+         if(whereJetMetSD!=JetMetSD_triggers.end()){
+            Accept2 = IncreasedTreshold(trEv, InputTag("hltPFMET170Filter","","HLT"),190 , 99, 1, false);
+         }
 
          if(Accept                    ){plot->Histo   ->Fill(All_triggers[i].c_str(),Event_Weight);}       
          if(Accept && !AlreadyAccepted){plot->HistoInc->Fill(All_triggers[i].c_str(),Event_Weight);}
@@ -298,8 +302,8 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
          plot->HistoInc->Fill("Total",Event_Weight);
       }
 
-//      JetMetTr = JetMetSD & ((rand()%100)<90);
-//      MuTr     = MuSD     & ((rand()%100)<90);  
+      //JetMetTr = JetMetSD & ((rand()%100)<99);
+      MuTr     = MuSD     & ((rand()%100)<98);  //emulate 2% data/MC difference
 
       Total+=Event_Weight;
       if(JetMetSD)SDJetMET+=Event_Weight;
@@ -354,6 +358,7 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
    TCanvas* c1;
    
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
+   c1->SetBottomMargin(0.5);
    Histos[0] = (TH1*)plot->BetaMuon;                    legend.push_back("Muon");
    Histos[1] = (TH1*)plot->BetaTotal;                   legend.push_back("Overall");
    DrawSuperposedHistos((TH1**)Histos, legend, "HIST E1",  "#beta of the fastest HSCP", "Trigger Efficiency (%)", 0,1, 0,100);
@@ -379,7 +384,7 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
    TCanvas* c1 = new TCanvas("MyC","Histo",600,600);
    legend.clear();
    c1->SetGrid();
-   c1->SetBottomMargin(0.3);
+   c1->SetBottomMargin(0.5);
 
    for(unsigned int i=0;i<plots.size();i++){
       Histos1[i]=plots[i]->Histo; legend.push_back(sigs[i]);
@@ -402,7 +407,7 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
    c1 = new TCanvas("MyC","Histo",600,600);
    legend.clear();
    c1->SetGrid();
-   c1->SetBottomMargin(0.3);
+   c1->SetBottomMargin(0.5);
 
    for(unsigned int i=0;i<plots.size();i++){
       Histos1[i]=plots[i]->HistoInc; legend.push_back(sigs[i]);
@@ -427,8 +432,22 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
 
 bool IncreasedTreshold(const trigger::TriggerEvent& trEv, const edm::InputTag& InputPath, double NewThreshold, double etaCut, int NObjectAboveThreshold, bool averageThreshold)
 {
+//  unsigned int filterIndex= 0;
+//  if(edm::is_glob(pattern)){
+//     std::vector< std::vector<std::string>::const_iterator > matches = edm::regexMatch(tr.triggerNames(), pattern);
+//     for(size_t t=0;t<matches.size();t++){
+//        if(tr.accept( matches[t]->c_str() ) )return true;
+//     }
+//  }else{
+//     if(tr.accept( pattern.c_str() ) ) return true;
+//  }
+
+   //for(unsigned int i=0;i<trEv.sizeFilters();i++){printf("%i --> %s XXX %s\n", i, trEv.filterTag(i).label().c_str(), trEv.filterTag(i).process().c_str());}
+
+
    unsigned int filterIndex = trEv.filterIndex(InputPath);
    //if(filterIndex<trEv.sizeFilters())printf("SELECTED INDEX =%i --> %s    XXX   %s\n",filterIndex,trEv.filterTag(filterIndex).label().c_str(), trEv.filterTag(filterIndex).process().c_str());
+   //else printf("BUG filterIndex=%i while size=%i\n", filterIndex, trEv.sizeFilters());
 
    if (filterIndex<trEv.sizeFilters()){
       const trigger::Vids& VIDS(trEv.filterIds(filterIndex));
