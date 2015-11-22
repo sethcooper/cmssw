@@ -407,7 +407,6 @@ bool passTriggerPatterns(edm::TriggerResultsByName& tr, std::string pattern){
   return false;
 }
 
-
 #include "TVector3.h"
 double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp){
    reco::TrackRef track1=hscp.trackRef();

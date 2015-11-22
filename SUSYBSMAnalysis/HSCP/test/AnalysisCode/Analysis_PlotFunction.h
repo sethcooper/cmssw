@@ -4,9 +4,9 @@
 #define PLOT_FUNCTION
 
 
-int Color [] = {1,4,2,8,6,9,3,7,5};
-int Marker[] = {20,22,21,23,29,27,2, 30};
-int Style [] = {1,2,5,7,9,10,11,12};
+int Color [] = {1,4,2,8,6,9,3,7,5,46,42};
+int Marker[] = {20,22,21,23,29,27,2,30,24,25};
+int Style [] = {1,2,5,7,9,10,11,12, 13, 14};
 int GraphStyle [] = {20, 21, 22, 23, 24, 25, 26, 27};
 
 // handfull function to get one TObject from a complex cirectory stucture in a file
