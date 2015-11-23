@@ -35,7 +35,7 @@ if sys.argv[1]=='1':
       index+=1           
       if(line.startswith('#')):continue
       vals=line.split(',')
-      if(int(vals[1])!=0):continue
+      if(int(vals[1])==2):continue
       LaunchOnCondor.SendCluster_Push(["BASH", "sh " + os.getcwd()+"/StabilityCheck.sh " + os.getcwd()+"/pictures " + str(index) +" " + str(1)])
    f.close()
    LaunchOnCondor.SendCluster_Submit()

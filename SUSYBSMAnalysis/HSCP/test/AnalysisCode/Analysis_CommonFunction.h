@@ -407,7 +407,6 @@ bool passTriggerPatterns(edm::TriggerResultsByName& tr, std::string pattern){
   return false;
 }
 
-
 #include "TVector3.h"
 double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp){
    reco::TrackRef track1=hscp.trackRef();
@@ -472,7 +471,7 @@ class DuplicatesClass{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, TH1* histoToFill=NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool fakeHIP=false, TH1* histoToFill=NULL);
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 void printClusterCleaningMessage (uint8_t exitCode);
@@ -620,7 +619,7 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
 }
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, TH1* histoToFill){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, bool fakeHIP, TH1* histoToFill){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -680,6 +679,9 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
 
         if(templateHisto){  //save discriminator probability
            double ChargeOverPathlength = scaleFactor*ClusterCharge/(dedxHits->pathlength(h)*10.0*(detid.subdetId()<3?265:1));
+//           if(fakeHIP && detid.subdetId()>=3 && rand()%1000<35)ChargeOverPathlength = ( 0.5 + ((rand()%15000)/10000.0) ) / (3.61e-06*265*10);
+//           if(fakeHIP && detid.subdetId() <3 && rand()%1000<20)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) ) / (3.61e-06*265*10*265);
+
            int moduleGeometry = 0; // underflow for debug
            if (detid.subdetId()<3) moduleGeometry = 15; // 15 == pixel
            else {SiStripDetId SSdetId(detid); moduleGeometry = SSdetId.moduleGeometry();}
@@ -693,6 +695,9 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
         }else{
            double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
            double ChargeOverPathlength = scaleFactor*Norm*ClusterCharge/dedxHits->pathlength(h);
+           if(fakeHIP && detid.subdetId()>=3 && rand()%1000<35)ChargeOverPathlength = ( 0.5 + ((rand()%15000)/10000.0) );
+           if(fakeHIP && detid.subdetId()< 3 && rand()%1000<10)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) );
+
            vect.push_back(ChargeOverPathlength); //save charge
            if(detid.subdetId()< 3)vectPixel.push_back(ChargeOverPathlength);
            if(detid.subdetId()>=3)vectStrip.push_back(ChargeOverPathlength);

@@ -58,8 +58,63 @@ using namespace trigger;
 #endif
 
 
+struct plotSt{
+   TH1D* NVert;
+   TH1D* Pt;
+   TH1D* dEdxHitStrip;
+   TH1D* dEdxHitPixel;
+   TH1D* dEdxMin1;
+   TH1D* dEdxMin2;
+   TH1D* dEdxMin3;
+   TH1D* dEdxMin4;
+   TH1D* dEdx;
+   TH1D* dEdxMT;
+   TH1D* dEdxM;
+   TH1D* dEdxMS;
+   TH1D* dEdxMP;
+   TH1D* dEdxMSC;
+   TH1D* dEdxMPC;
+   TH1D* dEdxMSF;
+   TH1D* dEdxMPF;
+   TH1D* TOF;
+   TH1D* TOFDT;
+   TH1D* TOFCSC;
+   TH1D* Vertex;
+   TH1D* VertexDT;
+   TH1D* VertexCSC;
+
+   plotSt(string prefix, string sufix){
+      string histoName;              
+      histoName=prefix + "NVert"        + sufix ; NVert        = new TH1D(histoName.c_str(), histoName.c_str(),  100, 0.0, 100);
+      histoName=prefix + "Pt"           + sufix ; Pt           = new TH1D(histoName.c_str(), histoName.c_str(), 1000, 0.0,1000);
+      histoName=prefix + "dEdxHitStrip" + sufix ; dEdxHitStrip = new TH1D(histoName.c_str(), histoName.c_str(),  400, 0.0,20.0);
+      histoName=prefix + "dEdxHitPixel" + sufix ; dEdxHitPixel = new TH1D(histoName.c_str(), histoName.c_str(),  400, 0.0,20.0);
+      histoName=prefix + "dEdxMin1"     + sufix ; dEdxMin1     = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMin2"     + sufix ; dEdxMin2     = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMin3"     + sufix ; dEdxMin3     = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMin4"     + sufix ; dEdxMin4     = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdx"         + sufix ; dEdx         = new TH1D(histoName.c_str(), histoName.c_str(),  100, 0.0, 1.0);
+      histoName=prefix + "dEdxMT"       + sufix ; dEdxMT       = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxM"        + sufix ; dEdxM        = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMS"       + sufix ; dEdxMS       = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMP"       + sufix ; dEdxMP       = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMSC"      + sufix ; dEdxMSC      = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMPC"      + sufix ; dEdxMPC      = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMSF"      + sufix ; dEdxMSF      = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "dEdxMPF"      + sufix ; dEdxMPF      = new TH1D(histoName.c_str(), histoName.c_str(),  200, 0.0,10.0);
+      histoName=prefix + "TOF"          + sufix ; TOF          = new TH1D(histoName.c_str(), histoName.c_str(),  100, -1.0, 3.0);
+      histoName=prefix + "TOFDT"        + sufix ; TOFDT        = new TH1D(histoName.c_str(), histoName.c_str(),  100, -1.0, 3.0);
+      histoName=prefix + "TOFCSC"       + sufix ; TOFCSC       = new TH1D(histoName.c_str(), histoName.c_str(),  100, -1.0, 3.0);
+      histoName=prefix + "Vertex"       + sufix ; Vertex       = new TH1D(histoName.c_str(), histoName.c_str(),  100, -10.0, 10.0);
+      histoName=prefix + "VertexDT"     + sufix ; VertexDT     = new TH1D(histoName.c_str(), histoName.c_str(),  100, -10.0, 10.0);
+      histoName=prefix + "VertexCSC"    + sufix ; VertexCSC    = new TH1D(histoName.c_str(), histoName.c_str(),  100, -10.0, 10.0);
+   };
+};
+std::map<string, std::map<string, plotSt*> > MapRunTriggerPlots;
+
 bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData& dedxSObj, const reco::DeDxData& dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev);
 bool IncreasedTreshold(const trigger::TriggerEvent& trEv, const edm::InputTag& InputPath, double NewThreshold, int NObjectAboveThreshold, bool averageThreshold=false);
+
 
 
 bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData& dedxSObj, const reco::DeDxData& dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev)
@@ -90,17 +145,20 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData& d
    const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
    if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
 
-
    int highestPtGoodVertex = -1;
    int goodVerts=0;
+   double dzMin=10000;
    for(unsigned int i=0;i<vertexColl.size();i++){
      if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
      goodVerts++;
-     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
-//     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
+
+//     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+     if(fabs(track->dz (vertexColl[i].position())) < fabs(dzMin) ){
+         dzMin = fabs(track->dz (vertexColl[i].position()));
+         highestPtGoodVertex = i;
 //       dz  = track->dz (vertexColl[i].position());
 //       dxy = track->dxy(vertexColl[i].position());
-//     }
+     }
    }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
 
    double dz  = track->dz (vertexColl[highestPtGoodVertex].position());
@@ -154,8 +212,26 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
   if(DIRNAME=="COMPILE") return;
   OUTDIRNAME+="/";
 
+   std::vector<string> triggers;
+   triggers.push_back("Any");
+//   triggers.push_back("HLT_Mu45_eta2p1");
+   triggers.push_back("HLT_Mu50");
+//   triggers.push_back("HLT_PFMET170_NoiseCleaned");
+
+   std::vector<string> versions;
+   versions.push_back("");
+   versions.push_back("AOD");
+   versions.push_back("FAKE");
+
+
+
+
   int JobIndex;  sscanf(JobIndexStr.c_str(),"%d",&JobIndex);
   int NJobs;     sscanf(NJobsStr   .c_str(),"%d",&NJobs);
+   char OutputFileName[1024];  sprintf(OutputFileName, "%s/Histos_%i.root", OUTDIRNAME.c_str(), JobIndex);
+   TFile* OutputHisto = new TFile(OutputFileName,"RECREATE");
+   TypeMode      = 0;
+
 
    Event_Weight = 1;
    MaxEntry = -1;
@@ -189,71 +265,39 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 
    vector<string> DataFileName;
    for(unsigned int s=0;s<samples.size();s++){
-      if(samples[s].Type!=0)continue; //only data sample is considered
       GetInputFiles(samples[s], BaseDirectory, DataFileName, 0);
-   }
-//   DataFileName.clear();
-//   DataFileName.push_back("root://eoscms//eos/cms/store/cmst3/user/querten/15_03_25_HSCP_Run2EDMFiles/Data_Run2015B_251253_251883.root");
 
-   for(unsigned int f=0;f<DataFileName.size();f++){printf("file %i : %s\n", f, DataFileName[f].c_str());}
+      for(unsigned int f=0;f<DataFileName.size();f++){printf("file %i : %s\n", f, DataFileName[f].c_str());}
 
-   std::vector<string> triggers;
-   triggers.push_back("Any");
-   triggers.push_back("HLT_Mu45_eta2p1");
-   triggers.push_back("HLT_Mu50");
-   triggers.push_back("HLT_PFMET170_NoiseCleaned");
+      bool isData   = (samples[s].Type==0);
+      bool isMC     = (samples[s].Type==1);
+      bool isSignal = (samples[s].Type>=2);
 
-   TH1D** NVert = new TH1D*[triggers.size()];;
-   TH1D** dEdxAOD = new TH1D*[triggers.size()];;
-   TH1D** dEdxMTAOD = new TH1D*[triggers.size()];;
-   TH1D** dEdxMAOD = new TH1D*[triggers.size()];;
-   TH1D** dEdxMin = new TH1D*[triggers.size()];;
-   TH1D** dEdx = new TH1D*[triggers.size()];;
-   TH1D** dEdxMT = new TH1D*[triggers.size()];;
-   TH1D** dEdxM = new TH1D*[triggers.size()];;
-   TH1D** dEdxMS = new TH1D*[triggers.size()];;
-   TH1D** dEdxMP = new TH1D*[triggers.size()];;
-   TH1D** dEdxMSC = new TH1D*[triggers.size()];;
-   TH1D** dEdxMPC = new TH1D*[triggers.size()];;
-   TH1D** dEdxMSF = new TH1D*[triggers.size()];;
-   TH1D** dEdxMPF = new TH1D*[triggers.size()];;
-   TH1D** Pt   = new TH1D*[triggers.size()];;
-   TH1D** TOFAOD   = new TH1D*[triggers.size()];;
-   TH1D** TOFAODDT   = new TH1D*[triggers.size()];;
-   TH1D** TOFAODCSC   = new TH1D*[triggers.size()];;
-   TH1D** TOF   = new TH1D*[triggers.size()];;
-   TH1D** TOFDT   = new TH1D*[triggers.size()];;
-   TH1D** TOFCSC   = new TH1D*[triggers.size()];;
-   TH1D** VertexAOD   = new TH1D*[triggers.size()];;
-   TH1D** VertexAODDT   = new TH1D*[triggers.size()];;
-   TH1D** VertexAODCSC   = new TH1D*[triggers.size()];;
-   TH1D** Vertex   = new TH1D*[triggers.size()];;
-   TH1D** VertexDT   = new TH1D*[triggers.size()];;
-   TH1D** VertexCSC = new TH1D*[triggers.size()];;
+      if(isData){ 
+         dEdxSF [0] = 1.00000;
+         dEdxSF [1] = 1.21836;
+         dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+      }else{  
+         dEdxSF [0] = 1.09708;
+         dEdxSF [1] = 1.01875;
+         dEdxTemplates = loadDeDxTemplate("../../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
+      }
 
- 
-   char OutputFileName[1024];  sprintf(OutputFileName, "%s/Histos_%i.root", OUTDIRNAME.c_str(), JobIndex);
-   TFile* OutputHisto = new TFile(OutputFileName,"RECREATE");
-   TypeMode      = 0;
+      if(isData){    trackerCorrector.LoadDeDxCalibration("../../../data/Data13TeVGains_v2.root"); 
+      }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
+      }
 
-   dedxGainCorrector trackerCorrector;
-   double dEdxSF [2];
-   dEdxSF [0] = 1.00000;
-   dEdxSF [1] = 1.21836;
-   TH3F* dEdxTemplates = loadDeDxTemplate("../../../data/Data13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
-
-   if(true){    trackerCorrector.LoadDeDxCalibration("../../../data/Data13TeVGains_v2.root");
-   }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
-   }
- 
    moduleGeom::loadGeometry("../../../data/CMS_GeomTree.root");
    muonTimingCalculator tofCalculator;
    tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
    unsigned int CurrentRun = 0;
+ 
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Looping on Tree              :");
+
+   std::map<string, plotSt*>* MapTriggerPlots=NULL;;
 
    int NEvents = ev.size();// / NJobs;
    int FirstEvent = 0;//JobIndex * NEvents;
@@ -268,89 +312,29 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          tofCalculator.setRun(CurrentRun);
          trackerCorrector.setRun(CurrentRun);
 
-         TDirectory* dir = OutputHisto;
-         char DIRECTORY[2048]; sprintf(DIRECTORY,"%6i",ev.eventAuxiliary().run());
-         TDirectory::AddDirectory(kTRUE);
-         TH1::AddDirectory(kTRUE);
-         dir = (TDirectory*)OutputHisto->Get(DIRECTORY);
-         if(dir==NULL){
-            dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
-            dir->cd();
 
-            for(unsigned int i=0;i<triggers.size();i++){
-               NVert[i] = new TH1D((triggers[i] + "NVert"    ).c_str(), "NVert"  , 100, 0.0, 100);
-               Pt  [i]  = new TH1D((triggers[i] + "Pt"       ).c_str(), "Pt"     ,1000, 0.0,1000);
-
-               dEdxAOD[i]    = new TH1D((triggers[i] + "dEdxAOD"   ).c_str(), "dEdxAOD"   , 100, 0.0, 1.0);
-               dEdxMTAOD[i]  = new TH1D((triggers[i] + "dEdxMTAOD" ).c_str(), "dEdxMTAOD" , 200, 0.0,10.0);
-               dEdxMAOD[i]   = new TH1D((triggers[i] + "dEdxMAOD"  ).c_str(), "dEdxMAOD"  , 200, 0.0,10.0);
-
-               dEdxMin[i] = new TH1D((triggers[i] + "dEdxMin").c_str(), "dEdxMin", 200, 0.0,10.0);
-
-               dEdx[i]    = new TH1D((triggers[i] + "dEdx"   ).c_str(), "dEdx"   , 100, 0.0, 1.0);
-               dEdxMT[i]  = new TH1D((triggers[i] + "dEdxMT" ).c_str(), "dEdxMT" , 200, 0.0,10.0);
-               dEdxM[i]   = new TH1D((triggers[i] + "dEdxM"  ).c_str(), "dEdxM"  , 200, 0.0,10.0);
-               dEdxMS[i]  = new TH1D((triggers[i] + "dEdxMS" ).c_str(), "dEdxMS" , 200, 0.0,10.0);
-               dEdxMP[i]  = new TH1D((triggers[i] + "dEdxMP" ).c_str(), "dEdxMP" , 200, 0.0,10.0);
-               dEdxMSC[i] = new TH1D((triggers[i] + "dEdxMSC").c_str(), "dEdxMSC", 200, 0.0,10.0);
-               dEdxMPC[i] = new TH1D((triggers[i] + "dEdxMPC").c_str(), "dEdxMPC", 200, 0.0,10.0);
-               dEdxMSF[i] = new TH1D((triggers[i] + "dEdxMSF").c_str(), "dEdxMSF", 200, 0.0,10.0);
-               dEdxMPF[i] = new TH1D((triggers[i] + "dEdxMPF").c_str(), "dEdxMPF", 200, 0.0,10.0);
-
-               TOFAOD   [i] = new TH1D((triggers[i] + "TOFAOD"  ).c_str(), "TOFAOD"      , 100, -1.0, 3.0);
-               TOFAODDT [i] = new TH1D((triggers[i] + "TOFAODDT"  ).c_str(), "TOFAODDT"  , 100, -1.0, 3.0);
-               TOFAODCSC[i] = new TH1D((triggers[i] + "TOFAODCSC"  ).c_str(), "TOFAODCSC", 100, -1.0, 3.0);
-
-               TOF      [i] = new TH1D((triggers[i] + "TOF"  ).c_str(), "TOF"            , 100, -1.0, 3.0);
-               TOFDT    [i] = new TH1D((triggers[i] + "TOFDT"  ).c_str(), "TOFDT"        , 100, -1.0, 3.0);
-               TOFCSC   [i] = new TH1D((triggers[i] + "TOFCSC"  ).c_str(), "TOFCSC"      , 100, -1.0, 3.0);
-
-               VertexAOD   [i] = new TH1D((triggers[i] + "VertexAOD"  ).c_str(), "VertexAOD"      , 100, -10.0, 10.0);
-               VertexAODDT [i] = new TH1D((triggers[i] + "VertexAODDT"  ).c_str(), "VertexAODDT"  , 100, -10.0, 10.0);
-               VertexAODCSC[i] = new TH1D((triggers[i] + "VertexAODCSC"  ).c_str(), "VertexAODCSC", 100, -10.0, 10.0);
-
-               Vertex      [i] = new TH1D((triggers[i] + "Vertex"  ).c_str(), "Vertex"            , 100, -10.0, 10.0);
-               VertexDT    [i] = new TH1D((triggers[i] + "VertexDT"  ).c_str(), "VertexDT"        , 100, -10.0, 10.0);
-               VertexCSC   [i] = new TH1D((triggers[i] + "VertexCSC"  ).c_str(), "VertexCSC"      , 100, -10.0, 10.0);
-            }
+         char DIRECTORY[2048];
+         if(isData){
+            sprintf(DIRECTORY,"%6i", ev.eventAuxiliary().run());
          }else{
-            for(unsigned int i=0;i<triggers.size();i++){
-               NVert[i] = (TH1D*)dir->Get("NVert");
-               Pt  [i]  = (TH1D*)dir->Get("Pt");
-
-               dEdxAOD[i]    = (TH1D*)dir->Get("dEdxAOD");
-               dEdxMTAOD[i]   = (TH1D*)dir->Get("dEdxMTAOD");
-               dEdxMAOD[i]   = (TH1D*)dir->Get("dEdxMAOD");
-
-               dEdxMin[i]  = (TH1D*)dir->Get("dEdxMin");
-
-               dEdx[i]    = (TH1D*)dir->Get("dEdx");
-               dEdxMT[i]   = (TH1D*)dir->Get("dEdxMT");
-               dEdxM[i]   = (TH1D*)dir->Get("dEdxM");
-               dEdxMS[i]  = (TH1D*)dir->Get("dEdxMS");
-               dEdxMP[i]  = (TH1D*)dir->Get("dEdxMP");
-               dEdxMSC[i] = (TH1D*)dir->Get("dEdxMSC");
-               dEdxMPC[i] = (TH1D*)dir->Get("dEdxMPC");
-               dEdxMSF[i] = (TH1D*)dir->Get("dEdxMSF");
-               dEdxMPF[i] = (TH1D*)dir->Get("dEdxMPF");
-
-               TOFAOD   [i] = (TH1D*)dir->Get("TOFAOD");
-               TOFAODDT [i] = (TH1D*)dir->Get("TOFAODDT");
-               TOFAODCSC[i] = (TH1D*)dir->Get("TOFAODCSC");
-
-               TOF      [i] = (TH1D*)dir->Get("TOF");
-               TOFDT    [i] = (TH1D*)dir->Get("TOFDT");
-               TOFCSC   [i] = (TH1D*)dir->Get("TOFCSC");
-
-               VertexAOD   [i] = (TH1D*)dir->Get("VertexAOD");
-               VertexAODDT [i] = (TH1D*)dir->Get("VertexAODDT");
-               VertexAODCSC[i] = (TH1D*)dir->Get("VertexAODCSC");
-
-               Vertex      [i] = (TH1D*)dir->Get("Vertex");
-               VertexDT    [i] = (TH1D*)dir->Get("VertexDT");
-               VertexCSC   [i] = (TH1D*)dir->Get("VertexCSC");
-            }
+            sprintf(DIRECTORY,"%s", samples[s].Name.c_str() );            
          }
+         if(MapRunTriggerPlots.find(DIRECTORY)==MapRunTriggerPlots.end()){
+            TDirectory* dir = OutputHisto;
+            TDirectory::AddDirectory(kTRUE);
+            TH1::AddDirectory(kTRUE);
+            dir = (TDirectory*)OutputHisto->Get(DIRECTORY);
+            if(dir==NULL){
+               dir = OutputHisto->mkdir(DIRECTORY, DIRECTORY);
+               dir->cd();
+
+               for(unsigned int i=0;i<triggers.size();i++){
+               for(unsigned int v=0;v<versions.size();v++){
+                  MapRunTriggerPlots[DIRECTORY][triggers[i]+versions[v]] = new plotSt(triggers[i], versions[v]);
+               }}
+            }else{printf("BUG\n");}
+         }
+         MapTriggerPlots = &MapRunTriggerPlots[DIRECTORY];
       }
 
       if(!PassingTrigger(ev,"Any")){continue;} //need to pass at least one of the trigger, otherwise save time
@@ -406,96 +390,94 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          }
 
          bool useClusterCleaning = true;
-         DeDxData dedxSObjaod = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, NULL, true, true, 99, false, 1);
-         DeDxData dedxMObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, NULL, true, true, 99, false, 1);
-         DeDxData dedxMTObjaod = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, NULL, true, true, 99, false, 1);
-
-         DeDxData dedxMinObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, true);
-
-         DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-         DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-         DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-         DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-         DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, false, true, 99, false, 1);
-
-         const reco::MuonTimeExtra* tofaod = NULL;
-         const reco::MuonTimeExtra* dttofaod = NULL;
-         const reco::MuonTimeExtra* csctofaod = NULL;
-         if(!hscp.muonRef().isNull()){ tofaod  = &TOFCollH->get(hscp.muonRef().key()); dttofaod  = &TOFDTCollH->get(hscp.muonRef().key()); csctofaod  = &TOFCSCCollH->get(hscp.muonRef().key());}
-
-         const reco::MuonTimeExtra* tof = NULL;
-         const reco::MuonTimeExtra* dttof = NULL;
-         const reco::MuonTimeExtra* csctof = NULL;
+         DeDxData PSdedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+         DeDxData PSdedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+         const reco::MuonTimeExtra* PStof = NULL;
+         const reco::MuonTimeExtra* PSdttof = NULL;
+         const reco::MuonTimeExtra* PScsctof = NULL;        
          if(!hscp.muonRef().isNull() && hscp.muonRef()->isStandAloneMuon() ){
-            const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
-            const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
-            tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
-            tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
+            if(isMC){
+               PStof  = &TOFCollH->get(hscp.muonRef().key()); PSdttof = &TOFDTCollH->get(hscp.muonRef().key());  PScsctof = &TOFCSCCollH->get(hscp.muonRef().key());
+            }else{
+               const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+               const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+               tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
+               PStof  = &tofCalculator.combinedTOF; PSdttof = &tofCalculator.dtTOF;  PScsctof = &tofCalculator.cscTOF;
+            }
          }          
-
-         if(!PassPreselection(hscp, dedxSObj, dedxMObj, tof, dttof, csctof, ev)){continue;}
-
-//         printf("AOD %i %i %iOR%i %i\n", tofaod!=NULL?1:0, tofaod->nDof()>=GlobalMinNDOF?1:0,  dttofaod->nDof()>=GlobalMinNDOFDT?1:0 , csctofaod->nDof()>=GlobalMinNDOFCSC?1:0, tofaod->inverseBetaErr()<=GlobalMaxTOFErr?1:0  );
-//         printf("OTF %i %i %iOR%i %i\n", tof   !=NULL?1:0, tof   ->nDof()>=GlobalMinNDOF?1:0,  dttof   ->nDof()>=GlobalMinNDOFDT?1:0 , csctof   ->nDof()>=GlobalMinNDOFCSC?1:0, tof   ->inverseBetaErr()<=GlobalMaxTOFErr?1:0  );
-
+         if(!PassPreselection(hscp, PSdedxSObj, PSdedxMObj, PStof, PSdttof, PScsctof, ev)){continue;}
          for(unsigned int i=0;i<triggers.size();i++){
             if(!PassingTrigger(ev,triggers[i])){continue;}
+            for(unsigned int v=0;v<versions.size();v++){
 
-            NVert[i]->Fill(vertexColl.size()); 
-             
+            plotSt* plots = (*MapTriggerPlots)[triggers[i]+versions[v]];
+            bool useClusterCleaning = true;
 
-            if(tofaod && tofaod->nDof()>=GlobalMinNDOF && (dttofaod->nDof()>=GlobalMinNDOFDT || csctofaod->nDof()>=GlobalMinNDOFCSC) && tofaod->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttofaod->inverseBeta()-1)<50){
-               TOFAOD[i]->Fill(tofaod->inverseBeta());
-               if(dttofaod->nDof()>=GlobalMinNDOFDT) TOFAODDT[i]->Fill(dttofaod->inverseBeta());
-               if(csctofaod->nDof()>=GlobalMinNDOFCSC) TOFAODCSC[i]->Fill(csctofaod->inverseBeta());
-               VertexAOD[i]->Fill(tofaod->timeAtIpInOut());
-               if(dttofaod->nDof()>=GlobalMinNDOFDT) VertexAODDT[i]->Fill(dttofaod->timeAtIpInOut());
-               if(csctofaod->nDof()>=GlobalMinNDOFCSC) VertexAODCSC[i]->Fill(csctofaod->timeAtIpInOut());
+            auto tkGains = trackerCorrector.TrackerGains;
+            if(versions[v]=="AOD")tkGains=NULL;
+ 
+            bool fake=false;
+            if(versions[v]=="FAKE")fake=true;
+
+            DeDxData dedxMin1Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.1, fake);
+            DeDxData dedxMin2Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.2, fake);
+            DeDxData dedxMin3Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.3, fake);
+            DeDxData dedxMin4Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.4, fake);
+            DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake, plots->dEdxHitStrip);
+            DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, false, true, 99, false, 1, 0.0, fake, plots->dEdxHitPixel);
+
+            const reco::MuonTimeExtra* tof = NULL;
+            const reco::MuonTimeExtra* dttof = NULL;
+            const reco::MuonTimeExtra* csctof = NULL;
+            if(versions[v]=="AOD" || isMC){
+               if(!hscp.muonRef().isNull()){ tof  = &TOFCollH->get(hscp.muonRef().key()); dttof  = &TOFDTCollH->get(hscp.muonRef().key()); csctof  = &TOFCSCCollH->get(hscp.muonRef().key());}
+            }else{
+               if(!hscp.muonRef().isNull() && hscp.muonRef()->isStandAloneMuon() ){
+                  const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
+                  const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
+                  tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1 ); //apply T0 correction on data but not on signal MC
+                  tof  = &tofCalculator.combinedTOF; dttof = &tofCalculator.dtTOF;  csctof = &tofCalculator.cscTOF;
+               }          
+            }
+
+
+            plots->NVert->Fill(vertexColl.size()); 
+            plots->Pt->Fill(hscp.trackRef()->pt());
+
+            plots->dEdxMin1->Fill(dedxMin1Obj.dEdx());
+            plots->dEdxMin2->Fill(dedxMin2Obj.dEdx());
+            plots->dEdxMin3->Fill(dedxMin3Obj.dEdx());
+            plots->dEdxMin4->Fill(dedxMin4Obj.dEdx());
+            plots->dEdx->Fill(dedxSObj.dEdx());
+            plots->dEdxMT->Fill(dedxMTObj.dEdx());
+            plots->dEdxM->Fill(dedxMObj.dEdx());
+            plots->dEdxMS->Fill(dedxMSObj.dEdx());
+            plots->dEdxMP->Fill(dedxMPObj.dEdx());
+            if(fabs(track->eta())<0.5){
+            plots->dEdxMSC->Fill(dedxMSObj.dEdx());
+            plots->dEdxMPC->Fill(dedxMPObj.dEdx());
+            }
+            if(fabs(track->eta())>1.5){
+            plots->dEdxMSF->Fill(dedxMSObj.dEdx());
+            plots->dEdxMPF->Fill(dedxMPObj.dEdx());
             }
 
             if(tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttof->inverseBeta()-1)<50){
-               TOF[i]->Fill(tof->inverseBeta());
-               if(dttof->nDof()>=GlobalMinNDOFDT) TOFDT[i]->Fill(dttof->inverseBeta());
-               if(csctof->nDof()>=GlobalMinNDOFCSC) TOFCSC[i]->Fill(csctof->inverseBeta());
-               Vertex[i]->Fill(tof->timeAtIpInOut());
-               if(dttof->nDof()>=GlobalMinNDOFDT) VertexDT[i]->Fill(dttof->timeAtIpInOut());
-               if(csctof->nDof()>=GlobalMinNDOFCSC) VertexCSC[i]->Fill(csctof->timeAtIpInOut());
-            }  
-
-/*            if(i==0 && tof && tof->nDof()>=GlobalMinNDOF && (dttof->nDof()>=GlobalMinNDOFDT || csctof->nDof()>=GlobalMinNDOFCSC) && tof->inverseBetaErr()<=GlobalMaxTOFErr && fabs(dttof->inverseBeta()-1)>50){
-               printf("Large values %f+-%f vs %f+-%f (aod)\n", dttof->inverseBeta(), dttof->inverseBetaErr(), dttofaod->inverseBeta(), dttofaod->inverseBetaErr());
-               printf("%i vs %i  (Min=%f)\n", dttof->nDof(), dttofaod->nDof(), GlobalMinNDOFDT);
-               const CSCSegmentCollection& CSCSegmentColl = *CSCSegmentCollHandle;
-               const DTRecSegment4DCollection& DTSegmentColl = *DTSegmentCollHandle;
-               tofCalculator.computeTOF(muon, CSCSegmentColl, DTSegmentColl, 1, true ); //apply T0 correction on data but not on signal MC
-            }
-*/
-
-
-            dEdxAOD[i]->Fill(dedxSObjaod.dEdx());
-            dEdxMTAOD[i]->Fill(dedxMTObjaod.dEdx());
-            dEdxMAOD[i]->Fill(dedxMObjaod.dEdx());
-
-            dEdxMin[i]->Fill(dedxMinObj.dEdx());
-
-
-            dEdx[i]->Fill(dedxSObj.dEdx());
-            dEdxMT[i]->Fill(dedxMTObj.dEdx());
-            dEdxM[i]->Fill(dedxMObj.dEdx());
-            dEdxMS[i]->Fill(dedxMSObj.dEdx());
-            dEdxMP[i]->Fill(dedxMPObj.dEdx());
-            if(fabs(track->eta())<0.5){
-            dEdxMSC[i]->Fill(dedxMSObj.dEdx());
-            dEdxMPC[i]->Fill(dedxMPObj.dEdx());
-            }
-            if(fabs(track->eta())>1.5){
-            dEdxMSF[i]->Fill(dedxMSObj.dEdx());
-            dEdxMPF[i]->Fill(dedxMPObj.dEdx());
-            }
-            Pt[i]->Fill(hscp.trackRef()->pt());
+               plots->TOF->Fill(tof->inverseBeta());
+               if(dttof->nDof()>=GlobalMinNDOFDT) plots->TOFDT->Fill(dttof->inverseBeta());
+               if(csctof->nDof()>=GlobalMinNDOFCSC) plots->TOFCSC->Fill(csctof->inverseBeta());
+               plots->Vertex->Fill(tof->timeAtIpInOut());
+               if(dttof->nDof()>=GlobalMinNDOFDT) plots->VertexDT->Fill(dttof->timeAtIpInOut());
+               if(csctof->nDof()>=GlobalMinNDOFCSC) plots->VertexCSC->Fill(csctof->timeAtIpInOut());
+            } 
+           } 
          }
       }
    }printf("\n");
+   }
 
    OutputHisto->Write();
    OutputHisto->Close();  
