@@ -469,9 +469,13 @@ class DuplicatesClass{
 
 #ifdef FWLITE
 
+struct HitDeDx{double dedx; double dx; bool isSat; bool passClusterCleaning; bool isInside; unsigned char subDet;};
+typedef std::vector<HitDeDx> HitDeDxCollection;
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool fakeHIP=false, TH1* histoToFill=NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool fakeHIP=false);
+HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
+
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
 void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
 void printClusterCleaningMessage (uint8_t exitCode);
@@ -479,9 +483,81 @@ std::vector<int> convert(const vector<unsigned char>& input);
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 
 
+class dedxHIPEmulator{
+   private:
+      TH1D* ratePdfPixel;
+      TH1D* ratePdfStrip;
+      double eventRatePixel;
+      double eventRateStrip;
+   public:
+      dedxHIPEmulator(){
+	   ratePdfPixel = new TH1D("ratePdfPixel","",20,0,10);
+	   ratePdfPixel->SetBinContent(2,116789);
+	   ratePdfPixel->SetBinContent(3,2501600);
+	   ratePdfPixel->SetBinContent(4,7088437);
+	   ratePdfPixel->SetBinContent(5,3.771881e+07);
+	   ratePdfPixel->SetBinContent(6,2.24745e+07);
+	   ratePdfPixel->SetBinContent(7,7.324569e+07);
+	   ratePdfPixel->SetBinContent(8,1.703727e+07);
+	   ratePdfPixel->SetBinContent(9,1.72861e+07);
+	   ratePdfPixel->SetBinContent(10,1.059352e+07);
+	   ratePdfPixel->SetBinContent(11,2.179018e+07);
+	   ratePdfPixel->SetBinContent(12,7.105593e+07);
+	   ratePdfPixel->SetBinContent(13,1495028);
+	   ratePdfPixel->SetBinContent(14,163321);
+	   ratePdfPixel->SetBinContent(15,140044);
+	   ratePdfPixel->SetBinContent(16,548);	 
+           ratePdfPixel->Scale(1.0/ratePdfPixel->Integral());
+
+
+	   ratePdfStrip = new TH1D("ratePdfStrip","",20,0,10);
+	   ratePdfStrip->SetBinContent(4,122);
+	   ratePdfStrip->SetBinContent(5,312);
+	   ratePdfStrip->SetBinContent(6,1848);
+	   ratePdfStrip->SetBinContent(7,21443);
+	   ratePdfStrip->SetBinContent(8,408057);
+	   ratePdfStrip->SetBinContent(9,3.178217e+07);
+	   ratePdfStrip->SetBinContent(10,1.560515e+08);
+	   ratePdfStrip->SetBinContent(11,9.134156e+07);
+	   ratePdfStrip->SetBinContent(12,1306459);
+	   ratePdfStrip->SetBinContent(13,1759553);
+	   ratePdfStrip->SetBinContent(14,29769);
+	   ratePdfStrip->SetBinContent(15,3097);
+	   ratePdfStrip->SetBinContent(16,1322);
+	   ratePdfStrip->SetBinContent(17,177);
+	   ratePdfStrip->SetBinContent(18,400);
+           ratePdfStrip->Scale(1.0/ratePdfStrip->Integral());
+
+      }
+     ~dedxHIPEmulator(){}
+
+     void setEventRate(double ratePixel=-1, double rateStrip=-1){
+        if(ratePixel<0){eventRatePixel = ratePdfPixel->GetRandom();}else{eventRatePixel = ratePixel;}
+        if(rateStrip<0){eventRateStrip = ratePdfStrip->GetRandom();}else{eventRateStrip = rateStrip;}  
+
+        eventRatePixel -= 3.6;//2.4; //subtract rate already present in the MC
+        eventRateStrip -= 1.0;//0.8; //subtract rate already present in the MC
+
+        eventRatePixel *= 100; //for random generator usage
+        eventRateStrip *= 100; //for random generator usage
+        
+        eventRatePixel = std::max(eventRatePixel, 0.0);
+        eventRateStrip = std::max(eventRateStrip, 0.0);
+     }
+
+     void fakeHIP(HitDeDxCollection& hitDeDx){
+        for(unsigned int h=0;h<hitDeDx.size();h++){
+           if(hitDeDx[h].subDet< 3 && rand()%10000<eventRatePixel)hitDeDx[h].dedx = ( 0.7 + ((rand()%14000)/10000.0) );
+           if(hitDeDx[h].subDet>=3 && rand()%10000<eventRateStrip)hitDeDx[h].dedx = ( 0.5 + ((rand()%15000)/10000.0) );
+       }
+    }
+
+  
+};
+
+
 
 class dedxGainCorrector{
-
    private:
       std::map<unsigned int, std::unordered_map<unsigned int, double> > TrackerGainsPerRuns;
 
@@ -618,8 +694,62 @@ bool isHitInsideTkModule(const LocalPoint hitPos, const DetId& detid, const SiSt
    return true;
 }
 
+HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains, bool correctFEDSat, int crossTalkInvAlgo){
+     HitDeDxCollection toReturn;
+     for(unsigned int h=0;h<dedxHits->size();h++){
+        DetId detid(dedxHits->detId(h));  
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, bool fakeHIP, TH1* histoToFill){
+        HitDeDx hit; 
+        hit.subDet              = detid.subdetId();
+        hit.passClusterCleaning = clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo);
+        hit.isInside            = isHitInsideTkModule(dedxHits->pos(h), detid, detid.subdetId()>=3?dedxHits->stripCluster(h):NULL);
+        hit.isSat               = false;
+
+        int ClusterCharge = dedxHits->charge(h);
+        if(detid.subdetId()>=3){//for strip only
+           const SiStripCluster* cluster = dedxHits->stripCluster(h);
+           vector<int> amplitudes = convert(cluster->amplitudes());
+           if (crossTalkInvAlgo) amplitudes = CrossTalkInv(amplitudes, 0.10, 0.04, true);
+           int firstStrip = cluster->firstStrip();
+           int prevAPV = -1;
+           double gain = 1.0;
+
+           ClusterCharge = 0;
+           for(unsigned int s=0;s<amplitudes.size();s++){
+              if(TrackerGains!=NULL){ //don't reload the gain if unnecessary  since map access are slow
+                 int APV = (firstStrip+s)/128;
+                 if(APV != prevAPV){gain = TrackerGains->at(detid.rawId()<<3 |APV); prevAPV=APV; }
+              }
+
+              int StripCharge =  amplitudes[s];
+              if(StripCharge<254){
+                 StripCharge=(int)(StripCharge/gain);
+                 if(StripCharge>=1024){         StripCharge = 255;
+                 }else if(StripCharge>=254){    StripCharge = 254;
+                 }
+              }
+
+              if(StripCharge>=254){hit.isSat=true;}
+              if(StripCharge>=255 && correctFEDSat){StripCharge=512;}
+              ClusterCharge += StripCharge;
+            } 
+        }
+
+        double scaleFactor = scaleFactors[0];
+        if (detid.subdetId()<3) scaleFactor *= scaleFactors[1]; // add pixel scaling
+
+        double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
+        hit.dx   = dedxHits->pathlength(h);
+        hit.dedx = (scaleFactor*Norm*ClusterCharge) / hit.dx;
+
+        toReturn.push_back(hit);
+     } 
+   return toReturn;
+}
+
+
+
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, bool fakeHIP){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -711,10 +841,6 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
          std::sort(vectStrip.begin(), vectStrip.end(), std::greater<double>() );
          int nTrunc = vectStrip.size()*dropLowerDeDxValue;
          for(unsigned int s=0;s+nTrunc<vectStrip.size();s++){vect.push_back(vectStrip[s]);}
-     }
-
-     if(histoToFill){
-         for(unsigned int h=0;h<vect.size();h++){histoToFill->Fill(vect[h]);}
      }
 
      double result;
