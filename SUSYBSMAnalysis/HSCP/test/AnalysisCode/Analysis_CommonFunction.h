@@ -535,8 +535,8 @@ class dedxHIPEmulator{
         if(ratePixel<0){eventRatePixel = ratePdfPixel->GetRandom();}else{eventRatePixel = ratePixel;}
         if(rateStrip<0){eventRateStrip = ratePdfStrip->GetRandom();}else{eventRateStrip = rateStrip;}  
 
-        eventRatePixel -= 3.6;//2.4; //subtract rate already present in the MC
-        eventRateStrip -= 1.0;//0.8; //subtract rate already present in the MC
+        eventRatePixel -= 3.2;//2.4; //subtract rate already present in the MC
+        eventRateStrip -= 1.1;//0.8; //subtract rate already present in the MC
 
         eventRatePixel *= 100; //for random generator usage
         eventRateStrip *= 100; //for random generator usage
@@ -547,8 +547,8 @@ class dedxHIPEmulator{
 
      void fakeHIP(HitDeDxCollection& hitDeDx){
         for(unsigned int h=0;h<hitDeDx.size();h++){
-           if(hitDeDx[h].subDet< 3 && rand()%10000<eventRatePixel)hitDeDx[h].dedx = ( 0.7 + ((rand()%14000)/10000.0) );
-           if(hitDeDx[h].subDet>=3 && rand()%10000<eventRateStrip)hitDeDx[h].dedx = ( 0.5 + ((rand()%15000)/10000.0) );
+           if(hitDeDx[h].subDet< 3 && rand()%10000<eventRatePixel)hitDeDx[h].dedx = ( 0.6 + ((rand()%15000)/10000.0) );
+           if(hitDeDx[h].subDet>=3 && rand()%10000<eventRateStrip)hitDeDx[h].dedx = ( 0.6 + ((rand()%15000)/10000.0) );
        }
     }
 

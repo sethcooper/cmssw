@@ -112,7 +112,7 @@ double RescaleError  = 0.2;
 
 //final Plot y-axis range
 double PlotMinScale = 0.0001;
-double PlotMaxScale = 700;
+double PlotMaxScale = 1000;
 
 //Easy flag to skip running time consuming Cls expected limits. True runs the limit, false does not
 bool FullExpLimit=true;
@@ -149,10 +149,10 @@ string SHAPESTRING="";
 
 void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern="", string signal=""){
   setTDRStyle();
-  gStyle->SetPadTopMargin   (0.06);
-  gStyle->SetPadBottomMargin(0.12);
-  gStyle->SetPadRightMargin (0.16);
-  gStyle->SetPadLeftMargin  (0.14);
+  gStyle->SetPadTopMargin   (0.05);
+  gStyle->SetPadBottomMargin(0.11);
+  gStyle->SetPadRightMargin (0.05);
+  gStyle->SetPadLeftMargin  (0.15);
   gStyle->SetTitleSize(0.05, "XYZ");
   gStyle->SetTitleXOffset(1.1);
   gStyle->SetTitleYOffset(1.4);
@@ -425,7 +425,7 @@ printf("Test %s\n", MODE.c_str());
 
    TMultiGraph* TkSystGraphs = new TMultiGraph();
 
-   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG = new TLegend(0.20,0.65,0.80,0.80);
    LEG->SetNColumns(2) ;
    LEG->SetFillColor(0);
    LEG->SetFillStyle(0);
@@ -452,7 +452,7 @@ printf("Test %s\n", MODE.c_str());
    TkSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
    TkSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
    TkSystGraphs->GetYaxis()->SetTitleOffset(1.40);
-   TkSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.60);
+   TkSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.70);
    TkSystGraphs->GetYaxis()->SetNdivisions(520, "X");
 
    LEG->Draw();
@@ -470,7 +470,7 @@ printf("Test %s\n", MODE.c_str());
    c1->SetLeftMargin(0.15);
    TMultiGraph* MuSystGraphs = new TMultiGraph();
 
-   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG = new TLegend(0.20,0.65,0.80,0.80);
    LEG->SetNColumns(2) ;
    LEG->SetFillColor(0);
    LEG->SetFillStyle(0);
@@ -497,7 +497,7 @@ printf("Test %s\n", MODE.c_str());
    MuSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
    MuSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
    MuSystGraphs->GetYaxis()->SetTitleOffset(1.40);
-   MuSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.6);
+   MuSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.7);
    MuSystGraphs->GetYaxis()->SetNdivisions(520, "X");
 
    LEG->Draw();
@@ -883,7 +883,7 @@ std::cout<<"TESTD\n";
    frame->GetXaxis()->SetNdivisions(505);
    frame->SetTitle("");
    frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetXaxis()->SetTitle("Mass (GeV)");
    frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(PlotMaxScale);
@@ -928,8 +928,8 @@ std::cout<<"TESTD\n";
    MuGraphMap["DY_Q1"    ]->Draw("LP");
    MuGraphMap["DY_Q2"    ]->Draw("LP");
 
-   DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
-   TLegend* LEGMu = !Combine ? new TLegend(0.50,0.92-7*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+7*0.043);
+   DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
+   TLegend* LEGMu = !Combine ? new TLegend(0.60,0.82-7*0.043,0.93,0.82) : new TLegend(0.60,0.15,0.93,0.15+7*0.043);
    LEGMu->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGMu->SetTextSize(18); //font size
    LEGMu->SetFillColor(0); 
@@ -944,7 +944,7 @@ std::cout<<"TESTD\n";
    LEGMu->AddEntry(MuGraphMap["DY_Q1"   ], "|Q| = 1e"                ,"LP");
    LEGMu->AddEntry(MuGraphMap["DY_Q2"   ], "|Q| = 2e"                ,"LP");
 
-   TLegend* LEGTh = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
+   TLegend* LEGTh = new TLegend(0.25,0.82-(1+6)*0.043,0.60,0.82);
    LEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGTh->SetTextSize(18); //font size
    if(!Combine) {
@@ -988,7 +988,7 @@ std::cout<<"TESTD\n";
    frame->GetXaxis()->SetNdivisions(505);
    frame->SetTitle("");
    frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetXaxis()->SetTitle("Mass (GeV)");
    frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(PlotMaxScale);
@@ -1031,9 +1031,9 @@ std::cout<<"TESTD\n";
    TkGraphMap["DY_Q2"    ]->Draw("LP");
    //TkGraphMap["DY_Q2o3"    ]->Draw("LP");
 
-   DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
 
-   TLegend* LEGTk = !Combine ? new TLegend(0.50,0.92-8*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+8*0.043);
+   TLegend* LEGTk = !Combine ? new TLegend(0.60,0.82-8*0.043,0.93,0.82) : new TLegend(0.60,0.15,0.93,0.15+8*0.043);
    LEGTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGTk->SetTextSize(18); //font size
    LEGTk->SetFillColor(0); 
@@ -1050,7 +1050,7 @@ std::cout<<"TESTD\n";
    LEGTk->AddEntry(TkGraphMap["DY_Q1"    ], "|Q| = 1e"                            ,"LP");
    LEGTk->AddEntry(TkGraphMap["DY_Q2"    ], "|Q| = 2e"                            ,"LP");
 
-   TLegend* LEGThTk = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
+   TLegend* LEGThTk = new TLegend(0.25,0.82-(1+6)*0.043,0.60,0.82);
    LEGThTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGThTk->SetTextSize(18); //font size
    if(!Combine) {
@@ -1099,7 +1099,7 @@ if(Combine){
    frame->GetXaxis()->SetNdivisions(505);
    frame->SetTitle("");
    frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetXaxis()->SetTitle("Mass (GeV)");
    frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(20);
@@ -1119,7 +1119,7 @@ if(Combine){
 
    TLine* LineAtOne = new TLine(90,1,570,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
 
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
 
    LEGTk = !Combine ? new TLegend(0.50,0.92-3*0.043,0.83,0.92) : new TLegend(0.45,0.15+4*0.043,0.80,0.15+7*0.043);
    LEGTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1192,7 +1192,7 @@ if(Combine){
 
    MGMO->Draw("same");
    MGMO->SetTitle("");
-   MGMO->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   MGMO->GetXaxis()->SetTitle("Mass (GeV)");
    MGMO->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGMO->GetYaxis()->SetTitleOffset(1.40);
    MGMO->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
@@ -1288,7 +1288,7 @@ if(Combine){
 
    MGLQ->Draw("same");
    MGLQ->SetTitle("");
-   MGLQ->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   MGLQ->GetXaxis()->SetTitle("Mass (GeV)");
    MGLQ->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGLQ->GetYaxis()->SetTitleOffset(1.40);
    MGLQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
@@ -1352,7 +1352,7 @@ if(Combine){
    
    MGHQ->Draw("same");
    MGHQ->SetTitle("");
-   MGHQ->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   MGHQ->GetXaxis()->SetTitle("Mass (GeV)");
    MGHQ->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGHQ->GetYaxis()->SetTitleOffset(1.40);
    MGHQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
@@ -1496,10 +1496,10 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
 	else SystTr[N] = -1*sqrt(0.05*0.05 + 0.04*0.04 + 0.01*0.01);
         SystErrTr[N] = 0.0;
       }else{
-	if(IsNeutral) SystTr[N] = -0.08;
+	if(IsNeutral) SystTr[N] = -0.13;
 //	else if(modelSample[s].ModelName().find("1o3")!=string::npos) SystTr[N] = -1*sqrt(0.15*0.15 + 0.04*0.04 + 0.05*0.05);
 //	else if(modelSample[s].ModelName().find("2o3")!=string::npos) SystTr[N] = -1*sqrt(0.03*0.03 + 0.04*0.04 + 0.05*0.05);
-	else SystTr[N] = -0.08;
+	else SystTr[N] = -0.13;
         SystErrTr[N] = 0.0;
       }
 
@@ -1595,10 +1595,10 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
      SystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
      SystGraphs->GetYaxis()->SetTitle("Relative Change in Efficiency");
      SystGraphs->GetYaxis()->SetTitleOffset(1.40);
-     SystGraphs->GetYaxis()->SetRangeUser(-0.55, 0.35);
-     SystGraphs->GetYaxis()->SetNdivisions(520, "X");
+     SystGraphs->GetYaxis()->SetRangeUser(-0.45, 0.45);
+     SystGraphs->GetYaxis()->SetNdivisions(510, "X");
 
-     TLegend* LEG = new TLegend(0.20,0.9,0.80,0.75);
+     TLegend* LEG = new TLegend(0.30,0.80,0.80,0.65);
      LEG->SetFillColor(0);
      LEG->SetFillStyle(0);
      LEG->SetBorderSize(0);
@@ -1855,11 +1855,11 @@ void DrawModelLimitWithBand(string InputPattern){
       ExpErr      ->Draw("f");
       MG          ->Draw("same");
       MG->SetTitle("");
-      MG->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+      MG->GetXaxis()->SetTitle("Mass (GeV)");
       MG->GetYaxis()->SetTitle("#sigma (pb)");
       MG->GetYaxis()->SetTitleOffset(1.70);
       MG->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-      DrawPreliminary(SQRTS, LInt);
+      DrawPreliminary(LegendFromType(InputPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
 
       TLegend* LEG = EXCLUSIONDIR.find("COMB")==string::npos ? new TLegend(0.45,0.58,0.65,0.90) : new TLegend(0.45,0.10,0.65,0.42);
       //TLegend* LEG = new TLegend(0.40,0.65,0.8,0.90);
@@ -2012,7 +2012,7 @@ void DrawRatioBands(string InputPattern)
       MG->Draw("same");
       MG->SetTitle("");
       if(k==modelVector.size()-1) {
-         MG->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+         MG->GetXaxis()->SetTitle("Mass (GeV)");
          MG->GetXaxis()->SetTitleSize(0.2);
          MG->GetXaxis()->SetLabelSize(0.2);
       }
@@ -2047,7 +2047,7 @@ void DrawRatioBands(string InputPattern)
       }
    }
    c2->cd();
-   DrawPreliminary(SQRTS, LInt);
+   DrawPreliminary(LegendFromType(InputPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
    TPaveText *pt = new TPaveText(0.1, 0., 0.15, 0.7,"NDC");
    string tmp = "95% CL Limits (Relative to Expected Limit)";
    TText *text = pt->AddText(tmp.c_str()); 
@@ -2604,7 +2604,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    double UncEffPU=(EffPU-Eff)/Eff;
    double UncEffT=(EffT-Eff)/Eff;
    double UncEffRe  = -0.02;
-   double UncEffTr  = -0.08;
+   double UncEffTr  = -0.13;
    double UncEffMB  = 0.0;
 
    //Reset Reco and dEdx uncertainty for fractional as dedicated samples for this
