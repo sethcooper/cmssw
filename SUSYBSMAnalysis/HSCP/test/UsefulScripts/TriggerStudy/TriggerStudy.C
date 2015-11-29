@@ -109,7 +109,7 @@ class stPlot{
 };
 
 
-void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot);
+void TriggerStudy_Core(string sampleName, FILE* pFile, stPlot* plot, std::vector<string> FileName);
 bool IncreasedTreshold(const trigger::TriggerEvent& trEv, const edm::InputTag& InputPath, double NewThreshold, double etaCut,int NObjectAboveThreshold, bool averageThreshold=false);
 void layout(vector<stPlot*>& plots, vector<string>& sigs, string name);
 void SetWeight(const double& IntegratedLuminosityInPb=-1, const double& IntegratedLuminosityInPbBeforeTriggerChange=-1, const double& CrossSection=0, const double& MCEvents=0, int period=0);
@@ -128,7 +128,7 @@ void SetWeight(const double& IntegratedLuminosityInPb, const double& IntegratedL
 
  
 
-void TriggerStudy()
+void TriggerStudy(string sampleName="", string filePath="")
 {
    system("mkdir pictures");
 
@@ -166,56 +166,70 @@ void TriggerStudy()
    for(unsigned int i=0;i<JetMetSD_triggersL.size();i++)All_triggersL.push_back(JetMetSD_triggersL[i]);
 
    ///////////////////////////////////////////////////////
-   FILE* pFile = fopen("Results.txt","w");
 
-   stPlot** plots = new stPlot*[samples.size()];  
-   for(unsigned int i=0;i<samples.size();i++){
-      if(samples[i].Type!=2)continue;
-      plots[i] = new stPlot(samples[i].Name);
-      if(! (samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M1600_f10" || samples[i].Name=="Gluino_13TeV_M2600_f10"  
-      || samples[i].Name=="Gluino_13TeV_M600N_f10" || samples[i].Name=="Gluino_13TeV_M1600N_f10" || samples[i].Name=="Gluino_13TeV_M2600N_f10"  
-      || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" || samples[i].Name=="GMStau_13TeV_M1218" 
-      || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871" || samples[i].Name=="PPStau_13TeV_M1218"  
-      ))continue;
-      printf("Process %20s sample\n", samples[i].Name.c_str());
-      TriggerStudy_Core(samples[i], pFile, plots[i]);
+   if(sampleName!="" && filePath!=""){
+      FILE* pFile = fopen((string("Results_") + sampleName + ".txt").c_str(),"w");
+      vector<string> FileName;  FileName.push_back(filePath);
+      stPlot* plot = new stPlot(sampleName);
+      TriggerStudy_Core(sampleName, pFile, plot, FileName);
+      fflush(pFile);
+      fclose(pFile);
+   }else{   
+           FILE* pFile = fopen("Results.txt","w");
+	   stPlot** plots = new stPlot*[samples.size()];  
+	   for(unsigned int i=0;i<samples.size();i++){
+	      if(samples[i].Type!=2)continue;
+	      plots[i] = new stPlot(samples[i].Name);
+	      if(! (samples[i].Name=="Gluino_13TeV_M600_f10" || samples[i].Name=="Gluino_13TeV_M1600_f10" || samples[i].Name=="Gluino_13TeV_M2600_f10"  
+	      || samples[i].Name=="Gluino_13TeV_M600N_f10" || samples[i].Name=="Gluino_13TeV_M1600N_f10" || samples[i].Name=="Gluino_13TeV_M2600N_f10"  
+	      || samples[i].Name=="GMStau_13TeV_M308" || samples[i].Name=="GMStau_13TeV_M871" || samples[i].Name=="GMStau_13TeV_M1218" 
+	      || samples[i].Name=="PPStau_13TeV_M308" || samples[i].Name=="PPStau_13TeV_M871" || samples[i].Name=="PPStau_13TeV_M1218"  
+	      ))continue;
+	      printf("Process %20s sample\n", samples[i].Name.c_str());
+
+
+	      vector<string> FileName;
+	      GetInputFiles(samples[i], BaseDirectory, FileName);
+	      TriggerStudy_Core(samples[i].Name, pFile, plots[i], FileName);
+	   }
+
+	   int Id;                              vector<stPlot*> objs;        vector<string> leg;
+
+						objs.clear();                leg.clear();
+	   Id = JobIdToIndex("Gluino_13TeV_M600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("Gluino_13TeV_M1600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("Gluino_13TeV_M2600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   layout(objs, leg, "summary_Gluino");
+
+						objs.clear();                leg.clear();
+	   Id = JobIdToIndex("Gluino_13TeV_M600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("Gluino_13TeV_M1600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("Gluino_13TeV_M2600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   layout(objs, leg, "summary_GluinoN");
+
+
+
+						objs.clear();                leg.clear();
+						objs.clear();                leg.clear();
+	   Id = JobIdToIndex("GMStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("GMStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("GMStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   layout(objs, leg, "summary_GMStau");
+
+						objs.clear();                leg.clear();
+	   Id = JobIdToIndex("PPStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("PPStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   Id = JobIdToIndex("PPStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
+	   layout(objs, leg, "summary_PPStau");
+
+           fflush(pFile);
+           fclose(pFile);
+
    }
-
-   int Id;                              vector<stPlot*> objs;        vector<string> leg;
-
-                                        objs.clear();                leg.clear();
-   Id = JobIdToIndex("Gluino_13TeV_M600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("Gluino_13TeV_M1600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("Gluino_13TeV_M2600_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   layout(objs, leg, "summary_Gluino");
-
-                                        objs.clear();                leg.clear();
-   Id = JobIdToIndex("Gluino_13TeV_M600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("Gluino_13TeV_M1600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("Gluino_13TeV_M2600N_f10",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   layout(objs, leg, "summary_GluinoN");
-
-
-
-                                        objs.clear();                leg.clear();
-                                        objs.clear();                leg.clear();
-   Id = JobIdToIndex("GMStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("GMStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("GMStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   layout(objs, leg, "summary_GMStau");
-
-                                        objs.clear();                leg.clear();
-   Id = JobIdToIndex("PPStau_13TeV_M308",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("PPStau_13TeV_M871",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   Id = JobIdToIndex("PPStau_13TeV_M1218",samples);      objs.push_back(plots[Id]);   leg.push_back(samples[Id].Legend);
-   layout(objs, leg, "summary_PPStau");
-
-   fflush(pFile);
-   fclose(pFile);
 
 }
 
-void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
+void TriggerStudy_Core(string sampleName, FILE* pFile, stPlot* plot, std::vector<string> FileName)
 {
    double Total       = 0;
    double SDJetMET    = 0;
@@ -230,8 +244,6 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
    int MaxPrint = 0;
    for (int period=0; period<RunningPeriods; period++) {
 
-   vector<string> FileName;
-   GetInputFiles(sample, BaseDirectory, FileName, period);
    string thisname = FileName[0];
    bool simhitshifted =0;
    if(thisname.find("S.",0)<std::string::npos ||thisname.find("SBX1.",0)<std::string::npos) simhitshifted=1 ;
@@ -246,7 +258,7 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
    printf("Event Weight = %f\n", Event_Weight);
 
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
-   printf("Looping on %10s        :", sample.Name.c_str());
+   printf("Looping on %10s        :", sampleName.c_str());
    int TreeStep = ev.size()/50;if(TreeStep==0)TreeStep=1;
    for(Long64_t e=0;e<ev.size();e++){
       if(e%TreeStep==0){printf(".");fflush(stdout);}
@@ -331,7 +343,7 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
       if(JetMetTr||MuTr)TrBoth+=Event_Weight;
 
       double Beta = 1.0;
-      if(sample.Name!="Data")Beta = FastestHSCP(ev);
+      if(sampleName!="Data")Beta = FastestHSCP(ev);
       plot->BetaCount->Fill(Beta,Event_Weight);
       if(MuSD||JetMetSD)plot->BetaTotal->Fill(Beta,Event_Weight);
       if(MuSD)plot->BetaMuon->Fill(Beta,Event_Weight);
@@ -340,12 +352,12 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
    }printf("\n");
    }
 
-//   fprintf(pFile,  "%15s --> JetMET = %5.2f%% (was %5.2f%%) Mu = %5.2f%% (was %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sample.Name.c_str(), (100.0*TrJetMET)/Total, (100.0*SDJetMET)/Total, (100.0*TrMu)/Total, (100.0*SDMu)/Total, (100.0*TrBoth)/Total, (100.0*SDBoth)/Total);
-//   fprintf(stdout, "%15s --> JetMET = %5.2f%% (was %5.2f%%) Mu = %5.2f%% (was %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sample.Name.c_str(), (100.0*TrJetMET)/Total, (100.0*SDJetMET)/Total, (100.0*TrMu)/Total, (100.0*SDMu)/Total, (100.0*TrBoth)/Total, (100.0*SDBoth)/Total);
+//   fprintf(pFile,  "%15s --> JetMET = %5.2f%% (was %5.2f%%) Mu = %5.2f%% (was %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sampleName.c_str(), (100.0*TrJetMET)/Total, (100.0*SDJetMET)/Total, (100.0*TrMu)/Total, (100.0*SDMu)/Total, (100.0*TrBoth)/Total, (100.0*SDBoth)/Total);
+//   fprintf(stdout, "%15s --> JetMET = %5.2f%% (was %5.2f%%) Mu = %5.2f%% (was %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sampleName.c_str(), (100.0*TrJetMET)/Total, (100.0*SDJetMET)/Total, (100.0*TrMu)/Total, (100.0*SDMu)/Total, (100.0*TrBoth)/Total, (100.0*SDBoth)/Total);
 
 
-   fprintf(pFile,  "%15s --> MET = %5.2f%% (modified %5.2f%%) Mu = %5.2f%% (modified %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sample.Name.c_str(), (100.0*SDJetMET)/Total, (100.0*TrJetMET)/Total, (100.0*SDMu)/Total, (100.0*TrMu)/Total, (100.0*SDBoth)/Total, (100.0*TrBoth)/Total);
-   fprintf(stdout, "%15s --> MET = %5.2f%% (modified %5.2f%%) Mu = %5.2f%% (modified %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sample.Name.c_str(), (100.0*SDJetMET)/Total, (100.0*TrJetMET)/Total, (100.0*SDMu)/Total, (100.0*TrMu)/Total, (100.0*SDBoth)/Total, (100.0*TrBoth)/Total);
+   fprintf(pFile,  "%15s --> MET = %5.2f%% (modified %5.2f%%) Mu = %5.2f%% (modified %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sampleName.c_str(), (100.0*SDJetMET)/Total, (100.0*TrJetMET)/Total, (100.0*SDMu)/Total, (100.0*TrMu)/Total, (100.0*SDBoth)/Total, (100.0*TrBoth)/Total);
+   fprintf(stdout, "%15s --> MET = %5.2f%% (modified %5.2f%%) Mu = %5.2f%% (modified %5.2f%%) JetMET||Mu = %5.2f%% (%5.2f%%)\n",sampleName.c_str(), (100.0*SDJetMET)/Total, (100.0*TrJetMET)/Total, (100.0*SDMu)/Total, (100.0*TrMu)/Total, (100.0*SDBoth)/Total, (100.0*TrBoth)/Total);
 
 
 
@@ -380,7 +392,7 @@ void TriggerStudy_Core(stSample& sample, FILE* pFile, stPlot* plot)
    DrawLegend((TObject**)Histos,legend,"Trigger:","LP",0.35, 0.93, 0.20, 0.06);
    c1->Modified();
    DrawPreliminary("Simulation", 13.0, "", true);
-   SaveCanvas(c1,"pictures/",sample.Name);
+   SaveCanvas(c1,"pictures/",sampleName);
    delete c1;
 }
 

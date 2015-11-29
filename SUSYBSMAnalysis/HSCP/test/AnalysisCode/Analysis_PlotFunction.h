@@ -66,128 +66,48 @@ void SaveCanvas(TCanvas* c, std::string path, std::string name, bool OnlyPPNG=fa
 
 
 // function that add the TPaveText on the current canvas with the "CMS Preliminary...." on top of the Histograms. For split Lumi
-void DrawPreliminary(string Text, double SQRTS_, string LumiText, bool preliminary=true, double X=0.15, double Y=0.995, double W=0.82, double H=0.945){
-   TPaveText* T = new TPaveText(X,Y,W,H, "NDC");
-   T->SetTextFont(43);  //give the font size in pixel (instead of fraction)
-   T->SetTextSize(21);  //font size
-   T->SetFillColor(0);
-   T->SetFillStyle(0);
-   T->SetBorderSize(0);
-   T->SetTextAlign(22);
-   char tmp[2048];
+void DrawPreliminary(string Text, double SQRTS_, string LumiText, string MoreText, double L, double B, double R, double T,  bool preliminary=true){
 
- 
-   char energy[128];
-//   if(SQRTS_==78.0 || SQRTS_==87.0){
-//      sprintf(energy, "#sqrt{s} = %1.0f+%1.0f TeV  ",7.0,8.0);
-//   }else if(SQRTS_>0.0){
-//      sprintf(energy, "#sqrt{s} = %1.0f TeV  ",SQRTS_);
-//   }else{
-      sprintf(energy, "");
-//   }
+     //TOP RIGHT OUT-FRAME
+     TPaveText* T1 = new TPaveText(1.0-R-0.50, 1.0-T, 1.01-R, 1.0, "NDC");
+     T1->SetTextFont(43); T1->SetTextSize(23);   T1->SetTextAlign(32);
+     T1->SetFillColor(0); T1->SetFillStyle(0);   T1->SetBorderSize(0);
+     T1->AddText(LumiText.c_str());  T1->Draw();
 
-   if(preliminary){   
-      if(Text!="" && !(SQRTS_==78.0 || SQRTS_==87.0)){
-        sprintf(tmp,"%s  #bf{CMS Preliminary}  %s%s",Text.c_str(), energy, LumiText.c_str());      
-      }else{
-        sprintf(tmp,"#bf{CMS Preliminary}  %s%s",energy, LumiText.c_str());
-      }
-   }else{
-      if(Text!="" && !(SQRTS_==78.0 || SQRTS_==87.0)){
-        sprintf(tmp,"%s    CMS    %s%s",Text.c_str(), energy, LumiText.c_str());      
-      }else{
-	T->SetTextSize(18);
-        sprintf(tmp,"CMS    %s%s",energy, LumiText.c_str());
-      }
-   }
+     //TOP LEFT IN-FRAME
+     TPaveText* T2 = new TPaveText(L+0.01, 1.0-T-0.06, L+0.20, 1.0-T-0.01, "NDC");
+     T2->SetTextFont(63); T2->SetTextSize(30);   T2->SetTextAlign(12);
+     T2->SetFillColor(0); T2->SetFillStyle(0);   T2->SetBorderSize(0);
+     T2->AddText("CMS"); T2->Draw();
 
+     if(preliminary){ //Bellow CMS
+     TPaveText* T3 = new TPaveText(L+0.01, 1.0-T-0.11, L+0.20, 1.0-T-0.05, "NDC");
+     T3->SetTextFont(53); T3->SetTextSize(23);   T3->SetTextAlign(12);
+     T3->SetFillColor(0); T3->SetFillStyle(0);   T3->SetBorderSize(0);
+     T3->AddText("Preliminary"); T3->Draw();
+     }
 
-   T->AddText(tmp);
-   T->Draw("same");
+     if(Text!=""){  //TOP right IN-FRAME
+     TPaveText* T4 = new TPaveText(1.0-R-0.50, 1.0-T-0.06, 1.0-R, 1.0-T-0.01, "NDC");
+     T4->SetTextFont(43); T4->SetTextSize(23);   T4->SetTextAlign(32);
+     T4->SetFillColor(0); T4->SetFillStyle(0);   T4->SetBorderSize(0);
+     T4->AddText(Text.c_str());  T4->Draw();
+     }
 
-   if(Text!="" && (SQRTS_==78.0 || SQRTS_==87.0)){
-      double h = fabs(Y-H);
-      TPaveText* T2 = new TPaveText(X-0.02,H-0.35*h,W,H-1.35*h, "NDC");
-      T2->SetTextFont(43);  //give the font size in pixel (instead of fraction)
-      T2->SetTextSize(18);  //font size
-      T2->SetFillColor(0);
-      T2->SetFillStyle(0);
-      T2->SetFillStyle(0);
-      T2->SetBorderSize(0);
-      T2->SetTextAlign(12);
-      sprintf(tmp,"%s",Text.c_str());
-      T2->AddText(tmp);
-      T2->Draw("same");
-   }
-
+     if(MoreText!=""){ //Right of CMS
+     TPaveText* T5 = new TPaveText(L+0.12, 1.0-T-0.06, L+0.32, 1.0-T-0.02, "NDC");
+     T5->SetTextFont(53); T5->SetTextSize(23);   T5->SetTextAlign(12);
+     T5->SetFillColor(0); T5->SetFillStyle(0);   T5->SetBorderSize(0);
+     T5->AddText(MoreText.c_str()); T5->Draw();
+     }
 
 }
 
-// function that add the TPaveText on the current canvas with the "CMS Preliminary...." on top of the Histograms
-void DrawPreliminary(string Text, double SQRTS_, double Lumi, bool preliminary, double X=0.15, double Y=0.995, double W=0.82, double H=0.945){
-   TPaveText* T = new TPaveText(X,Y,W,H, "NDC");
-   T->SetTextFont(43);  //give the font size in pixel (instead of fraction)
-   T->SetTextSize(21);  //font size
-   T->SetFillColor(0);
-   T->SetTextAlign(12);
-   char tmp[2048];
- 
-   char energy[128];
-   if(SQRTS_==78.0 || SQRTS_==87.0){
-      sprintf(energy, "#sqrt{s} = %1.0f+%1.0f TeV",7.0,8.0);
-   }else if(SQRTS_>0.0){
-      sprintf(energy, "#sqrt{s} = %1.0f TeV",SQRTS_);
-   }else{
-      sprintf(energy, "");
-   }
-   
-   char LumiText[1024];
-   
-   if(preliminary){
-      if(Lumi<=0 ){
-         sprintf(LumiText,"#bf{CMS Preliminary}   %s",energy);
-      }else if(Lumi>0 ){
-        sprintf(LumiText,"#bf{CMS Preliminary}   %s   %1.1f fb ^{-1}",energy, Lumi*0.001);
-      }
-   }else{
-      if(Lumi<=0 ){
-         sprintf(LumiText,"CMS    %s",energy);
-      }else if(Lumi>0 ){
-        sprintf(LumiText,"CMS    %s   %1.1f fb ^{-1}",energy, Lumi*0.001);
-      }
-   }
-
-   //if(Text!=""){
-   //  sprintf(tmp,"%s   -   %s",Text.c_str(), LumiText);      
-   //}else{
-   //  sprintf(tmp,"%s",LumiText);
-   //}
-
-
-   T->AddText(tmp);
-   T->Draw("same");
-
-   if(Text!=""){
-      double h = fabs(Y-H);
-      TPaveText* T2 = new TPaveText(X,H-0.6*h,W,H-1.6*h, "NDC");
-      T2->SetTextFont(43);  //give the font size in pixel (instead of fraction)
-      T2->SetTextSize(18);  //font size
-      T2->SetFillColor(0);
-      T2->SetFillStyle(0);
-      T2->SetTextAlign(12);
-      sprintf(tmp,"%s",Text.c_str());
-      T2->AddText(tmp);
-      T2->Draw("same");
-   }
-
-
-
-
+void DrawPreliminary(string Text, double SQRTS_, string LumiText, string MoreText="", TAttPad* pad=NULL, bool preliminary=true){
+   if     (pad )DrawPreliminary(Text, SQRTS_,  LumiText, MoreText, pad->GetLeftMargin(), pad->GetBottomMargin(), pad->GetRightMargin(), pad->GetTopMargin() , preliminary);
+   else if(gPad)DrawPreliminary(Text, SQRTS_,  LumiText, MoreText, gPad->GetLeftMargin(),gPad->GetBottomMargin(),gPad->GetRightMargin(),gPad->GetTopMargin(), preliminary);
+   else         DrawPreliminary(Text, SQRTS_,  LumiText, MoreText, 0.15, 0.15, 0.15, 0.15                                                                   , preliminary);
 }
-void DrawPreliminary(double SQRTS_, double Lumi, double X=0.40, double Y=0.995, double W=0.82, double H=0.945){
-   DrawPreliminary("",SQRTS_, Lumi, X,Y,W,H);
-}
-
 
 // handfull function to draw the legend associated to a vector of histogram
 void DrawLegend (TObject** Histos, std::vector<std::string> legend, std::string Title, std::string Style_, double X=0.79, double Y=0.92, double W=0.20, double H=0.05)
@@ -305,6 +225,7 @@ void DrawSuperposedHistos(TH1** Histos, std::vector<std::string> legend, std::st
 	Histos[i]->GetXaxis()->SetTitleSize(0.05);
         if(xmin!=xmax)Histos[i]->SetAxisRange(xmin,xmax,"X");
         if(ymin!=ymax)Histos[i]->SetAxisRange(ymin,ymax,"Y");
+        if(ymin==ymax && ymin<0)Histos[i]->SetMaximum(Histos[i]->GetMaximum()*fabs(ymax));
         Histos[i]->SetFillColor(0);
         Histos[i]->SetMarkerStyle(Marker[i]);
         Histos[i]->SetMarkerColor(Color[i]);
@@ -471,6 +392,31 @@ std::string toLatexRounded(double value, double error=-1, double systError=-1)
    return string(tmpchar);
 }
 
+//https://twiki.cern.ch/twiki/bin/view/CMS/PoissonErrorBars
+#include "Math/QuantFuncMathCore.h"
+#include "TMath.h"
+TGraphAsymmErrors* getGarwoodErrorBars(TH1D* h1)
+{
+   const double alpha = 1 - 0.6827;
+   TGraphAsymmErrors * g = new TGraphAsymmErrors(h1);
+   g->SetMarkerSize(h1->GetMarkerSize());
+   g->SetMarkerStyle (h1->GetMarkerStyle());
+   g->SetMarkerColor (h1->GetMarkerColor());
+   g->SetLineWidth(h1->GetLineWidth());
+   g->SetLineStyle (h1->GetLineStyle());
+   g->SetLineColor (h1->GetLineColor());
 
+    int lastPoint=-1;
+    for (int i = 0; i < g->GetN(); ++i) { if(g->GetY()[i]>0)lastPoint=i;}
+
+    for (int i = 0; i <= lastPoint; ++i) {
+       int N = g->GetY()[i];
+       double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
+       double U =  ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) ;
+       g->SetPointEYlow(i, N-L);
+       g->SetPointEYhigh(i, U-N);
+   }
+   return g;
+}
 
 #endif

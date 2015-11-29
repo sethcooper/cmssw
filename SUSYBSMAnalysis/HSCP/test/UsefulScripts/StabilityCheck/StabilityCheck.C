@@ -82,6 +82,7 @@ struct plotSt{
    TH1D* Vertex;
    TH1D* VertexDT;
    TH1D* VertexCSC;
+   std::map<unsigned int, TH1D** > dEdxHitPerLumi;
 
    plotSt(string prefix, string sufix){
       string histoName;              
@@ -291,14 +292,14 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
    muonTimingCalculator tofCalculator;
    tofCalculator.loadTimeOffset("../../../data/MuonTimeOffset.txt");
    unsigned int CurrentRun = 0;
- 
+
+   dedxHIPEmulator HIPemulator;
 
    fwlite::ChainEvent ev(DataFileName);
    printf("Progressing Bar              :0%%       20%%       40%%       60%%       80%%       100%%\n");
    printf("Looping on Tree              :");
 
    std::map<string, plotSt*>* MapTriggerPlots=NULL;;
-
    int NEvents = ev.size();// / NJobs;
    int FirstEvent = 0;//JobIndex * NEvents;
    int TreeStep = NEvents/50;if(TreeStep==0)TreeStep=1;
@@ -336,8 +337,10 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          }
          MapTriggerPlots = &MapRunTriggerPlots[DIRECTORY];
       }
-
       if(!PassingTrigger(ev,"Any")){continue;} //need to pass at least one of the trigger, otherwise save time
+
+
+
 
       fwlite::Handle<susybsm::HSCParticleCollection> hscpCollHandle;
       hscpCollHandle.getByLabel(ev,"HSCParticleProducer");
@@ -367,7 +370,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
 
       fwlite::Handle<CSCSegmentCollection> CSCSegmentCollHandle;
       fwlite::Handle<DTRecSegment4DCollection> DTSegmentCollHandle;            
-      if(true){ //do not reocmpute TOF on MC background
+      if(!isMC){ //do not reocmpute TOF on MC background
          CSCSegmentCollHandle.getByLabel(ev, "cscSegments");
          if(!CSCSegmentCollHandle.isValid()){printf("CSC Segment Collection not found!\n"); continue;}
 
@@ -375,6 +378,9 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
          if(!DTSegmentCollHandle.isValid()){printf("DT Segment Collection not found!\n"); continue;}
       }
 
+      HIPemulator.setEventRate(); //take it from a pdf
+
+      bool plotPerEvent=true;
       for(unsigned int c=0;c<hscpColl.size();c++){
          susybsm::HSCParticle hscp  = hscpColl[c];
          reco::TrackRef track = hscp.trackRef();
@@ -411,23 +417,49 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             for(unsigned int v=0;v<versions.size();v++){
 
             plotSt* plots = (*MapTriggerPlots)[triggers[i]+versions[v]];
+            std::map<unsigned int, TH1D**>::iterator dEdxHitPerLumiIt = plots->dEdxHitPerLumi.find(ev.eventAuxiliary().luminosityBlock());
+            if(dEdxHitPerLumiIt==plots->dEdxHitPerLumi.end()){
+               char LUMI[256];sprintf(LUMI,"_ls%i", ev.eventAuxiliary().luminosityBlock());
+               plots->dEdxHitPerLumi[ev.eventAuxiliary().luminosityBlock()] = new TH1D*[3];
+               dEdxHitPerLumiIt = plots->dEdxHitPerLumi.find(ev.eventAuxiliary().luminosityBlock());
+               (dEdxHitPerLumiIt->second)[0] = (TH1D*)plots->NVert       ->Clone((string(plots->NVert       ->GetName())+LUMI).c_str()); 
+               (dEdxHitPerLumiIt->second)[1] = (TH1D*)plots->dEdxHitPixel->Clone((string(plots->dEdxHitPixel->GetName())+LUMI).c_str());
+               (dEdxHitPerLumiIt->second)[2] = (TH1D*)plots->dEdxHitStrip->Clone((string(plots->dEdxHitStrip->GetName())+LUMI).c_str());               
+//               (dEdxHitPerLumiIt->second)[3] = (TH1D*)plots->dEdxHitPixel->Clone((string(plots->dEdxHitPixel->GetName())+"PIB"+LUMI).c_str());
+//               (dEdxHitPerLumiIt->second)[4] = (TH1D*)plots->dEdxHitPixel->Clone((string(plots->dEdxHitPixel->GetName())+"PIE"+LUMI).c_str());
+//               (dEdxHitPerLumiIt->second)[5] = (TH1D*)plots->dEdxHitStrip->Clone((string(plots->dEdxHitStrip->GetName())+"TIB"+LUMI).c_str());
+//               (dEdxHitPerLumiIt->second)[6] = (TH1D*)plots->dEdxHitStrip->Clone((string(plots->dEdxHitStrip->GetName())+"TID"+LUMI).c_str());
+//               (dEdxHitPerLumiIt->second)[7] = (TH1D*)plots->dEdxHitStrip->Clone((string(plots->dEdxHitStrip->GetName())+"TOB"+LUMI).c_str());
+//               (dEdxHitPerLumiIt->second)[8] = (TH1D*)plots->dEdxHitStrip->Clone((string(plots->dEdxHitStrip->GetName())+"TEC"+LUMI).c_str());
+            }
+
+
             bool useClusterCleaning = true;
 
             auto tkGains = trackerCorrector.TrackerGains;
             if(versions[v]=="AOD")tkGains=NULL;
  
             bool fake=false;
-            if(versions[v]=="FAKE")fake=true;
+            if(versions[v]=="FAKE" && !isData)fake=true;
 
-            DeDxData dedxMin1Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.1, fake);
-            DeDxData dedxMin2Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.2, fake);
-            DeDxData dedxMin3Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.3, fake);
-            DeDxData dedxMin4Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.4, fake);
-            DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake);
-            DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake);
-            DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake);
-            DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, fake, plots->dEdxHitStrip);
-            DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, false, true, 99, false, 1, 0.0, fake, plots->dEdxHitPixel);
+            HitDeDxCollection hitDeDx = getHitDeDx(dedxHits, dEdxSF, tkGains, false, 1);
+            if(fake)HIPemulator.fakeHIP(hitDeDx);
+            for(unsigned int h=0;h<hitDeDx.size();h++){
+               if((useClusterCleaning && !hitDeDx[h].passClusterCleaning) || !hitDeDx[h].isInside)continue;
+               if(hitDeDx[h].subDet< 3){plots->dEdxHitPixel->Fill(hitDeDx[h].dedx); (dEdxHitPerLumiIt->second)[1]->Fill(hitDeDx[h].dedx);}
+               if(hitDeDx[h].subDet>=3){plots->dEdxHitStrip->Fill(hitDeDx[h].dedx); (dEdxHitPerLumiIt->second)[2]->Fill(hitDeDx[h].dedx);}
+               //(dEdxHitPerLumiIt->second)[2+hitDeDx[h].subDet]->Fill(hitDeDx[h].dedx); 
+            }
+
+            DeDxData dedxMin1Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.1, fake);
+            DeDxData dedxMin2Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.2, fake);
+            DeDxData dedxMin3Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.3, fake);
+            DeDxData dedxMin4Obj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.4, fake);
+            DeDxData dedxSObj = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, tkGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMTObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , true, tkGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMSObj = computedEdx(dedxHits, dEdxSF, NULL,          false,useClusterCleaning, false      , false, tkGains, true, true, 99, false, 1, 0.0, fake);
+            DeDxData dedxMPObj = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, tkGains, false, true, 99, false, 1, 0.0, fake);
 
             const reco::MuonTimeExtra* tof = NULL;
             const reco::MuonTimeExtra* dttof = NULL;
@@ -443,8 +475,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
                }          
             }
 
-
-            plots->NVert->Fill(vertexColl.size()); 
+            if(plotPerEvent){plots->NVert->Fill(vertexColl.size()); (dEdxHitPerLumiIt->second)[0]->Fill(vertexColl.size());}
             plots->Pt->Fill(hscp.trackRef()->pt());
 
             plots->dEdxMin1->Fill(dedxMin1Obj.dEdx());
@@ -475,6 +506,7 @@ void StabilityCheck(string DIRNAME="COMPILE", string OUTDIRNAME="pictures", stri
             } 
            } 
          }
+         plotPerEvent = false;
       }
    }printf("\n");
    }
