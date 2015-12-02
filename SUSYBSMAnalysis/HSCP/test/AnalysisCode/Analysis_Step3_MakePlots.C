@@ -294,6 +294,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
    //compute integral for few mass window
     if(Data13TeV && Pred13TeV){
+      printf("Computing Chi2 between data and prediction at 13TeV:\n");
+      double Chi2 = Data13TeV->Chi2Test(Pred13TeV, "UW P");
+
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
          double D = Data13TeV->Integral( Data13TeV->GetXaxis()->FindBin(M),  Data13TeV->GetXaxis()->FindBin(2000.0));
