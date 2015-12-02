@@ -472,15 +472,6 @@ class DuplicatesClass{
 struct HitDeDx{double dedx; double dx; bool isSat; bool passClusterCleaning; bool isInside; unsigned char subDet;};
 typedef std::vector<HitDeDx> HitDeDxCollection;
 
-TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool fakeHIP=false);
-HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
-
-bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
-void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
-void printClusterCleaningMessage (uint8_t exitCode);
-std::vector<int> convert(const vector<unsigned char>& input);
-std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 
 
 class dedxHIPEmulator{
@@ -545,15 +536,35 @@ class dedxHIPEmulator{
         eventRateStrip = std::max(eventRateStrip, 0.0);
      }
 
+     double fakeHIP(unsigned int subDet, double dedx){
+        if(subDet< 3 && rand()%10000<eventRatePixel)dedx = ( 0.6 + ((rand()%15000)/10000.0) );
+        if(subDet>=3 && rand()%10000<eventRateStrip)dedx = ( 0.6 + ((rand()%15000)/10000.0) );
+        return dedx;
+     }
+
      void fakeHIP(HitDeDxCollection& hitDeDx){
         for(unsigned int h=0;h<hitDeDx.size();h++){
-           if(hitDeDx[h].subDet< 3 && rand()%10000<eventRatePixel)hitDeDx[h].dedx = ( 0.6 + ((rand()%15000)/10000.0) );
-           if(hitDeDx[h].subDet>=3 && rand()%10000<eventRateStrip)hitDeDx[h].dedx = ( 0.6 + ((rand()%15000)/10000.0) );
+           hitDeDx[h].dedx = fakeHIP(hitDeDx[h].subDet, hitDeDx[h].dedx);
        }
     }
 
   
 };
+
+
+
+
+
+
+TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0,  dedxHIPEmulator* hipEmulator=NULL);
+HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
+
+bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
+void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
+void printClusterCleaningMessage (uint8_t exitCode);
+std::vector<int> convert(const vector<unsigned char>& input);
+std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
 
 
 
@@ -749,7 +760,7 @@ HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, 
 
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, bool fakeHIP){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, dedxHIPEmulator* hipEmulator){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -825,8 +836,7 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
         }else{
            double Norm = (detid.subdetId()<3)?3.61e-06:3.61e-06*265;
            double ChargeOverPathlength = scaleFactor*Norm*ClusterCharge/dedxHits->pathlength(h);
-           if(fakeHIP && detid.subdetId()>=3 && rand()%1000<35)ChargeOverPathlength = ( 0.5 + ((rand()%15000)/10000.0) );
-           if(fakeHIP && detid.subdetId()< 3 && rand()%1000<10)ChargeOverPathlength = ( 0.3 + ((rand()%12000)/10000.0) );
+           if(hipEmulator)ChargeOverPathlength = hipEmulator->fakeHIP(detid.subdetId(), ChargeOverPathlength);
 
            vect.push_back(ChargeOverPathlength); //save charge
            if(detid.subdetId()< 3)vectPixel.push_back(ChargeOverPathlength);

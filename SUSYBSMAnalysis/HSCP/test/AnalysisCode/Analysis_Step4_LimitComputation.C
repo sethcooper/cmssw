@@ -453,7 +453,7 @@ printf("Test %s\n", MODE.c_str());
    TkSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
    TkSystGraphs->GetYaxis()->SetTitleOffset(1.40);
    TkSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.70);
-   TkSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+   TkSystGraphs->GetYaxis()->SetNdivisions(505, "X");
 
    LEG->Draw();
    c1->SetLogy(false);
@@ -498,7 +498,7 @@ printf("Test %s\n", MODE.c_str());
    MuSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
    MuSystGraphs->GetYaxis()->SetTitleOffset(1.40);
    MuSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.7);
-   MuSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+   MuSystGraphs->GetYaxis()->SetNdivisions(505, "X");
 
    LEG->Draw();
    c1->SetLogy(false);

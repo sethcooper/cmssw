@@ -223,7 +223,7 @@ void MakedEdxPlot()
       delete c1;
 
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      TGraph* graphpT = ConvertFromRunToIntLumi(SingleMu_PtProf, "A*" , "<p_{T}> (GeV/c)",0,0);
+      TGraph* graphpT = ConvertFromRunToIntLumi(SingleMu_PtProf, "A*" , "<p_{T}> (GeV)",0,0);
       SaveCanvas(c1,"pictures/","GraphdEdx_Profile_pT");
       delete c1;
 
@@ -255,7 +255,7 @@ void MakedEdxPlot()
 
    c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
    Histos[0] = SingleMu_PtProf;                    legend.push_back("SingleMu50");
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "p_{T} (GeV/c)", 0,0, 0,0);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "", "p_{T} (GeV)", 0,0, 0,0);
    for(unsigned int i=0;i<legend.size();i++){((TProfile*)Histos[i])->SetMarkerSize(0.5);           ((TProfile*)Histos[i])->GetYaxis()->SetTitleOffset(0.9);}
    DrawLegend(Histos,legend,"","P");
    DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
@@ -604,6 +604,12 @@ void MakePlot()
    selectedRuns.push_back("258714");   selectedLegs.push_back("R258714 <#vtx>= 8.9");
    selectedRuns.push_back("MC_13TeV_DYToMuMu");  selectedLegs.push_back("MC: DY to #mu#mu");
 
+   std::vector<string> selectedRuns260373;   std::vector<string> selectedLegs260373;
+   selectedRuns260373.push_back("260373");   selectedLegs260373.push_back("R260373");
+   selectedRuns260373.push_back("MC_13TeV_DYToMuMu");  selectedLegs260373.push_back("MC: DY to #mu#mu");
+
+
+
    TH1D* frameR = new TH1D("frameR", "frameR", N, 0, N);
    frameR->SetTitle("");
    frameR->SetStats(kFALSE);
@@ -687,7 +693,7 @@ void MakePlot()
       delete c1;
 
       c1 = new TCanvas("c1","c1,",1200,600);          legend.clear();
-      frameR->GetYaxis()->SetTitle("p_{T} (GeV/c)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(150.0);  frameR->Draw("AXIS");
+      frameR->GetYaxis()->SetTitle("p_{T} (GeV)");   frameR->SetMinimum(0.0);   frameR->SetMaximum(150.0);  frameR->Draw("AXIS");
       g1 = getStabilityGraph(runList, InputFile, trigger+"Pt");  g1->Draw("0 P same");
       DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,"pictures/","Summary_Profile_Pt");
@@ -699,9 +705,17 @@ void MakePlot()
          if(dEdxLegends[S].find("I_{as}")!=std::string::npos){
             //overlay(runList     , InputFile,  trigger+dEdxVariables[S]+version, 0.0, 0.5, "overlay_"+dEdxVariables[S]+version+"All", 1E-5, dEdxLegends[S].c_str()); 
             overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 0.5, "overlay_"+dEdxVariables[S]+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs, &selectedRuns);
+
+            overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 0.5, "260373overlay_"+dEdxVariables[S]+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs260373, &selectedRuns260373);
          }else{
             //overlay(runList     , InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "overlay_"+dEdxVariables[S]+version+"All", 1E-5, dEdxLegends[S].c_str());
             overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "overlay_"+dEdxVariables[S]+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs, &selectedRuns);
+
+            overlay(runList, InputFile,  trigger+dEdxVariables[S]+version, 0.0, 10.0, "260373overlay_"+dEdxVariables[S]+version      , 1E-5, dEdxLegends[S].c_str(), &selectedLegs260373, &selectedRuns260373);
+
+
+
+
          }
      }
 
@@ -711,6 +725,7 @@ void MakePlot()
 //      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 10, "overlay_dEdxHitStrip"+version+"All", 1E-4, "Strip Hit dEdx (MeV/cm)");
       overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 6, "overlay_dEdxHitStrip"+version, 1E-4, "Strip Hit dEdx (MeV/cm)", &selectedLegs, &selectedRuns);
 
+      overlay(runList, InputFile,  trigger+"dEdxHitStrip"+version, 0.0, 6, "260373overlay_dEdxHitStrip"+version, 1E-4, "Strip Hit dEdx (MeV/cm)", &selectedLegs260373, &selectedRuns260373);
 
 
       for(unsigned int S=0;S<sizeof(dEdxVariables)/sizeof(string);S++){
