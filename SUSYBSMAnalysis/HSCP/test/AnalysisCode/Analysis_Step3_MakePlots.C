@@ -63,6 +63,7 @@ void Analysis_Step3_MakePlots()
    Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
+<<<<<<< HEAD
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
@@ -72,6 +73,17 @@ void Analysis_Step3_MakePlots()
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
+=======
+//   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
+//   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
+//   CutFlow(InputPattern, CutIndex);
+//   CutFlow(InputPattern, CutIndexTight);
+//   CutFlowPlot(InputPattern, 0);
+//   CutFlowPlot(InputPattern, CutIndex);
+//   CutFlowPlot(InputPattern, CutIndexTight);
+//   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+//   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
+>>>>>>> 3e9a974fdc6770b946b60f88f2f5cf63e1401bfd
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
 
@@ -2957,7 +2969,11 @@ void CheckPrediction(string InputPattern, string HistoSuffix, string DataType){
       DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta Cut", "Tracks", 0, 0, 1, 2200000);
     }
     Histos[1]->Draw("E1 same");
-    DrawLegend((TObject**)Histos,legend,LegendTitle,"P", 0.93, 0.88, 0.45, 0.045);
+    char LegendWithCuts[1024];
+    if(ICut>-1 && PtCut>-1) sprintf(LegendWithCuts, "I_{as} > %.2f, p_{T} > %.0f GeV", ICut, PtCut);
+    else if(PtCut>-1)       sprintf(LegendWithCuts, "p_{T} > %.0f GeV", PtCut);
+    else if(ICut>-1)        sprintf(LegendWithCuts, "I_{as} > %.2f", ICut);
+    DrawLegend((TObject**)Histos,legend,LegendWithCuts,"P", 0.93, 0.88, 0.45, 0.045);
     c1->SetLogy(true);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
 
