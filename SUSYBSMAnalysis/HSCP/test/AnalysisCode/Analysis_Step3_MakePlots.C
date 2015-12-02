@@ -60,18 +60,18 @@ void Analysis_Step3_MakePlots()
    string InputPattern;				unsigned int CutIndex;     unsigned int CutIndex_Flip=1;  unsigned int CutIndexTight;
    std::vector<string> Legends;                 std::vector<string> Inputs;
 
-//   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
+   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
-//   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
-//   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
-//   CutFlow(InputPattern, CutIndex);
-//   CutFlow(InputPattern, CutIndexTight);
-//   CutFlowPlot(InputPattern, 0);
- ///  CutFlowPlot(InputPattern, CutIndex);
-//   CutFlowPlot(InputPattern, CutIndexTight);
-//   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
-//   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
+   CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, 0);
+   CutFlowPlot(InputPattern, CutIndex);
+   CutFlowPlot(InputPattern, CutIndexTight);
+   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
 
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
 
@@ -79,14 +79,14 @@ void Analysis_Step3_MakePlots()
    MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV_Tight");
    MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV_Tight");
-//   CutFlow(InputPattern, CutIndex);
-//   CutFlow(InputPattern, CutIndexTight);
-//   CutFlowPlot(InputPattern, 0);
-//   CutFlowPlot(InputPattern, CutIndex);
-//   CutFlowPlot(InputPattern, CutIndexTight);
-//   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+   CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndexTight);
+   CutFlowPlot(InputPattern, 0);
+   CutFlowPlot(InputPattern, CutIndex);
+   CutFlowPlot(InputPattern, CutIndexTight);
+   SelectionPlot(InputPattern, CutIndex, CutIndexTight);
 
-//   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
 //  std::cout<<"A\n";
    CheckPrediction(InputPattern, "_Flip", "Data13TeV");
 //  std::cout<<"B\n";
@@ -294,6 +294,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
    //compute integral for few mass window
     if(Data13TeV && Pred13TeV){
+      printf("Computing Chi2 between data and prediction at 13TeV:\n");
+      double Chi2 = Data13TeV->Chi2Test(Pred13TeV, "UW P");
+
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
          double D = Data13TeV->Integral( Data13TeV->GetXaxis()->FindBin(M),  Data13TeV->GetXaxis()->FindBin(2000.0));
@@ -876,7 +879,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(10);
    ((TH1D*)Histos[1])->Rebin(10);  
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (Gev/c)", "u.a.", 0,1500, -10.0, -10.0);
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (GeV)", "u.a.", 0,1500, -10.0, -10.0);
    DrawLegend(Histos,legend,"","P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_PSpectrum");
@@ -930,7 +933,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(10);
    ((TH1D*)Histos[1])->Rebin(10);  
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (Gev/c)", "u.a.", 0,1500, -10.0, -10.0);
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (GeV)", "u.a.", 0,1500, -10.0, -10.0);
    DrawLegend(Histos,legend,"","P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_PSpectrum_Flip");
@@ -2957,7 +2960,11 @@ void CheckPrediction(string InputPattern, string HistoSuffix, string DataType){
       DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta Cut", "Tracks", 0, 0, 1, 2200000);
     }
     Histos[1]->Draw("E1 same");
-    DrawLegend((TObject**)Histos,legend,LegendTitle,"P", 0.93, 0.88, 0.45, 0.045);
+    char LegendWithCuts[1024];
+    if(ICut>-1 && PtCut>-1) sprintf(LegendWithCuts, "I_{as} > %.2f, p_{T} > %.0f GeV", ICut, PtCut);
+    else if(PtCut>-1)       sprintf(LegendWithCuts, "p_{T} > %.0f GeV", PtCut);
+    else if(ICut>-1)        sprintf(LegendWithCuts, "I_{as} > %.2f", ICut);
+    DrawLegend((TObject**)Histos,legend,LegendWithCuts,"P", 0.93, 0.88, 0.45, 0.045);
     c1->SetLogy(true);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
 

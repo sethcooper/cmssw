@@ -109,7 +109,7 @@ double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
    1.21836    // [1]  Pixel data to SiStrip data
 };
-
+dedxHIPEmulator HIPemulator;
 
 bool useClusterCleaning = true;
 /////////////////////////// CODE PARAMETERS /////////////////////////////
@@ -1217,6 +1217,8 @@ std::cout<<"G\n";
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystPU[CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystH [CutIndex] = -1; }
 
+            HIPemulator.setEventRate(); //take it from a pdf
+
             //loop on HSCP candidates
             for(unsigned int c=0;c<hscpColl.size();c++){
                //define alias for important variable
@@ -1270,9 +1272,9 @@ std::cout<<"G\n";
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, false);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, false);
-               DeDxData dedxMUObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, !isData);
+               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, NULL);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, NULL);
+               DeDxData dedxMUObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, !isData?&HIPemulator:NULL);
                DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                DeDxData* dedxMUObj = dedxMUObjTmp.numberOfMeasurements()>0?&dedxMUObjTmp:NULL;

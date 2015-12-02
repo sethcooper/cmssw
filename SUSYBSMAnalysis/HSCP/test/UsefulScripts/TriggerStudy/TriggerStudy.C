@@ -388,10 +388,10 @@ void TriggerStudy_Core(string sampleName, FILE* pFile, stPlot* plot, std::vector
    c1->SetBottomMargin(0.15);
    Histos[0] = (TH1*)plot->BetaMuon;                    legend.push_back("Muon");
    Histos[1] = (TH1*)plot->BetaTotal;                   legend.push_back("Overall");
-   DrawSuperposedHistos((TH1**)Histos, legend, "HIST E1",  "#beta of the fastest HSCP", "Trigger Efficiency (%)", 0,1, 0,100);
-   DrawLegend((TObject**)Histos,legend,"Trigger:","LP",0.35, 0.93, 0.20, 0.06);
+   DrawSuperposedHistos((TH1**)Histos, legend, "HIST E1",  "#beta of the fastest HSCP", "Trigger Efficiency (%)", 0,1, 0,120);
+   DrawLegend((TObject**)Histos,legend,"Trigger:","LP",0.35, 0.80, 0.20, 0.06);
    c1->Modified();
-   DrawPreliminary("Simulation", 13.0, "", true);
+   DrawPreliminary("", 13.0, "(13 TeV)", "Simulation");
    SaveCanvas(c1,"pictures/",sampleName);
    delete c1;
 }
@@ -417,10 +417,10 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
       Histos1[i]=plots[i]->Histo; legend.push_back(sigs[i]);
    }
 //   DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,100);  
-   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,70);
-   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,120);
-   DrawLegend(Histos1,legend,"","P", 0.48, 0.92, 0.16, 0.03);
-   DrawPreliminary("Simulation", 13.0, "", true);
+   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,80);
+   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Efficiency (%)", 0,0, 0,130);
+   DrawLegend(Histos1,legend,"","P", 0.48, 0.85, 0.16, 0.03);
+   DrawPreliminary("", 13.0, "(13 TeV)", "Simulation");
 
    for(unsigned int i=0;i<plots.size();i++){
       plots[i]->Histo->GetYaxis()->SetTitleOffset(1.55);
@@ -439,10 +439,10 @@ void layout(vector<stPlot*>& plots, vector<string>& sigs, string name){
    for(unsigned int i=0;i<plots.size();i++){
       Histos1[i]=plots[i]->HistoInc; legend.push_back(sigs[i]);
    }
-   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,70);
-   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,120);
-   DrawLegend(Histos1,legend,"","P", 0.48, 0.92, 0.16, 0.03);
-   DrawPreliminary("Simulation", 13.0, "", true);
+   if(name=="summary_Gluino")DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,80);
+   else                      DrawSuperposedHistos((TH1**)Histos1, legend, "E1",  "", "Incremental Efficiency (%)", 0,0, 0,130);
+   DrawLegend(Histos1,legend,"","P", 0.48, 0.85, 0.16, 0.03);
+   DrawPreliminary("", 13.0, "(13 TeV)", "Simulation");
 
    for(unsigned int i=0;i<plots.size();i++){
       plots[i]->HistoInc->GetYaxis()->SetTitleOffset(1.55);

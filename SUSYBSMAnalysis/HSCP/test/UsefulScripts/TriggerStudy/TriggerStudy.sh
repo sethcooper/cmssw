@@ -13,6 +13,7 @@ root -l -b << EOF
   gSystem->Load("libDataFormatsCommon.so");
   gSystem->Load("libDataFormatsTrackerRecHit2D.so");
   gSystem->Load("libAnalysisDataFormatsSUSYBSMObjects.so");
+  .x TriggerStudy.C+("", "")
 
   .x TriggerStudy.C+("GMStau_13TeV_M1029WiTS", "/nfs/home/fynu/quertenmont/scratch/15_05_13_HSCP_SampleProd/CMSSW_7_4_2/src/SUSYBSMAnalysis/HSCP/test/UsefulScripts/SampleProduction/WiTS/FARM_EDM/outputs/GMStau_13TeV_M1029.root")
   .x TriggerStudy.C+("GMStau_13TeV_M156WiTS", "/nfs/home/fynu/quertenmont/scratch/15_05_13_HSCP_SampleProd/CMSSW_7_4_2/src/SUSYBSMAnalysis/HSCP/test/UsefulScripts/SampleProduction/WiTS/FARM_EDM/outputs/GMStau_13TeV_M156.root")
