@@ -12,6 +12,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TPaletteAxis.h"
 #include "TColor.h"
+#include "TLatex.h"
 
 using namespace std;
 
@@ -1386,9 +1387,9 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     TH1D* HCuts_Pt  = (TH1D*) GetObjectFromPath (InputFile, "HCuts_Pt");
     TH1D* HCuts_Is  = (TH1D*) GetObjectFromPath (InputFile, "HCuts_I");
     TH1D* HCuts_TOF = (TH1D*) GetObjectFromPath (InputFile, "HCuts_TOF");
-    char PtCutStr [1024]; sprintf (PtCutStr, "pT>%.0f GeV", HCuts_Pt ->GetBinContent(CutIndex+1));
-    char ICutStr  [1024]; sprintf (ICutStr,  "Ias>%.2f", HCuts_Is ->GetBinContent(CutIndex+1));
-    char TOFCutStr[1024]; sprintf (TOFCutStr,"iBeta>%.3f", HCuts_TOF->GetBinContent(CutIndex+1));
+    char PtCutStr [1024]; sprintf (PtCutStr, "p_{T}>%.0f GeV", HCuts_Pt ->GetBinContent(CutIndex+1));
+    char ICutStr  [1024]; sprintf (ICutStr,  "I_{as}>%.2f", HCuts_Is ->GetBinContent(CutIndex+1));
+    char TOFCutStr[1024]; sprintf (TOFCutStr,"1/#beta>%.3f", HCuts_TOF->GetBinContent(CutIndex+1));
 
     vector < pair<stSample, Color_t> > SamplesToDraw;
     SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV"             , samples)], kBlack      ));
@@ -1401,8 +1402,8 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
 //    const char * AxisLabels [16] = {"Initial", "#hit #geq 8", "dE/dx #hit #geq 6", "nDof #geq 8", "high purity track", "#chi^{2}/nDof < 5",
 //	    "pT > 55", "#beta^{-1}>1", "d_{xy}<5mm", "tracker iso < 50", "E/p iso < 0.3", "pT_{err} < 25%", "d_{z}<5mm", 
 //	    "pT", "I_{as}", "#beta^{-1}"};
-    const char * AxisLabels [16] = {"Triggered", "#hit>7", "#dEdxHit>5", "nDof>7", "Track Qual.", "Chi^2/nDof<5",
-	    "pT>55 GeV", "iBeta>1", "dXY<5mm", "TkIso<50", "E/p<0.3", "pTerr<25%", "dZ<5mm", PtCutStr, ICutStr, TOFCutStr};
+    const char * AxisLabels [16] = {"Triggered", "#hit>7", "#dEdxHit>5", "nDof>7", "Track Qual.", "#chi^{2}/nDof<5",
+	    "p_{T}>55 GeV", "1/#beta>1", "dXY<5 mm", "TkIso<50", "E/p<0.3", "#sigma_{p_{T}}/p_{T}<25 %", "dZ<5 mm", PtCutStr, ICutStr, TOFCutStr};
 
     unsigned int NumberOfCuts = sizeof(AxisLabels)/sizeof(const char *);
     TypeMode = TypeFromPattern(InputPattern);
@@ -1502,14 +1503,14 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
         histos[sample_i].first->Draw("same");
     }
     // now put the axis labels -- each cut at each respective bin
-    TText T;
+    TLatex T;
     T.SetTextAngle(35);
     T.SetTextAlign(33);
     T.SetTextSize (0.03);
 
     double Y = histos[0].first->GetYaxis()->GetBinLowEdge(1);
     for (unsigned int cut_i = 0; cut_i < NumberOfCuts; cut_i++)
-        T.DrawText (histos[0].first->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
+        T.DrawLatex (histos[0].first->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
 
     leg->Draw();
     SQRTS=13; string LegendTitle = LegendFromType(InputPattern);
@@ -1573,7 +1574,7 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     T.SetTextSize (0.03);
     Y = histos[0].second->GetYaxis()->GetBinLowEdge(1);
     for (unsigned int cut_i = 0; cut_i < NumberOfCuts; cut_i++)
-        T.DrawText (histos[0].second->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
+        T.DrawLatex (histos[0].second->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
 
     leg->Draw();
     SQRTS=13; LegendTitle = LegendFromType(InputPattern);
