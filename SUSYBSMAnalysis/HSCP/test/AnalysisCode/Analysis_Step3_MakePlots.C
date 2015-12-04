@@ -2008,7 +2008,7 @@ std::cout<<"DF\n";
       graph_sum->GetYaxis()->SetTitleOffset(1.40);
       graph_sum->GetXaxis()->SetTitle(Title.c_str());
       graph_sum->Draw("AC*");
-      graph_sum->GetYaxis()->SetRangeUser(0,0.5);
+      graph_sum->GetYaxis()->SetRangeUser(0,0.3);
 
       if(p==2){
          TGraph* graph_sum2 = new TGraph(ArrN[p+1],ArrPt[p+1],ArrSum[p+1]);
@@ -2048,7 +2048,7 @@ std::cout<<"DF\n";
       graph_stat->GetYaxis()->SetTitleOffset(1.40);
       graph_stat->GetXaxis()->SetTitle(Title.c_str());
       graph_stat->Draw("AC*");
-      graph_stat->GetYaxis()->SetRangeUser(0,0.25);
+      graph_stat->GetYaxis()->SetRangeUser(0,0.3);
 
       if(p==2){
          TGraph* graph_stat2 = new TGraph(ArrN[p+1],ArrPt[p+1],ArrStat[p+1]);
@@ -2132,7 +2132,7 @@ std::cout<<"DF\n";
       graph_syst->GetXaxis()->SetTitle(Title.c_str());
       graph_syst->Draw("AC*");
       graph_syst->GetXaxis()->SetRangeUser(40,100);
-      graph_syst->GetYaxis()->SetRangeUser(0,0.25);
+      graph_syst->GetYaxis()->SetRangeUser(0,0.3);
 
       if(p==2){
          TGraph* graph_syst2 = new TGraph(ArrN[p+1],ArrPt[p+1],ArrSyst[p+1]);
