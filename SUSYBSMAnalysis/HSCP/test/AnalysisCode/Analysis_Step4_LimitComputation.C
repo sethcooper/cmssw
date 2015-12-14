@@ -854,11 +854,11 @@ std::cout<<"TESTC\n";
    //LQGraphMap["DY_Q2o3"      ]->SetLineColor(43); LQGraphMap["DY_Q2o3"      ]->SetMarkerColor(43);  LQGraphMap["DY_Q2o3"      ]->SetLineWidth(2);   LQGraphMap["DY_Q2o3"      ]->SetLineStyle(1);  LQGraphMap["DY_Q2o3"      ]->SetMarkerStyle(34);
    //LQGraphMap["DY_Q1"        ]->SetLineColor(46); LQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  LQGraphMap["DY_Q1"        ]->SetLineWidth(2);   LQGraphMap["DY_Q1"        ]->SetLineStyle(1);  LQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
 
-   ThGraphMap["DY_Q1"        ]->SetLineColor(46); ThGraphMap["DY_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY_Q1"        ]->SetLineStyle(1);  ThGraphMap["DY_Q1"        ]->SetMarkerStyle(1);
+   ThGraphMap["DY_Q1"        ]->SetLineColor(46); ThGraphMap["DY_Q1"        ]->SetMarkerColor(46);  ThGraphMap["DY_Q1"        ]->SetLineWidth(1);   ThGraphMap["DY_Q1"        ]->SetLineStyle(8);  ThGraphMap["DY_Q1"        ]->SetMarkerStyle(1);
    MuGraphMap["DY_Q1"        ]->SetLineColor(46); MuGraphMap["DY_Q1"        ]->SetMarkerColor(46);  MuGraphMap["DY_Q1"        ]->SetLineWidth(2);   MuGraphMap["DY_Q1"        ]->SetLineStyle(1);  MuGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
    TkGraphMap["DY_Q1"        ]->SetLineColor(46); TkGraphMap["DY_Q1"        ]->SetMarkerColor(46);  TkGraphMap["DY_Q1"        ]->SetLineWidth(2);   TkGraphMap["DY_Q1"        ]->SetLineStyle(1);  TkGraphMap["DY_Q1"      ]->SetMarkerStyle(20);
    //HQGraphMap["DY_Q1"        ]->SetLineColor(46); HQGraphMap["DY_Q1"        ]->SetMarkerColor(46);  HQGraphMap["DY_Q1"        ]->SetLineWidth(2);   HQGraphMap["DY_Q1"        ]->SetLineStyle(1);  HQGraphMap["DY_Q1"        ]->SetMarkerStyle(20);
-   ThGraphMap["DY_Q2"        ]->SetLineColor(2 ); ThGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(2);  ThGraphMap["DY_Q2"        ]->SetMarkerStyle(1);
+   ThGraphMap["DY_Q2"        ]->SetLineColor(43); ThGraphMap["DY_Q2"        ]->SetMarkerColor(43);  ThGraphMap["DY_Q2"        ]->SetLineWidth(1);   ThGraphMap["DY_Q2"        ]->SetLineStyle(10);  ThGraphMap["DY_Q2"        ]->SetMarkerStyle(1);
    MuGraphMap["DY_Q2"        ]->SetLineColor(43); MuGraphMap["DY_Q2"        ]->SetMarkerColor(43);  MuGraphMap["DY_Q2"        ]->SetLineWidth(2);   MuGraphMap["DY_Q2"        ]->SetLineStyle(1);  MuGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
    TkGraphMap["DY_Q2"        ]->SetLineColor(43); TkGraphMap["DY_Q2"        ]->SetMarkerColor(43);  TkGraphMap["DY_Q2"        ]->SetLineWidth(2);   TkGraphMap["DY_Q2"        ]->SetLineStyle(1);  TkGraphMap["DY_Q2"      ]->SetMarkerStyle(34);
    //HQGraphMap["DY_Q2"        ]->SetLineColor(2 ); HQGraphMap["DY_Q2"        ]->SetMarkerColor(2 );  HQGraphMap["DY_Q2"        ]->SetLineWidth(2);   HQGraphMap["DY_Q2"        ]->SetLineStyle(1);  HQGraphMap["DY_Q2"        ]->SetMarkerStyle(21);
@@ -2283,7 +2283,7 @@ void makeDataCard(string outpath, string rootPath, string ChannelName, string Si
    double LumiUnc   = 1.0;
    if(SQRTS==7 ) LumiUnc=1.022;
    if(SQRTS==8 ) LumiUnc=1.044;
-   if(SQRTS==13) LumiUnc=1.120;
+   if(SQRTS==13) LumiUnc=1.046;
 
    if(isnan(float(PredRelErr)))PredRelErr= 1.2;
 

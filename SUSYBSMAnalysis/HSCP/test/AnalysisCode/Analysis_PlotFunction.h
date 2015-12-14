@@ -398,7 +398,7 @@ std::string toLatexRounded(double value, double error=-1, double systError=-1)
 TGraphAsymmErrors* getGarwoodErrorBars(TH1D* h1)
 {
    const double alpha = 1 - 0.6827;
-   TGraphAsymmErrors * g = new TGraphAsymmErrors(h1);
+   TGraphAsymmErrors * g = new TGraphAsymmErrors(h1->GetNbinsX());
    g->SetMarkerSize(h1->GetMarkerSize());
    g->SetMarkerStyle (h1->GetMarkerStyle());
    g->SetMarkerColor (h1->GetMarkerColor());
@@ -407,15 +407,18 @@ TGraphAsymmErrors* getGarwoodErrorBars(TH1D* h1)
    g->SetLineColor (h1->GetLineColor());
 
     int lastPoint=-1;
-    for (int i = 0; i < g->GetN(); ++i) { if(g->GetY()[i]>0)lastPoint=i;}
+    for (int i = 1; i <= h1->GetNbinsX(); ++i) { if(h1->GetBinContent(i)>0)lastPoint=i;}
 
-    for (int i = 0; i <= lastPoint; ++i) {
-       int N = g->GetY()[i];
+    int INDEX=0;
+    for (int i = 1; i <= lastPoint; ++i) {
+       int N = h1->GetBinContent(i);
        double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
        double U =  ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) ;
-       g->SetPointEYlow(i, N-L);
-       g->SetPointEYhigh(i, U-N);
-   }
+       g->SetPoint(INDEX, h1->GetBinCenter(i), N);
+       g->SetPointEYlow(INDEX, N-L);
+       g->SetPointEYhigh(INDEX, U-N);
+       INDEX++;
+   }g->Set(INDEX);
    return g;
 }
 

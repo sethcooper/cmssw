@@ -61,26 +61,26 @@ void Analysis_Step3_MakePlots()
    string InputPattern;				unsigned int CutIndex;     unsigned int CutIndex_Flip=1;  unsigned int CutIndexTight;
    std::vector<string> Legends;                 std::vector<string> Inputs;
 
-   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
+//   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
-   CutFlow(InputPattern, CutIndex);
+/*   CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
    CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
-
+*/
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
 
    MassPrediction(InputPattern, CutIndex,      "Mass"     , false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV_Tight");
    MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV_Tight");
-   CutFlow(InputPattern, CutIndex);
+/*   CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
    CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
@@ -94,7 +94,7 @@ void Analysis_Step3_MakePlots()
 //   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 
   std::cout<<"ALL DONE WITH THE PLOTTING CODE\n";
-
+*/
   exit(0);//all done
 
   //FIXME:  Bellow this line, all the code in THIS FUNCTION is what was used for run1 paper.
@@ -321,7 +321,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
 
    //Rebin the histograms and find who is the highest
-   double Max = 1.0; double Min=0.01;
+   double Max = 1.0; double Min=0.005;
    if(Data13TeV){Data13TeV->Rebin(4);  Max=std::max(Max, Data13TeV->GetMaximum());}
    if(Pred13TeV){Pred13TeV->Rebin(4);  Max=std::max(Max, Pred13TeV->GetMaximum());}
    if(Data8TeV){Data8TeV->Rebin(4);  Max=std::max(Max, Data8TeV->GetMaximum());}
@@ -417,12 +417,31 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
    //Loop twice to make plots with and without ratio box
    for(int r=0; r<2; r++) {
+     TPad* t2 = NULL;
+     if(r==0){
+       TPad* t1 = new TPad("t1","t1", 0.0, 0.00, 1.0, 1.0);
+       t1->Draw();
+       t1->cd();
+       t1->SetLogy(true);
+     }
      if(r==1) {
        TPad* t1 = new TPad("t1","t1", 0.0, 0.20, 1.0, 1.0);
        t1->Draw();
        t1->cd();
        t1->SetLogy(true);
        t1->SetTopMargin(0.06);
+       t1->SetBottomMargin(0.001);
+
+       c1->cd();
+       t2 = new TPad("t2","t2", 0.0, 0.0, 1.0, 0.2); 
+       t2->Draw();
+       t2->cd();
+       t2->SetGridy(true);
+       t2->SetPad(0,0.0,1.0,0.2);
+       t2->SetTopMargin(0.001);
+       t2->SetBottomMargin(0.5);
+
+       t1->cd();
      }
      c1->SetLogy(true);
 
@@ -430,12 +449,24 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
        frame->GetXaxis()->SetNdivisions(505);
        frame->SetTitle("");
        frame->SetStats(kFALSE);
-       frame->GetXaxis()->SetTitle("Mass (GeV)");
        frame->GetYaxis()->SetTitle(YAxisLegend);
        frame->GetYaxis()->SetTitleOffset(1.40);
        frame->SetMaximum(Max);
        frame->SetMinimum(Min);
        frame->SetAxisRange(0,1400,"X");
+       frame->GetYaxis()->SetLabelFont(43); //give the font size in pixel (instead of fraction)
+       frame->GetYaxis()->SetLabelSize(20); //font size
+       frame->GetYaxis()->SetTitleFont(43); //give the font size in pixel (instead of fraction)
+       frame->GetYaxis()->SetTitleSize(20); //font size
+       frame->GetYaxis()->SetNdivisions(505);
+       frame->GetXaxis()->SetNdivisions(505);
+       frame->GetXaxis()->SetLabelFont(43); //give the font size in pixel (instead of fraction)
+       frame->GetXaxis()->SetLabelSize(20); //font size
+       frame->GetXaxis()->SetTitleFont(43); //give the font size in pixel (instead of fraction)
+       frame->GetXaxis()->SetTitleSize(20); //font size
+//       frame->GetXaxis()->SetTitleOffset(3.75);
+       if(r==0)frame->GetXaxis()->SetTitle("Mass (GeV)");
+
        frame->Draw("AXIS");
 
        if(Signal){
@@ -552,7 +583,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
       Data13TeV->SetLineColor(1);
       Data13TeV->SetFillColor(0);
       //Data13TeV->Draw("P same");
-      getGarwoodErrorBars(Data13TeV)->Draw("PE same");
+      getGarwoodErrorBars(Data13TeV)->Draw("P E1 same");
    }
 
 
@@ -603,14 +634,8 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    if(r==0)  SaveCanvas(c1, InputPattern, string("RescaleNoRatio_") + HistoSuffix + "_" + DataName);
    else {
    c1->cd();
-   TPad* t2 = new TPad("t2","t2", 0.0, 0.0, 1.0, 0.2); 
-   t2->Draw();
-   t2->cd();
-   t2->SetGridy(true);
-   t2->SetPad(0,0.0,1.0,0.2);
-   t2->SetTopMargin(0);
-   t2->SetBottomMargin(0.5);
 
+   t2->cd();
    TH1D* frameR = new TH1D("frameR", "frameR", 1,0, 2800);
    frameR->GetXaxis()->SetNdivisions(505);
    frameR->SetTitle("");
@@ -618,17 +643,18 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    frameR->GetXaxis()->SetTitle("");
    frameR->GetXaxis()->SetTitle("Mass (GeV)");
    frameR->GetYaxis()->SetTitle("Obs / Pred");
-   frameR->SetMaximum(2.00);
-   frameR->SetMinimum(0.00);
+   frameR->SetMaximum(2.50);
+   frameR->SetMinimum(0.0);
    frameR->GetYaxis()->SetLabelFont(43); //give the font size in pixel (instead of fraction)
-   frameR->GetYaxis()->SetLabelSize(15); //font size
+   frameR->GetYaxis()->SetLabelSize(20); //font size
    frameR->GetYaxis()->SetTitleFont(43); //give the font size in pixel (instead of fraction)
-   frameR->GetYaxis()->SetTitleSize(15); //font size
-   frameR->GetYaxis()->SetNdivisions(505);
+   frameR->GetYaxis()->SetTitleSize(20); //font size
+   frameR->GetYaxis()->SetNdivisions(503);
+   frameR->GetXaxis()->SetNdivisions(505);
    frameR->GetXaxis()->SetLabelFont(43); //give the font size in pixel (instead of fraction)
-   frameR->GetXaxis()->SetLabelSize(15); //font size
+   frameR->GetXaxis()->SetLabelSize(20); //font size
    frameR->GetXaxis()->SetTitleFont(43); //give the font size in pixel (instead of fraction)
-   frameR->GetXaxis()->SetTitleSize(15); //font size
+   frameR->GetXaxis()->SetTitleSize(20); //font size
    frameR->GetXaxis()->SetTitleOffset(3.75);
    frameR->Draw("AXIS");
 
@@ -3616,15 +3642,15 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    Data_PIm->GetXaxis()->SetTitle("p (GeV)");
    Data_PIm->GetYaxis()->SetTitle(dEdxM_Legend.c_str());
    Data_PIm->GetYaxis()->SetTitleOffset(1.40);
-   Data_PIm->GetZaxis()->SetTitleOffset(1.60);
+   Data_PIm->GetZaxis()->SetTitleOffset(1.50);
    Data_PIm->GetZaxis()->SetTitle("Tracks / [ 2.4 (GeV) #times 0.03 (MeV/cm) ]");
    Data_PIm->GetZaxis()->CenterTitle(true);
    printf("%f - %f\n", Data_PIm->GetXaxis()->GetBinWidth(3), Data_PIm->GetYaxis()->GetBinWidth(3) );
    Data_PIm->SetAxisRange(50,1750,"X");
    Data_PIm->SetAxisRange(0,20,"Y");
    Data_PIm->SetMarkerSize (0.2);
-   Data_PIm->SetMarkerColor(Color[1]);
-   Data_PIm->SetFillColor(Color[1]);
+   Data_PIm->SetMarkerColor(kYellow-4);
+   Data_PIm->SetFillColor(kYellow-4);
    Data_PIm->Draw("COLZ");
 //   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
 //   SaveCanvas(c1, outpath, outName + "_Data_PIm", true);
@@ -3676,7 +3702,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    TBox* box = new TBox(50.0, 2.8, 1200.0, 3.0);
    box->SetFillColor(1);
    box->SetFillStyle(3004);
-   box->Draw("same");
+//   box->Draw("same");
 
    leg = new TLegend(0.80,0.92,0.80 - 0.41,0.92 - 6*0.03);
    leg->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -3701,7 +3727,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    c1->SetLogz(true);
 
    Data_PIm->Draw("COLZ");
-   box->Draw("same");
+//   box->Draw("same");
 
    leg = new TLegend(0.80,0.92,0.80 - 0.20,0.92 - 0.04);
    leg->SetTextFont(43);
@@ -3731,7 +3757,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    Signal3PIm->Draw("SCAT same");
    Signal2PIm->Draw("SCAT same");
    Signal1PIm->Draw("SCAT same");
-   box->Draw("same");
+//   box->Draw("same");
 
    leg = new TLegend(0.80,0.92,0.80 - 0.41,0.92 - 5*0.04);
    leg->SetTextFont(43);
