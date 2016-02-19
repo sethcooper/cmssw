@@ -14,8 +14,8 @@ class stAllInfo{
    public:
    double Mass, MassMean, MassSigma, MassCut;
    double XSec_Th, XSec_Err, XSec_Exp, XSec_ExpUp, XSec_ExpDown, XSec_Exp2Up, XSec_Exp2Down, XSec_Obs;
-   double  Eff, Eff_SYSTP, Eff_SYSTI, Eff_SYSTM, Eff_SYSTT, Eff_SYSTPU, TotalUnc;
-   double  EffE, EffE_SYSTP, EffE_SYSTI, EffE_SYSTM, EffE_SYSTT, EffE_SYSTPU;
+   double  Eff, Eff_SYSTP, Eff_SYSTI, Eff_SYSTM, Eff_SYSTHUp, Eff_SYSTHDown, Eff_SYSTT, Eff_SYSTPU, TotalUnc;
+   double  EffE, EffE_SYSTP, EffE_SYSTI, EffE_SYSTM, EffE_SYSTHUp, EffE_SYSTHDown, EffE_SYSTT, EffE_SYSTPU;
    double Significance; double XSec_5Sigma;
    double Index, WP_Pt, WP_I, WP_TOF;
    float  NData, NPred, NPredErr, NSign;
@@ -27,8 +27,8 @@ class stAllInfo{
       Index         = 0;      WP_Pt         = 0;      WP_I          = 0;      WP_TOF        = 0;
       XSec_Th       = 0;      XSec_Err      = 0;      XSec_Exp      = 1E50;   XSec_ExpUp    = 1E50;   XSec_ExpDown  = 1E50;    XSec_Exp2Up   = 1E50;    XSec_Exp2Down = 1E50;    XSec_Obs    = 1E50;
       Significance  = 1E50;   XSec_5Sigma   = 1E50;
-      Eff           = 0;      Eff_SYSTP     = 0;      Eff_SYSTI     = 0;      Eff_SYSTM     = 0;      Eff_SYSTT     = 0;   Eff_SYSTPU  = 0;
-      EffE          = 0;      EffE_SYSTP    = 0;      EffE_SYSTI    = 0;      EffE_SYSTM    = 0;      EffE_SYSTT    = 0;   EffE_SYSTPU = 0;
+      Eff           = 0;      Eff_SYSTP     = 0;      Eff_SYSTI     = 0;      Eff_SYSTM     = 0;      Eff_SYSTHUp     = 0;   Eff_SYSTHDown  = 0;  Eff_SYSTT     = 0;   Eff_SYSTPU  = 0;
+      EffE          = 0;      EffE_SYSTP    = 0;      EffE_SYSTI    = 0;      EffE_SYSTM    = 0;      EffE_SYSTHUp    = 0;   EffE_SYSTHDown = 0;  EffE_SYSTT    = 0;   EffE_SYSTPU = 0;
       NData         = 0;      NPred         = 0;      NPredErr      = 0;      NSign         = 0;      LInt          = 0;
       if(path=="")return;
       FILE* pFile = fopen(path.c_str(),"r");
@@ -45,6 +45,8 @@ class stAllInfo{
       fscanf(pFile,"Eff_SystP    : %lf +- %lf\n",&Eff_SYSTP , &EffE_SYSTP );
       fscanf(pFile,"Eff_SystI    : %lf +- %lf\n",&Eff_SYSTI , &EffE_SYSTI );
       fscanf(pFile,"Eff_SystM    : %lf +- %lf\n",&Eff_SYSTM , &EffE_SYSTM );
+      fscanf(pFile,"Eff_SystHUp  : %lf +- %lf\n",&Eff_SYSTHUp , &EffE_SYSTHUp );
+      fscanf(pFile,"Eff_SystHDown: %lf +- %lf\n",&Eff_SYSTHDown , &EffE_SYSTHDown );
       fscanf(pFile,"Eff_SystT    : %lf +- %lf\n",&Eff_SYSTT , &EffE_SYSTT );
       fscanf(pFile,"Eff_SystPU   : %lf +- %lf\n",&Eff_SYSTPU, &EffE_SYSTPU);
       fscanf(pFile,"TotalUnc     : %lf\n",&TotalUnc);
@@ -80,6 +82,8 @@ class stAllInfo{
       fprintf(pFile,"Eff_SystP    : %f +- %f\n",Eff_SYSTP , EffE_SYSTP);
       fprintf(pFile,"Eff_SystI    : %f +- %f\n",Eff_SYSTI , EffE_SYSTI);
       fprintf(pFile,"Eff_SystM    : %f +- %f\n",Eff_SYSTM , EffE_SYSTM);
+      fprintf(pFile,"Eff_SystHUp  : %f +- %f\n",Eff_SYSTHUp , EffE_SYSTHUp);
+      fprintf(pFile,"Eff_SystHDown: %f +- %f\n",Eff_SYSTHDown , EffE_SYSTHDown );
       fprintf(pFile,"Eff_SystT    : %f +- %f\n",Eff_SYSTT , EffE_SYSTT);
       fprintf(pFile,"Eff_SystPU   : %f +- %f\n",Eff_SYSTPU, EffE_SYSTPU);
       fprintf(pFile,"TotalUnc     : %f\n",TotalUnc);
@@ -110,7 +114,7 @@ double RescaleError  = 0.2;
 
 //final Plot y-axis range
 double PlotMinScale = 0.0001;
-double PlotMaxScale = 700;
+double PlotMaxScale = 1000;
 
 //Easy flag to skip running time consuming Cls expected limits. True runs the limit, false does not
 bool FullExpLimit=true;
@@ -130,12 +134,12 @@ void saveHistoForLimit(TH1* histo, string Name, string Id);
 void saveVariationHistoForLimit(TH1* histo, TH1* vardown, string Name, string variationName);
 void testShapeBasedAnalysis(string InputPattern, string signal);
 double computeSignificance(string datacard, bool expected, string& signal, string massStr, float Strength);
-bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, string& InputPattern, string& signal, unsigned int CutIndex, bool Shape, bool Temporary, stAllInfo& result, TH1* MassData, TH1* MassPred, TH1* MassSign, TH1* MassSignP, TH1* MassSignI, TH1* MassSignM, TH1* MassSignT, TH1* MassSignPU);
+bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, string& InputPattern, string& signal, unsigned int CutIndex, bool Shape, bool Temporary, stAllInfo& result, TH1* MassData, TH1* MassPred, TH1* MassSign, TH1* MassSignP, TH1* MassSignI, TH1* MassSignM, TH1* MassSignHUp, TH1* MassSignHDown, TH1* MassSignT, TH1* MassSignPU);
 bool Combine(string InputPattern, string signal7, string signal8);
 bool useSample(int TypeMode, string sample);
 
 double MinRange = 0;
-double MaxRange = 1999;
+double MaxRange = 99999;
 int    CurrentSampleIndex;
 
 std::vector<stSample> samples;
@@ -147,10 +151,10 @@ string SHAPESTRING="";
 
 void Analysis_Step4_LimitComputation(string MODE="COMPILE", string InputPattern="", string signal=""){
   setTDRStyle();
-  gStyle->SetPadTopMargin   (0.06);
-  gStyle->SetPadBottomMargin(0.12);
-  gStyle->SetPadRightMargin (0.16);
-  gStyle->SetPadLeftMargin  (0.14);
+  gStyle->SetPadTopMargin   (0.05);
+  gStyle->SetPadBottomMargin(0.11);
+  gStyle->SetPadRightMargin (0.05);
+  gStyle->SetPadLeftMargin  (0.15);
   gStyle->SetTitleSize(0.05, "XYZ");
   gStyle->SetTitleXOffset(1.1);
   gStyle->SetTitleYOffset(1.4);
@@ -423,7 +427,7 @@ printf("Test %s\n", MODE.c_str());
 
    TMultiGraph* TkSystGraphs = new TMultiGraph();
 
-   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG = new TLegend(0.20,0.65,0.80,0.80);
    LEG->SetNColumns(2) ;
    LEG->SetFillColor(0);
    LEG->SetFillStyle(0);
@@ -450,8 +454,8 @@ printf("Test %s\n", MODE.c_str());
    TkSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
    TkSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
    TkSystGraphs->GetYaxis()->SetTitleOffset(1.40);
-   TkSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.60);
-   TkSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+   TkSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.70);
+   TkSystGraphs->GetYaxis()->SetNdivisions(505, "X");
 
    LEG->Draw();
    c1->SetLogy(false);
@@ -468,15 +472,15 @@ printf("Test %s\n", MODE.c_str());
    c1->SetLeftMargin(0.15);
    TMultiGraph* MuSystGraphs = new TMultiGraph();
 
-   LEG = new TLegend(0.20,0.75,0.80,0.90);
+   LEG = new TLegend(0.20,0.65,0.80,0.80);
    LEG->SetNColumns(2) ;
    LEG->SetFillColor(0);
    LEG->SetFillStyle(0);
    LEG->SetBorderSize(0);
 
    fprintf(pFile   ,"\n\n %20s \n\n", LegendFromType(MuPattern).c_str());
-   fprintf(pFile,             "%20s   Eff   --> PScale |  DeDxScale | PUScale | TOFScale | TotalUncertainty     \n","Model");
-   fprintf(talkFile, "\\hline\n%20s &  Eff    & PScale &  DeDxScale & PUScale & TOFScale & TotalUncertainty \\\\\n","Model");
+   fprintf(pFile,             "%20s   Eff   --> PScale |  DeDxScale | MassScale | HIP | PUScale | TOFScale | TotalUncertainty     \n","Model");
+   fprintf(talkFile, "\\hline\n%20s &  Eff    & PScale &  DeDxScale & MassScale & HIP & PUScale & TOFScale & TotalUncertainty \\\\\n","Model");
    Graphs=0;
    for(unsigned int k=0; k<modelVector.size(); k++){
      TGraph* Uncertainty = CheckSignalUncertainty(pFile,talkFile,MuPattern, modelVector[k], modelMap[modelVector[k]]);
@@ -495,8 +499,8 @@ printf("Test %s\n", MODE.c_str());
    MuSystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
    MuSystGraphs->GetYaxis()->SetTitle("Relative Uncertainty");
    MuSystGraphs->GetYaxis()->SetTitleOffset(1.40);
-   MuSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.6);
-   MuSystGraphs->GetYaxis()->SetNdivisions(520, "X");
+   MuSystGraphs->GetYaxis()->SetRangeUser(0.0, 0.7);
+   MuSystGraphs->GetYaxis()->SetNdivisions(505, "X");
 
    LEG->Draw();
    c1->SetLogy(false);
@@ -881,7 +885,7 @@ std::cout<<"TESTD\n";
    frame->GetXaxis()->SetNdivisions(505);
    frame->SetTitle("");
    frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetXaxis()->SetTitle("Mass (GeV)");
    frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(PlotMaxScale);
@@ -926,8 +930,8 @@ std::cout<<"TESTD\n";
    MuGraphMap["DY_Q1"    ]->Draw("LP");
    MuGraphMap["DY_Q2"    ]->Draw("LP");
 
-   DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
-   TLegend* LEGMu = !Combine ? new TLegend(0.50,0.92-7*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+7*0.043);
+   DrawPreliminary(LegendFromType(MuPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
+   TLegend* LEGMu = !Combine ? new TLegend(0.60,0.82-7*0.043,0.93,0.82) : new TLegend(0.60,0.15,0.93,0.15+7*0.043);
    LEGMu->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGMu->SetTextSize(18); //font size
    LEGMu->SetFillColor(0); 
@@ -942,7 +946,7 @@ std::cout<<"TESTD\n";
    LEGMu->AddEntry(MuGraphMap["DY_Q1"   ], "|Q| = 1e"                ,"LP");
    LEGMu->AddEntry(MuGraphMap["DY_Q2"   ], "|Q| = 2e"                ,"LP");
 
-   TLegend* LEGTh = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
+   TLegend* LEGTh = new TLegend(0.25,0.82-(1+6)*0.043,0.60,0.82);
    LEGTh->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGTh->SetTextSize(18); //font size
    if(!Combine) {
@@ -986,7 +990,7 @@ std::cout<<"TESTD\n";
    frame->GetXaxis()->SetNdivisions(505);
    frame->SetTitle("");
    frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetXaxis()->SetTitle("Mass (GeV)");
    frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(PlotMaxScale);
@@ -1029,9 +1033,9 @@ std::cout<<"TESTD\n";
    TkGraphMap["DY_Q2"    ]->Draw("LP");
    //TkGraphMap["DY_Q2o3"    ]->Draw("LP");
 
-   DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary(LegendFromType(TkPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
 
-   TLegend* LEGTk = !Combine ? new TLegend(0.50,0.92-8*0.043,0.83,0.92) : new TLegend(0.50,0.15,0.83,0.15+8*0.043);
+   TLegend* LEGTk = !Combine ? new TLegend(0.60,0.82-8*0.043,0.93,0.82) : new TLegend(0.60,0.15,0.93,0.15+8*0.043);
    LEGTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGTk->SetTextSize(18); //font size
    LEGTk->SetFillColor(0); 
@@ -1048,7 +1052,7 @@ std::cout<<"TESTD\n";
    LEGTk->AddEntry(TkGraphMap["DY_Q1"    ], "|Q| = 1e"                            ,"LP");
    LEGTk->AddEntry(TkGraphMap["DY_Q2"    ], "|Q| = 2e"                            ,"LP");
 
-   TLegend* LEGThTk = new TLegend(0.15,0.92-(1+6)*0.043,0.50,0.92);
+   TLegend* LEGThTk = new TLegend(0.25,0.82-(1+6)*0.043,0.60,0.82);
    LEGThTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
    LEGThTk->SetTextSize(18); //font size
    if(!Combine) {
@@ -1097,7 +1101,7 @@ if(Combine){
    frame->GetXaxis()->SetNdivisions(505);
    frame->SetTitle("");
    frame->SetStats(kFALSE);
-   frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frame->GetXaxis()->SetTitle("Mass (GeV)");
    frame->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    frame->GetYaxis()->SetTitleOffset(1.40);
    frame->SetMaximum(20);
@@ -1117,7 +1121,7 @@ if(Combine){
 
    TLine* LineAtOne = new TLine(90,1,570,1);      LineAtOne->SetLineStyle(3);   LineAtOne->Draw();
 
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
 
    LEGTk = !Combine ? new TLegend(0.50,0.92-3*0.043,0.83,0.92) : new TLegend(0.45,0.15+4*0.043,0.80,0.15+7*0.043);
    LEGTk->SetTextFont(43); //give the font size in pixel (instead of fraction)
@@ -1190,7 +1194,7 @@ if(Combine){
 
    MGMO->Draw("same");
    MGMO->SetTitle("");
-   MGMO->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   MGMO->GetXaxis()->SetTitle("Mass (GeV)");
    MGMO->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGMO->GetYaxis()->SetTitleOffset(1.40);
    MGMO->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
@@ -1286,7 +1290,7 @@ if(Combine){
 
    MGLQ->Draw("same");
    MGLQ->SetTitle("");
-   MGLQ->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   MGLQ->GetXaxis()->SetTitle("Mass (GeV)");
    MGLQ->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGLQ->GetYaxis()->SetTitleOffset(1.40);
    MGLQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
@@ -1350,7 +1354,7 @@ if(Combine){
    
    MGHQ->Draw("same");
    MGHQ->SetTitle("");
-   MGHQ->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   MGHQ->GetXaxis()->SetTitle("Mass (GeV)");
    MGHQ->GetYaxis()->SetTitle(Combine?"95% CL limit on #sigma/#sigma_{th}":"95% CL limit on #sigma (pb)");
    MGHQ->GetYaxis()->SetTitleOffset(1.40);
    MGHQ->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
@@ -1446,6 +1450,8 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
    double* Mass      = new double   [modelSample.size()];  double* MassErr      = new double   [modelSample.size()];
    double* SystP     = new double   [modelSample.size()];  double* SystErrP     = new double   [modelSample.size()];
    double* SystI     = new double   [modelSample.size()];  double* SystErrI     = new double   [modelSample.size()];
+   double* SystM     = new double   [modelSample.size()];  double* SystErrM     = new double   [modelSample.size()];
+   double* SystH     = new double   [modelSample.size()];  double* SystErrH     = new double   [modelSample.size()];
    double* SystPU    = new double   [modelSample.size()];  double* SystErrPU    = new double   [modelSample.size()];
    double* SystT     = new double   [modelSample.size()];  double* SystErrT     = new double   [modelSample.size()];
    double* SystTr    = new double   [modelSample.size()];  double* SystErrTr    = new double   [modelSample.size()];
@@ -1469,7 +1475,9 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
          if(modelSample[s].ModelName().find("1o3")!=string::npos) SystI[N]=-0.25; SystErrP[N]       = 0;
          if(modelSample[s].ModelName().find("2o3")!=string::npos) SystI[N]=-0.10; SystErrI[N]       = 0;
       }
-
+      bool UpIsGreater = fabs(tmp.Eff_SYSTHUp - tmp.Eff) > fabs(tmp.Eff_SYSTHDown - tmp.Eff);
+      SystM[N]       = (tmp.Eff_SYSTM  - tmp.Eff)/tmp.Eff;  SystErrM[N]       = (tmp.EffE_SYSTM)/tmp.Eff;
+      SystH[N]       = UpIsGreater?((tmp.Eff_SYSTHUp - tmp.Eff)/tmp.Eff):((tmp.Eff_SYSTHDown - tmp.Eff)/tmp.Eff);  SystErrH[N] = UpIsGreater ? tmp.EffE_SYSTHUp/tmp.Eff : tmp.EffE_SYSTHDown/tmp.Eff;
       SystPU[N]      = (tmp.Eff_SYSTPU - tmp.Eff)/tmp.Eff;  SystErrPU[N]      = (tmp.EffE_SYSTPU)/tmp.Eff;
       SystT[N]       = (tmp.Eff_SYSTT  - tmp.Eff)/tmp.Eff;  SystErrT[N]       = (tmp.EffE_SYSTT )/tmp.Eff;
       SystRe[N]      = -0.02; SystErrRe[N]      = 0.0;
@@ -1477,29 +1485,36 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
 //      if((modelSample[s].ModelName().find("Q2")!=string::npos && modelSample[s].ModelName().find("Q2o3")==string::npos) || modelSample[s].ModelName().find("Q3")!=string::npos || modelSample[s].ModelName().find("Q4")!=string::npos || modelSample[s].ModelName().find("Q5")!=string::npos) SystMB[N]=-0.2;
       if(modelSample[s].ModelName().find("DY_Q")!=string::npos && modelSample[s].ModelName().find("o3")==string::npos) SystMB[N]=-0.2;
 
+      
       if(SQRTS==7) {
 	if(modelSample[s].ModelName().find("1o3")!=string::npos) SystTr[N] = -1*sqrt(0.15*0.15 + 0.02*0.02 + 0.05*0.05);
 	else if(modelSample[s].ModelName().find("2o3")!=string::npos) SystTr[N] = -1*sqrt(0.03*0.03 + 0.02*0.02 + 0.05*0.05);
 	else if(IsNeutral) SystTr[N] = -0.05;
 	else SystTr[N] = -1*sqrt(0.05*0.05 + 0.02*0.02 + 0.02*0.02); 
         SystErrTr[N] = 0.0;
-      }else {
+      }else if(SQRTS==8){
 	if(IsNeutral) SystTr[N] = -0.01;
 	else if(modelSample[s].ModelName().find("1o3")!=string::npos) SystTr[N] = -1*sqrt(0.15*0.15 + 0.04*0.04 + 0.05*0.05);
 	else if(modelSample[s].ModelName().find("2o3")!=string::npos) SystTr[N] = -1*sqrt(0.03*0.03 + 0.04*0.04 + 0.05*0.05);
 	else SystTr[N] = -1*sqrt(0.05*0.05 + 0.04*0.04 + 0.01*0.01);
         SystErrTr[N] = 0.0;
+      }else{
+	if(IsNeutral) SystTr[N] = -0.13;
+//	else if(modelSample[s].ModelName().find("1o3")!=string::npos) SystTr[N] = -1*sqrt(0.15*0.15 + 0.04*0.04 + 0.05*0.05);
+//	else if(modelSample[s].ModelName().find("2o3")!=string::npos) SystTr[N] = -1*sqrt(0.03*0.03 + 0.04*0.04 + 0.05*0.05);
+	else SystTr[N] = -0.13;
+        SystErrTr[N] = 0.0;
       }
 
 //      double Ptemp=max(SystP[N], 0.0), Itemp=max(SystI[N], 0.0), PUtemp=max(SystPU[N], 0.0), Ttemp=max(SystT[N], 0.0);
-      double Ptemp=SystP[N], Itemp=SystI[N], PUtemp=SystPU[N], Ttemp=SystT[N];
-      SystTotal[N] = -1*sqrt(Ptemp*Ptemp + Itemp*Itemp + PUtemp*PUtemp + Ttemp*Ttemp + SystTr[N]*SystTr[N] + SystRe[N]*SystRe[N] + SystMB[N]*SystMB[N]);
+      double Ptemp=SystP[N], Itemp=SystI[N], Mtemp=SystM[N], Htemp=SystH[N], PUtemp=SystPU[N], Ttemp=SystT[N];
+      SystTotal[N] = -1*sqrt(Ptemp*Ptemp + Itemp*Itemp + Mtemp*Mtemp + Htemp*Htemp + PUtemp*PUtemp + Ttemp*Ttemp + SystTr[N]*SystTr[N] + SystRe[N]*SystRe[N] + SystMB[N]*SystMB[N]);
 //      SystErrTotal[N] = sqrt(pow(SystErrP[N],2) + pow(SystErrI[N],2) + pow(SystErrPU[N],2) + pow(SystErrT[N],2) + pow(SystErrTr[N],2) + pow(SystErrRe[N],2) + pow(SystErrMB[N],2) );
       SystErrTotal[N] = (tmp.EffE)/tmp.Eff;
       SystTotal2[N] = -1*SystTotal[N]; 
 
-      if(TypeMode==0 || TypeMode==5)fprintf(pFile, "%30s   %7.3f --> %7.3f  |  %7.3f  | %7.3f  | %7.3f"        ,modelSample[N].Name.c_str(), tmp.Eff, SystP[N], SystI[N], SystPU[N]           , SystTotal[N]);  
-      else          fprintf(pFile, "%30s   %7.3f --> %7.3f  |  %7.3f  | %7.3f  | %7.3f | %7.3f",modelSample[N].Name.c_str(), tmp.Eff, SystP[N], SystI[N], SystPU[N], SystT[N], SystTotal[N]);
+      if(TypeMode==0 || TypeMode==5)fprintf(pFile, "%30s   %7.3f --> %7.3f  |  %7.3f  | %7.3f  | %7.3f | %7.3f  | %7.3f"        ,modelSample[N].Name.c_str(), tmp.Eff, SystP[N], SystI[N], SystM[N], SystH[N], SystPU[N]          , SystTotal[N]);  
+      else                          fprintf(pFile, "%30s   %7.3f --> %7.3f  |  %7.3f  | %7.3f  | %7.3f | %7.3f  | %7.3f | %7.3f",modelSample[N].Name.c_str(), tmp.Eff, SystP[N], SystI[N], SystM[N], SystH[N], SystPU[N], SystT[N], SystTotal[N]);
 
 
       //Check if they are variated samples for this point
@@ -1519,6 +1534,8 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
 
    TGraph* graphSystP = NULL;
    TGraph* graphSystI = NULL;
+   TGraph* graphSystM = NULL;
+   TGraph* graphSystH = NULL;
    TGraph* graphSystPU = NULL;
    TGraph* graphSystT = NULL;
    TGraph* graphSystTr = NULL;
@@ -1542,6 +1559,8 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
 
      graphSystP = new TGraph(N,Mass,SystP);//, MassErr, SystErrP);
      graphSystI = new TGraph(N,Mass,SystI);//, MassErr,SystErrI);
+     graphSystM = new TGraph(N,Mass,SystM);//, MassErr,SystErrI);
+     graphSystH = new TGraph(N,Mass,SystH);//, MassErr,SystErrI);
      graphSystPU = new TGraph(N,Mass,SystPU);//, MassErr,SystErrPU);
      graphSystT = new TGraph(N,Mass,SystT);//, MassErr,SystErrT);
      graphSystTr = new TGraph(N,Mass,SystTr);//, MassErr,SystErrTr);
@@ -1555,6 +1574,8 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
      graphSystTotal->SetLineColor(Color[0]);  graphSystTotal->SetMarkerColor(Color[0]);   graphSystTotal->SetMarkerStyle(20);    graphSystTotal->SetLineWidth(2);
      graphSystP->SetLineColor(Color[1]);      graphSystP->SetMarkerColor(Color[1]);       graphSystP->SetMarkerStyle(Marker[1]); graphSystP->SetLineWidth(2);
      graphSystI->SetLineColor(Color[2]);      graphSystI->SetMarkerColor(Color[2]);       graphSystI->SetMarkerStyle(Marker[2]); graphSystI->SetLineWidth(2);
+     graphSystM->SetLineColor(Color[8]);      graphSystM->SetMarkerColor(Color[8]);       graphSystM->SetMarkerStyle(Marker[8]); graphSystM->SetLineWidth(2);
+     graphSystH->SetLineColor(Color[9]);      graphSystH->SetMarkerColor(Color[9]);       graphSystH->SetMarkerStyle(Marker[9]); graphSystH->SetLineWidth(2);
      graphSystPU->SetLineColor(Color[3]);     graphSystPU->SetMarkerColor(Color[3]);      graphSystPU->SetMarkerStyle(Marker[3]);graphSystPU->SetLineWidth(2);
      graphSystT->SetLineColor(Color[4]);      graphSystT->SetMarkerColor(Color[4]);       graphSystT->SetMarkerStyle(Marker[4]); graphSystT->SetLineWidth(2);
      graphSystTr->SetLineColor(Color[5]);     graphSystTr->SetMarkerColor(Color[5]);      graphSystTr->SetMarkerStyle(Marker[5]);graphSystTr->SetLineWidth(2);
@@ -1565,6 +1586,8 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
      SystGraphs->Add(graphSystTr,"LP");
      SystGraphs->Add(graphSystRe,"LP");
      if(TypeMode!=3)SystGraphs->Add(graphSystI,"LP0");
+     if(TypeMode!=3)SystGraphs->Add(graphSystH,"LP0");
+     if(TypeMode!=3)SystGraphs->Add(graphSystM,"LP0");
      SystGraphs->Add(graphSystPU,"LP0");
      if(TypeMode!=0 && TypeMode!=5)SystGraphs->Add(graphSystT,"LP0");
      if(TypeMode==4) SystGraphs->Add(graphSystMB,"LP");
@@ -1575,20 +1598,22 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
      SystGraphs->GetXaxis()->SetTitle("Mass (GeV)");
      SystGraphs->GetYaxis()->SetTitle("Relative Change in Efficiency");
      SystGraphs->GetYaxis()->SetTitleOffset(1.40);
-     SystGraphs->GetYaxis()->SetRangeUser(-0.55, 0.35);
-     SystGraphs->GetYaxis()->SetNdivisions(520, "X");
+     SystGraphs->GetYaxis()->SetRangeUser(-0.45, 0.45);
+     SystGraphs->GetYaxis()->SetNdivisions(510, "X");
 
-     TLegend* LEG = new TLegend(0.20,0.9,0.80,0.75);
+     TLegend* LEG = new TLegend(0.30,0.80,0.80,0.65);
      LEG->SetFillColor(0);
      LEG->SetFillStyle(0);
      LEG->SetBorderSize(0);
-     LEG->AddEntry(graphSystTr,  "Trigger" ,"L");
-     LEG->AddEntry(graphSystRe,  "Reconstruction" ,"L");
-     if(TypeMode==4)LEG->AddEntry(graphSystMB,  "MB" ,"L");
-     LEG->AddEntry(graphSystP,  "P" ,"L");
-     if(TypeMode!=3)LEG->AddEntry(graphSystI,  "dE/dx" ,"L");
-     LEG->AddEntry(graphSystPU,  "Pile Up" ,"L");
-     if(TypeMode!=0 && TypeMode!=5)LEG->AddEntry(graphSystT,  "1/#beta" ,"L");
+     LEG->AddEntry(graphSystTr,  "Trigger" ,"LP");
+     LEG->AddEntry(graphSystRe,  "Reconstruction" ,"LP");
+     if(TypeMode==4)LEG->AddEntry(graphSystMB,  "MB" ,"LP");
+     LEG->AddEntry(graphSystP,  "P" ,"LP");
+     if(TypeMode!=3)LEG->AddEntry(graphSystI,  "dE/dx Ias" ,"LP");
+     if(TypeMode!=3)LEG->AddEntry(graphSystM,  "dE/dx Mass" ,"LP");
+     if(TypeMode!=3)LEG->AddEntry(graphSystH,  "dE/dx HIP" ,"LP");
+     LEG->AddEntry(graphSystPU,  "Pile Up" ,"LP");
+     if(TypeMode!=0 && TypeMode!=5)LEG->AddEntry(graphSystT,  "1/#beta" ,"LP");
      LEG->AddEntry(graphSystTotal,  "Total" ,"P");
      LEG->SetNColumns(2);
      LEG->Draw();
@@ -1758,7 +1783,7 @@ double GetSignalMeanHSCPPerEvent(string InputPattern, unsigned int CutIndex, dou
    TH1D*  NTracksPassingSelection  = Mass->ProjectionY("NTracksPassingSelection",CutIndex+1,CutIndex+1);
    TH1D*  NEventsPassingSelection  = MaxEventMass->ProjectionY("NEventsPassingSelection",CutIndex+1,CutIndex+1);
 
-   double NTracks       = NTracksPassingSelection->Integral(NTracksPassingSelection->GetXaxis()->FindBin(MinRange_), NTracksPassingSelection->GetXaxis()->FindBin(MaxRange_));
+   double NTracks       = NTracksPassingSelection->Integral(NTracksPassingSelection->GetXaxis()->FindBin(MinRange_), NTracksPassingSelection->GetXaxis()->FindBin(MaxRange_)); // all the way to the overflow
    double NEvents       = NEventsPassingSelection->Integral(NEventsPassingSelection->GetXaxis()->FindBin(MinRange_), NEventsPassingSelection->GetXaxis()->FindBin(MaxRange_));
    double toReturn      = (float)std::max(1.0,NTracks/ NEvents);
    delete Mass;
@@ -1833,11 +1858,11 @@ void DrawModelLimitWithBand(string InputPattern){
       ExpErr      ->Draw("f");
       MG          ->Draw("same");
       MG->SetTitle("");
-      MG->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+      MG->GetXaxis()->SetTitle("Mass (GeV)");
       MG->GetYaxis()->SetTitle("#sigma (pb)");
       MG->GetYaxis()->SetTitleOffset(1.70);
       MG->GetYaxis()->SetRangeUser(PlotMinScale,PlotMaxScale);
-      DrawPreliminary(SQRTS, LInt);
+      DrawPreliminary(LegendFromType(InputPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
 
       TLegend* LEG = EXCLUSIONDIR.find("COMB")==string::npos ? new TLegend(0.45,0.58,0.65,0.90) : new TLegend(0.45,0.10,0.65,0.42);
       //TLegend* LEG = new TLegend(0.40,0.65,0.8,0.90);
@@ -1990,7 +2015,7 @@ void DrawRatioBands(string InputPattern)
       MG->Draw("same");
       MG->SetTitle("");
       if(k==modelVector.size()-1) {
-         MG->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+         MG->GetXaxis()->SetTitle("Mass (GeV)");
          MG->GetXaxis()->SetTitleSize(0.2);
          MG->GetXaxis()->SetLabelSize(0.2);
       }
@@ -2025,7 +2050,7 @@ void DrawRatioBands(string InputPattern)
       }
    }
    c2->cd();
-   DrawPreliminary(SQRTS, LInt);
+   DrawPreliminary(LegendFromType(InputPattern).c_str(), SQRTS, IntegratedLuminosityFromE(SQRTS));
    TPaveText *pt = new TPaveText(0.1, 0., 0.15, 0.7,"NDC");
    string tmp = "95% CL Limits (Relative to Expected Limit)";
    TText *text = pt->AddText(tmp.c_str()); 
@@ -2084,6 +2109,8 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    TH2D* MassSignP     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystP");
    TH2D* MassSignI     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystI");
    TH2D* MassSignM     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystM");
+   TH2D* MassSignHUp   = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystHUp");
+   TH2D* MassSignHDown = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystHDown");
    TH2D* MassSignT     = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystT");
    TH2D* MassSignPU    = (TH2D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/Mass_SystPU" );
    TH1D* TotalE        = (TH1D*)GetObjectFromPath(InputFile, samples[CurrentSampleIndex].Name + "/TotalE" );
@@ -2139,7 +2166,7 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
          double MinDistance = 10000;
          for(int CutIndex=0;CutIndex<HCuts_Pt->GetNbinsX();CutIndex++){
             double cutDistance = fabs(cutPt_ - HCuts_Pt ->GetBinContent(CutIndex+1)) + fabs(cutI_ - HCuts_I ->GetBinContent(CutIndex+1)) + fabs(cutTOF_ - HCuts_TOF ->GetBinContent(CutIndex+1));
-            if(cutDistance<MinDistance){MinDistance=cutDistance; OptimCutIndex=CutIndex;  }//OptimMassWindow=massWindow_;}
+            if(cutDistance<MinDistance){MinDistance=cutDistance; OptimCutIndex=CutIndex;  }//OptimMassWindow=massWindow_;
          }
          printf("Closest cut index to the cuts provided: %i\n",OptimCutIndex);
          break; 
@@ -2153,12 +2180,14 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    double norm  = samples[CurrentSampleIndex].XSec*LInt/TotalE  ->Integral(); //normalize the samples to the actual lumi used for limits
    double normPU= samples[CurrentSampleIndex].XSec*LInt/(TotalEPU->Integral()>0?TotalEPU->Integral():TotalE->Integral());
 
-   MassSign  ->Scale(norm);
-   MassSignP ->Scale(norm);
-   MassSignI ->Scale(norm);
-   MassSignM ->Scale(norm);
-   MassSignT ->Scale(norm);
-   MassSignPU->Scale(normPU);
+   MassSign      ->Scale(norm);
+   MassSignP     ->Scale(norm);
+   MassSignI     ->Scale(norm);
+   MassSignM     ->Scale(norm);
+   MassSignHUp   ->Scale(norm);
+   MassSignHDown ->Scale(norm);
+   MassSignT     ->Scale(norm);
+   MassSignPU    ->Scale(normPU);
 
    //Compute mass range for the cut&count search
    double Mean=-1,Width=-1;
@@ -2192,7 +2221,7 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       if(OptimCutIndex>=0 && CutIndex!=OptimCutIndex)continue;
 
       //make sure the pT cut is high enough to get some statistic for both ABCD and mass shape
-      if(HCuts_Pt ->GetBinContent(CutIndex+1) < 50 && TypeMode!=4){printf("Skip cut=%i because of too lose pT cut\n", CutIndex); continue; }
+      if(HCuts_Pt ->GetBinContent(CutIndex+1) < 64 && TypeMode!=4){printf("Skip cut=%i because of too lose pT cut\n", CutIndex); continue; }
 
       //make sure we have a reliable prediction of the number of events      
       if(OptimCutIndex<0 && H_E->GetBinContent(CutIndex+1) >0 &&(H_A->GetBinContent(CutIndex+1)<25 ||  H_F->GetBinContent(CutIndex+1)<25 || H_G->GetBinContent(CutIndex+1)<25)){printf("Skip cut=%i because of unreliable ABCD prediction\n", CutIndex); continue;}  //Skip events where Prediction (AFG/EE) is not reliable
@@ -2223,8 +2252,8 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
       result.LInt      = LInt;
 
       //best significance --> is actually best reach
-      if(TypeMode<=2){if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
-      }else          {if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
+      if(TypeMode<=2){if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
+      }else          {if(!runCombine(true, false, true, InputPattern, signal, CutIndex, shape, true, result, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU)){printf("runCombine did not converge\n"); continue;}
       }
 
       //report the result for this point in the log file
@@ -2245,8 +2274,8 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    if(pFile)fclose(pFile);   
  
    //recompute the limit for the final point and save the output in the final directory (also save some plots for the shape based analysis)
-   if(TypeMode<=2){runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
-   }else          {runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
+   if(TypeMode<=2){runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU);
+   }else          {runCombine(false, true, true, InputPattern, signal, toReturn.Index, shape, false, toReturn, H_D, H_P, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU);
    }
   
    //all done, save the result to file
@@ -2256,8 +2285,10 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
 // produce the Higgs combine stat tool datacard
 void makeDataCard(string outpath, string rootPath, string ChannelName, string SignalName, double Obs, double Pred, double PredRelErr, double Sign, double SignStat, double SignalUnc, bool Shape){
 
-
-   double LumiUnc   = (SQRTS==7?1.022:1.044);
+   double LumiUnc   = 1.0;
+   if(SQRTS==7 ) LumiUnc=1.022;
+   if(SQRTS==8 ) LumiUnc=1.044;
+   if(SQRTS==13) LumiUnc=1.120;
 
    if(isnan(float(PredRelErr)))PredRelErr= 1.2;
 
@@ -2290,6 +2321,7 @@ void makeDataCard(string outpath, string rootPath, string ChannelName, string Si
    fprintf(pFile, "%35s    %6s 1.000     -    \n","mom"  , "shapeN2");
    fprintf(pFile, "%35s    %6s 1.000     -    \n","ias"  , "shapeN2");
    fprintf(pFile, "%35s    %6s 1.000     -    \n","ih"   , "shapeN2");
+   fprintf(pFile, "%35s    %6s 1.000     -    \n","hip"  , "shapeN2");
    fprintf(pFile, "%35s    %6s 1.000     -    \n","tof"  , "shapeN2");
    fprintf(pFile, "%35s    %6s 1.000     -    \n","pu"   , "shapeN2");
    }
@@ -2344,6 +2376,8 @@ void testShapeBasedAnalysis(string InputPattern, string signal){
    TH2D*  MassSignP  = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystP");
    TH2D*  MassSignI  = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystI");
    TH2D*  MassSignM  = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystM");
+   TH2D*  MassSignHUp   = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystHUp");
+   TH2D*  MassSignHDown = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystHDown");
    TH2D*  MassSignT  = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystT");
    TH2D*  MassSignPU = (TH2D*)GetObjectFromPath(InputFile, samples[s].Name+"/Mass_SystPU");
    TH1D*  TotalE     = (TH1D*)GetObjectFromPath(InputFile, samples[s].Name+"/TotalE" );
@@ -2353,12 +2387,14 @@ void testShapeBasedAnalysis(string InputPattern, string signal){
    double LInt  = H_Lumi->GetBinContent(1);
    double norm  = samples[CurrentSampleIndex].XSec*LInt/TotalE  ->Integral(); //normalize the samples to the actual lumi used for limits
    double normPU= samples[CurrentSampleIndex].XSec*LInt/TotalEPU->Integral();
-   MassSign  ->Scale(norm);
-   MassSignP ->Scale(norm);
-   MassSignI ->Scale(norm);
-   MassSignM ->Scale(norm);
-   MassSignT ->Scale(norm);
-   MassSignPU->Scale(normPU);
+   MassSign      ->Scale(norm);
+   MassSignP     ->Scale(norm);
+   MassSignI     ->Scale(norm);
+   MassSignM     ->Scale(norm);
+   MassSignHUp   ->Scale(norm);
+   MassSignHDown ->Scale(norm);
+   MassSignT     ->Scale(norm);
+   MassSignPU    ->Scale(normPU);
 
    bool Shape = true;
 
@@ -2371,7 +2407,7 @@ void testShapeBasedAnalysis(string InputPattern, string signal){
    }
 
    //compute shape based limits and save it's output
-   runCombine(false, true, true, InputPattern, signal, result.Index, Shape, false, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignT, MassSignPU);
+   runCombine(false, true, true, InputPattern, signal, result.Index, Shape, false, result, MassData, MassPred, MassSign, MassSignP, MassSignI, MassSignM, MassSignHUp, MassSignHDown, MassSignT, MassSignPU);
 
    //all done, save the results to file
    result.Save(InputPattern+"/"+SHAPESTRING+EXCLUSIONDIR+"/"+signal+".txt");
@@ -2402,10 +2438,10 @@ double computeSignificance(string datacard, bool expected, string& signal, strin
 }
 
 //run the higgs combine stat tool using predicted mass shape distribution (possibly do shape based analysis and/or cut on mass) OR 1D histogram output from ABCD  (only do cut and count without mass cut)
-bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, string& InputPattern, string& signal, unsigned int CutIndex, bool Shape, bool Temporary, stAllInfo& result, TH1* MassData, TH1* MassPred, TH1* MassSign, TH1* MassSignP, TH1* MassSignI, TH1* MassSignM, TH1* MassSignT, TH1* MassSignPU){
-   TH1D *MassDataProj=NULL, *MassPredProj=NULL, *MassSignProj=NULL, *MassSignProjP=NULL, *MassSignProjI=NULL, *MassSignProjM=NULL, *MassSignProjT=NULL, *MassSignProjPU=NULL;
-   double NData, NPredErr, NPred, NSign, NSignP, NSignI, NSignM, NSignT, NSignPU;
-   double NSignErr, NSignPErr, NSignIErr, NSignMErr, NSignTErr, NSignPUErr;
+bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, string& InputPattern, string& signal, unsigned int CutIndex, bool Shape, bool Temporary, stAllInfo& result, TH1* MassData, TH1* MassPred, TH1* MassSign, TH1* MassSignP, TH1* MassSignI, TH1* MassSignM, TH1* MassSignHUp, TH1* MassSignHDown, TH1* MassSignT, TH1* MassSignPU){
+   TH1D *MassDataProj=NULL, *MassPredProj=NULL, *MassSignProj=NULL, *MassSignProjP=NULL, *MassSignProjI=NULL, *MassSignProjM=NULL, *MassSignProjHUp=NULL, *MassSignProjHDown=NULL, *MassSignProjT=NULL, *MassSignProjPU=NULL;
+   double NData, NPredErr, NPred, NSign, NSignP, NSignI, NSignM, NSignHUp, NSignHDown, NSignT, NSignPU;
+   double NSignErr, NSignPErr, NSignIErr, NSignMErr, NSignHErrUp, NSignHErrDown, NSignTErr, NSignPUErr;
    double signalsMeanHSCPPerEvent = GetSignalMeanHSCPPerEvent(InputPattern,CutIndex, MinRange, MaxRange);
 
    //IF 2D histograms --> we get all the information from there (and we can do shape based analysis AND/OR cut on mass)
@@ -2417,6 +2453,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       MassSignProjP      = ((TH2D*)MassSignP )->ProjectionY("MassSignProP"  ,CutIndex+1,CutIndex+1);
       MassSignProjI      = ((TH2D*)MassSignI )->ProjectionY("MassSignProI"  ,CutIndex+1,CutIndex+1);
       MassSignProjM      = ((TH2D*)MassSignM )->ProjectionY("MassSignProM"  ,CutIndex+1,CutIndex+1);
+      MassSignProjHUp    = ((TH2D*)MassSignHUp )->ProjectionY("MassSignProH"  ,CutIndex+1,CutIndex+1);
+      MassSignProjHDown  = ((TH2D*)MassSignHDown )->ProjectionY("MassSignProHDown"  ,CutIndex+1,CutIndex+1);
       MassSignProjT      = ((TH2D*)MassSignT )->ProjectionY("MassSignProT"  ,CutIndex+1,CutIndex+1);
       MassSignProjPU     = ((TH2D*)MassSignPU)->ProjectionY("MassSignProPU" ,CutIndex+1,CutIndex+1);
 
@@ -2429,6 +2467,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       NSignP      = (MassSignProjP ->IntegralAndError(MassSignProjP ->GetXaxis()->FindBin(MinRange), MassSignProjP ->GetXaxis()->FindBin(MaxRange), NSignPErr )) / signalsMeanHSCPPerEvent;  NSignPErr /= signalsMeanHSCPPerEvent;
       NSignI      = (MassSignProjI ->IntegralAndError(MassSignProjI ->GetXaxis()->FindBin(MinRange), MassSignProjI ->GetXaxis()->FindBin(MaxRange), NSignIErr )) / signalsMeanHSCPPerEvent;  NSignIErr /= signalsMeanHSCPPerEvent;
       NSignM      = (MassSignProjM ->IntegralAndError(MassSignProjM ->GetXaxis()->FindBin(MinRange), MassSignProjM ->GetXaxis()->FindBin(MaxRange), NSignMErr )) / signalsMeanHSCPPerEvent;  NSignMErr /= signalsMeanHSCPPerEvent;
+      NSignHUp    = (MassSignProjHUp   ->IntegralAndError(MassSignProjHUp   ->GetXaxis()->FindBin(MinRange), MassSignProjHUp   ->GetXaxis()->FindBin(MaxRange), NSignHErrUp ))   / signalsMeanHSCPPerEvent;  NSignHErrUp   /= signalsMeanHSCPPerEvent;
+      NSignHDown  = (MassSignProjHDown ->IntegralAndError(MassSignProjHDown ->GetXaxis()->FindBin(MinRange), MassSignProjHDown ->GetXaxis()->FindBin(MaxRange), NSignHErrDown )) / signalsMeanHSCPPerEvent;  NSignHErrDown /= signalsMeanHSCPPerEvent;
       NSignT      = (MassSignProjT ->IntegralAndError(MassSignProjT ->GetXaxis()->FindBin(MinRange), MassSignProjT ->GetXaxis()->FindBin(MaxRange), NSignTErr )) / signalsMeanHSCPPerEvent;  NSignTErr /= signalsMeanHSCPPerEvent;
       NSignPU     = (MassSignProjPU->IntegralAndError(MassSignProjPU->GetXaxis()->FindBin(MinRange), MassSignProjPU->GetXaxis()->FindBin(MaxRange), NSignPUErr)) / signalsMeanHSCPPerEvent;  NSignPUErr/= signalsMeanHSCPPerEvent;
 
@@ -2445,6 +2485,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       MassSignProjP      = ((TH2D*)MassSignP )->ProjectionY("MassSignProP"  ,CutIndex+1,CutIndex+1);
       MassSignProjI      = ((TH2D*)MassSignI )->ProjectionY("MassSignProI"  ,CutIndex+1,CutIndex+1);
       MassSignProjM      = ((TH2D*)MassSignM )->ProjectionY("MassSignProM"  ,CutIndex+1,CutIndex+1);
+      MassSignProjHUp    = ((TH2D*)MassSignHUp  )->ProjectionY("MassSignProHUp"    ,CutIndex+1,CutIndex+1);
+      MassSignProjHDown  = ((TH2D*)MassSignHDown)->ProjectionY("MassSignProHDown"  ,CutIndex+1,CutIndex+1);
       MassSignProjT      = ((TH2D*)MassSignT )->ProjectionY("MassSignProT"  ,CutIndex+1,CutIndex+1);
       MassSignProjPU     = ((TH2D*)MassSignPU)->ProjectionY("MassSignProPU" ,CutIndex+1,CutIndex+1);
 
@@ -2452,6 +2494,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       NSignP      = MassSignProjP ->IntegralAndError(0, MassSignProjP ->GetNbinsX()+1, NSignPErr)  / signalsMeanHSCPPerEvent;  NSignPErr /= signalsMeanHSCPPerEvent;
       NSignI      = MassSignProjI ->IntegralAndError(0, MassSignProjI ->GetNbinsX()+1, NSignIErr)  / signalsMeanHSCPPerEvent;  NSignIErr /= signalsMeanHSCPPerEvent;
       NSignM      = MassSignProjM ->IntegralAndError(0, MassSignProjM ->GetNbinsX()+1, NSignMErr)  / signalsMeanHSCPPerEvent;  NSignMErr /= signalsMeanHSCPPerEvent;
+      NSignHUp    = MassSignProjHUp   ->IntegralAndError(0, MassSignProjHUp   ->GetNbinsX()+1, NSignHErrUp  )  / signalsMeanHSCPPerEvent;  NSignHErrUp   /= signalsMeanHSCPPerEvent;
+      NSignHDown  = MassSignProjHDown ->IntegralAndError(0, MassSignProjHDown ->GetNbinsX()+1, NSignHErrDown)  / signalsMeanHSCPPerEvent;  NSignHErrDown /= signalsMeanHSCPPerEvent;
       NSignT      = MassSignProjT ->IntegralAndError(0, MassSignProjT ->GetNbinsX()+1, NSignTErr)  / signalsMeanHSCPPerEvent;  NSignTErr /= signalsMeanHSCPPerEvent;
       NSignPU     = MassSignProjPU->IntegralAndError(0, MassSignProjPU->GetNbinsX()+1, NSignPUErr) / signalsMeanHSCPPerEvent;  NSignPUErr/= signalsMeanHSCPPerEvent;
 
@@ -2468,6 +2512,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    double EffP        = NSignP  / (result.XSec_Th*result.LInt);
    double EffI        = NSignI  / (result.XSec_Th*result.LInt);
    double EffM        = NSignM  / (result.XSec_Th*result.LInt);
+   double EffHUp      = NSignHUp/ (result.XSec_Th*result.LInt);
+   double EffHDown    = NSignHDown  / (result.XSec_Th*result.LInt);
    double EffT        = NSignT  / (result.XSec_Th*result.LInt);
    double EffPU       = NSignPU / (result.XSec_Th*result.LInt);
 
@@ -2475,6 +2521,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    double EffPErr     = NSignPErr  / (result.XSec_Th*result.LInt);
    double EffIErr     = NSignIErr  / (result.XSec_Th*result.LInt);
    double EffMErr     = NSignMErr  / (result.XSec_Th*result.LInt);
+   double EffHErrUp   = NSignHErrUp  / (result.XSec_Th*result.LInt);
+   double EffHErrDown = NSignHErrDown  / (result.XSec_Th*result.LInt);
    double EffTErr     = NSignTErr  / (result.XSec_Th*result.LInt);
    double EffPUErr    = NSignPUErr / (result.XSec_Th*result.LInt);
 
@@ -2487,12 +2535,16 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    result.Eff_SYSTP = EffP;
    result.Eff_SYSTI = EffI;
    result.Eff_SYSTM = EffM;
+   result.Eff_SYSTHUp   = EffHUp;
+   result.Eff_SYSTHDown = EffHDown;
    result.Eff_SYSTT = EffT;
    result.Eff_SYSTPU= EffPU;
    result.EffE       = EffErr;
    result.EffE_SYSTP = EffPErr;
    result.EffE_SYSTI = EffIErr;
    result.EffE_SYSTM = EffMErr;
+   result.EffE_SYSTHUp   = EffHErrUp;
+   result.EffE_SYSTHDown = EffHErrDown;
    result.EffE_SYSTT = EffTErr;
    result.EffE_SYSTPU= EffPUErr;
    result.NData     = NData;
@@ -2518,6 +2570,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       MassSignProjP ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
       MassSignProjI ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
       MassSignProjM ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjHUp   ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
+      MassSignProjHDown ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
       MassSignProjT ->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
       MassSignProjPU->Scale(1.0/(result.XSec_Th*signalsMeanHSCPPerEvent*result.LInt));
 
@@ -2528,6 +2582,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       MassSignProjP ->Rebin(2);
       MassSignProjI ->Rebin(2);
       MassSignProjM ->Rebin(2);
+      MassSignProjHUp   ->Rebin(2);
+      MassSignProjHDown ->Rebin(2);
       MassSignProjT ->Rebin(2);
       MassSignProjPU->Rebin(2);
 
@@ -2546,6 +2602,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       saveVariationHistoForLimit(MassSignProj, MassSignProjP , signal, "mom");
       saveVariationHistoForLimit(MassSignProj, MassSignProjI , signal, "ias");
       saveVariationHistoForLimit(MassSignProj, MassSignProjM , signal, "ih");
+      saveVariationHistoForLimit(MassSignProj, fabs(EffHUp-Eff)>fabs(Eff-EffHDown)?MassSignProjHUp:MassSignProjHDown , signal, "hip");
       saveVariationHistoForLimit(MassSignProj, MassSignProjT , signal, "tof");
       saveVariationHistoForLimit(MassSignProj, MassSignProjPU, signal, "pu");
 
@@ -2559,10 +2616,12 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    //Reconstruction Efficiency uncertainty
    double UncEffP=(EffP-Eff)/Eff;
    double UncEffI=(EffI-Eff)/Eff;
+   double UncEffM=(EffM-Eff)/Eff;
+   double UncEffH= fabs(EffHUp-Eff)>fabs(Eff-EffHDown)?((EffHUp-Eff)/Eff):((Eff-EffHDown)/Eff);
    double UncEffPU=(EffPU-Eff)/Eff;
    double UncEffT=(EffT-Eff)/Eff;
    double UncEffRe  = -0.02;
-   double UncEffTr  = -10;
+   double UncEffTr  = -0.13;
    double UncEffMB  = 0.0;
 
    //Reset Reco and dEdx uncertainty for fractional as dedicated samples for this
@@ -2575,6 +2634,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
 //   if(signal.find("DY_Q")!=string::npos && signal.find("o3")==string::npos) UncEffMB=-0.2;
    if(signal.find("DY")!=string::npos && signal.find("o3")==string::npos) UncEffMB=-0.2;
 
+   /*
    //Trigger efficiency uncertainty
    if(SQRTS==7) {
      //Numbers here are 0.05 for muon reconstruction uncertainty, 0.02 for muon trigger synchronization, 0.05 for MET charge suppresses
@@ -2590,12 +2650,12 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
      else if(signal.find("1o3")!=string::npos) UncEffTr = -1*sqrt(0.15*0.15 + 0.04*0.04 + 0.05*0.05);
      else if(signal.find("2o3")!=string::npos) UncEffTr = -1*sqrt(0.03*0.03 + 0.04*0.04 + 0.05*0.05);
      else UncEffTr = -1*sqrt(0.05*0.05 + 0.04*0.04 + 0.01*0.01);
-   }
+   }*/
 
 //   printf("uncertainties = %f %f %f %f %f %f %f\n", UncEffP, UncEffI, UncEffPU, UncEffT, UncEffRe, UncEffTr, UncEffMB);
    if(isnan((float)UncEffPU))UncEffPU=0.0;
  
-   double SignalUnc = 1 + sqrt(UncEffP*UncEffP + UncEffI*UncEffI + UncEffPU*UncEffPU + UncEffT*UncEffT + UncEffTr*UncEffTr + UncEffRe*UncEffRe + UncEffMB*UncEffMB);
+   double SignalUnc = 1 + sqrt(UncEffP*UncEffP + UncEffI*UncEffI + UncEffM*UncEffM + UncEffH*UncEffH + UncEffPU*UncEffPU + UncEffT*UncEffT + UncEffTr*UncEffTr + UncEffRe*UncEffRe + UncEffMB*UncEffMB);
    result.TotalUnc = SignalUnc-1;
 
 //   printf("SIGNAL UNCERTAINTY = %f\n",SignalUnc);
@@ -2756,6 +2816,8 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       TH1* MassSignProjPRatio = (TH1D*)MassSignProjP->Clone("mom");            MassSignProjPRatio->SetLineColor(2); MassSignProjPRatio->SetMarkerColor(2); MassSignProjPRatio->SetMarkerStyle(20);
       TH1* MassSignProjIRatio = (TH1D*)MassSignProjI->Clone("Ias");            MassSignProjIRatio->SetLineColor(4); MassSignProjIRatio->SetMarkerColor(4); MassSignProjIRatio->SetMarkerStyle(21);
       TH1* MassSignProjMRatio = (TH1D*)MassSignProjM->Clone("Ih");             MassSignProjMRatio->SetLineColor(3); MassSignProjMRatio->SetMarkerColor(3); MassSignProjMRatio->SetMarkerStyle(22);
+      TH1* MassSignProjHRatioUp   = (TH1D*)MassSignProjHUp  ->Clone("hipUp");  MassSignProjHRatioUp  ->SetLineColor(5); MassSignProjHRatioUp  ->SetMarkerColor(5); MassSignProjHRatioUp  ->SetMarkerStyle(24);
+      TH1* MassSignProjHRatioDown = (TH1D*)MassSignProjHDown->Clone("hipDown");MassSignProjHRatioDown->SetLineColor(5); MassSignProjHRatioDown->SetMarkerColor(5); MassSignProjHRatioDown->SetMarkerStyle(24);
       TH1* MassSignProjTRatio = (TH1D*)MassSignProjT->Clone("TOF");            MassSignProjTRatio->SetLineColor(8); MassSignProjTRatio->SetMarkerColor(8); MassSignProjTRatio->SetMarkerStyle(23);
       TH1* MassSignProjLRatio = (TH1D*)MassSignProjPU->Clone("pu");            MassSignProjLRatio->SetLineColor(6); MassSignProjLRatio->SetMarkerColor(6); MassSignProjLRatio->SetMarkerStyle(33);
 
@@ -2804,7 +2866,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    }
 
    //all done, clean everything and return true
-   delete MassDataProj; delete MassPredProj; delete MassSignProj; delete MassSignProjP; delete MassSignProjI; delete MassSignProjM; delete MassSignProjT; delete MassSignProjPU;
+   delete MassDataProj; delete MassPredProj; delete MassSignProj; delete MassSignProjP; delete MassSignProjI; delete MassSignProjM; delete MassSignProjHUp; delete MassSignProjT; delete MassSignProjPU; delete MassSignProjHDown;
    return true;
 }
 

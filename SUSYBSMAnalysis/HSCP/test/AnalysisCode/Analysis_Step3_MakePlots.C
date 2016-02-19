@@ -12,6 +12,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TPaletteAxis.h"
 #include "TColor.h"
+#include "TLatex.h"
 
 using namespace std;
 
@@ -20,7 +21,7 @@ using namespace std;
 void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuffix="Mass", bool showMC=true, string Data="Data13TeV");
 void PredictionAndControlPlot(string InputPattern, string Data, unsigned int CutIndex, unsigned int CutIndex_Flip);
 void CutFlow(string InputPattern, unsigned int CutIndex=0);
-void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, double ylow=8e-3, double yhigh=8e+6, bool setLog=true);
+void CutFlowPlot(string InputPattern, unsigned int CutIndex=4, double ylow=8e-3, double yhigh=1.5e+7, bool setLog=true);
 void SelectionPlot (string InputPattern, unsigned int CutIndex, unsigned int CutIndexTight);
 
 void Make2DPlot_Core(string ResultPattern, unsigned int CutIndex);
@@ -44,9 +45,9 @@ std::vector<stSample> samples;
 void Analysis_Step3_MakePlots()
 {
    setTDRStyle();
-   gStyle->SetPadTopMargin   (0.06);
+   gStyle->SetPadTopMargin   (0.05);
    gStyle->SetPadBottomMargin(0.12);
-   gStyle->SetPadRightMargin (0.16);
+   gStyle->SetPadRightMargin (0.05);
    gStyle->SetPadLeftMargin  (0.14);
    gStyle->SetTitleSize(0.05, "XYZ");
    gStyle->SetTitleXOffset(1.1);
@@ -62,32 +63,37 @@ void Analysis_Step3_MakePlots()
 
    Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
-   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 67;
-   MassPrediction(InputPattern, CutIndex,      "Mass", true, "13TeV_Loose");
-   MassPrediction(InputPattern, CutIndexTight, "Mass", true, "13TeV_Tight");
+   InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
+   MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
-   CutFlowPlot(InputPattern, 1);
+   CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
-   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
 
+   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
 
-   InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 695; CutIndex_Flip=12;
-   MassPrediction(InputPattern, CutIndex,      "Mass"     , true, "13TeV_Loose");
-   MassPrediction(InputPattern, CutIndexTight, "Mass"     , true, "13TeV_Tight");
-   MassPrediction(InputPattern, 1,             "Mass_Flip", true, "13TeV_Loose");
-   MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", true, "13TeV_Tight");
+   MassPrediction(InputPattern, CutIndex,      "Mass"     , false, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV_Tight");
+   MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV_Loose");
+   MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
-   CutFlowPlot(InputPattern, 1);
+   CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
+
    PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, CutIndex_Flip);
-   GetSystematicOnPrediction(InputPattern, "Data13TeV");
+//  std::cout<<"A\n";
    CheckPrediction(InputPattern, "_Flip", "Data13TeV");
+//  std::cout<<"B\n";
+//   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+
+  std::cout<<"ALL DONE WITH THE PLOTTING CODE\n";
 
   exit(0);//all done
 
@@ -234,8 +240,8 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
 
    //README: Comments or uncomment lines below in order to decide what you want to see on your plot
    if(DataName.find("13TeV")!=string::npos){
-                    SName="Gluino_13TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV/#font[12]{c}^{2})";
-      if(!IsTkOnly){SName="GMStau_13TeV_M494";         SLeg="Stau (M = 494 GeV/#font[12]{c}^{2})";}
+                    SName="Gluino_13TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV)";
+      if(!IsTkOnly){SName="GMStau_13TeV_M494";         SLeg="Stau (M = 494 GeV)";}
 
       Pred13TeV    = GetProjectionFromPath(InputFile, string("Data13TeV/Pred_") + HistoSuffix, CutIndex, "TmpPredMass");
       Data13TeV    = GetProjectionFromPath(InputFile, string("Data13TeV/"     ) + HistoSuffix, CutIndex, "TmpDataMass");
@@ -243,8 +249,8 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
       if(showMC)MC        = GetProjectionFromPath(InputFile, string("MCTr_13TeV/"       ) + HistoSuffix,  CutIndex, "TmpMCMass");
       Signal    = GetProjectionFromPath(InputFile, string(SName+"/"     ) + HistoSuffix, CutIndex, "TmpSignalMass");
    }else if(DataName.find("8TeV")!=string::npos){
-                    SName="Gluino_8TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV/#font[12]{c}^{2})";
-      if(!IsTkOnly){SName="GMStau_8TeV_M308";         SLeg="Stau (M = 308 GeV/#font[12]{c}^{2})";}
+                    SName="Gluino_8TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV)";
+      if(!IsTkOnly){SName="GMStau_8TeV_M308";         SLeg="Stau (M = 308 GeV)";}
 
       Pred8TeV    = ((TH2D*)GetObjectFromPath(InputFile, string("Data8TeV/Pred_") + HistoSuffix   ))->ProjectionY("TmpPredMass"   ,CutIndex+1,CutIndex+1,"o");
       Data8TeV    = ((TH2D*)GetObjectFromPath(InputFile, string("Data8TeV/"     ) + HistoSuffix   ))->ProjectionY("TmpDataMass"   ,CutIndex+1,CutIndex+1,"o");
@@ -254,8 +260,8 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
       if(showMC)MC        = ((TH2D*)GetObjectFromPath(InputFile, string("MCTr_8TeV/"       ) + HistoSuffix   ))->ProjectionY("TmpMCMass"     ,CutIndex+1,CutIndex+1,"o");
       Signal    = ((TH2D*)GetObjectFromPath(InputFile, string(SName+"/"     ) + HistoSuffix   ))->ProjectionY("TmpSignalMass" ,CutIndex+1,CutIndex+1,"o");
    }else{
-                    SName="Gluino_7TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV/#font[12]{c}^{2})";
-      if(!IsTkOnly){SName="GMStau_7TeV_M308";         SLeg="Stau (M = 308 GeV/#font[12]{c}^{2})";}
+                    SName="Gluino_7TeV_M1000_f10";     SLeg="Gluino (M = 1000 GeV)";
+      if(!IsTkOnly){SName="GMStau_7TeV_M308";         SLeg="Stau (M = 308 GeV)";}
 
       Pred8TeV    = ((TH2D*)GetObjectFromPath(InputFile, string("Data7TeV/Pred_") + HistoSuffix   ))->ProjectionY("TmpPredMass"   ,CutIndex+1,CutIndex+1,"o");
       Data8TeV    = ((TH2D*)GetObjectFromPath(InputFile, string("Data7TeV/"     ) + HistoSuffix   ))->ProjectionY("TmpDataMass"   ,CutIndex+1,CutIndex+1,"o");
@@ -287,10 +293,11 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    }
 
 
-
-
    //compute integral for few mass window
     if(Data13TeV && Pred13TeV){
+      printf("Computing Chi2 between data and prediction at 13TeV:\n");
+      double Chi2 = Data13TeV->Chi2Test(Pred13TeV, "UW P");
+
       for(double M=0;M<=1000;M+=100){
 	if(M>400 && (int)M%200!=0)continue;
          double D = Data13TeV->Integral( Data13TeV->GetXaxis()->FindBin(M),  Data13TeV->GetXaxis()->FindBin(2000.0));
@@ -324,7 +331,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    if(Signal){Signal->Rebin(4);  Max=std::max(Max, Signal->GetMaximum());}
    if(MC)    {MC    ->Rebin(4);  Max=std::max(Max, MC    ->GetMaximum());}
    if(MCPred){MCPred->Rebin(4);  Max=std::max(Max, MCPred->GetMaximum());}
-   Max*=5.0;
+   Max*=10.0;
 
 
 
@@ -404,7 +411,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    std::vector<string> legend;
    TLegend* leg;
    TCanvas* c1 = new TCanvas("c1","c1,",600,600);
-//   char YAxisLegend[1024]; sprintf(YAxisLegend,"Tracks / %2.0f GeV/#font[12]{c}^{2}", Signal->GetXaxis()->GetBinWidth(1));
+//   char YAxisLegend[1024]; sprintf(YAxisLegend,"Tracks / %2.0f GeV", Signal->GetXaxis()->GetBinWidth(1));
      char YAxisLegend[1024]; sprintf(YAxisLegend,"Tracks / bin");   
 
 
@@ -417,12 +424,13 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
        t1->SetLogy(true);
        t1->SetTopMargin(0.06);
      }
+     c1->SetLogy(true);
 
        TH1D* frame = new TH1D("frame", "frame", 1,0,1400);
        frame->GetXaxis()->SetNdivisions(505);
        frame->SetTitle("");
        frame->SetStats(kFALSE);
-       frame->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+       frame->GetXaxis()->SetTitle("Mass (GeV)");
        frame->GetYaxis()->SetTitle(YAxisLegend);
        frame->GetYaxis()->SetTitleOffset(1.40);
        frame->SetMaximum(Max);
@@ -543,20 +551,21 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
       Data13TeV->SetMarkerSize(1.0);
       Data13TeV->SetLineColor(1);
       Data13TeV->SetFillColor(0);
-      Data13TeV->Draw("E1 same");
+      //Data13TeV->Draw("P same");
+      getGarwoodErrorBars(Data13TeV)->Draw("PE same");
    }
 
 
 
    //Fill the legend
-   leg = new TLegend(0.7,0.93,0.35,showMC?0.66:0.75);
+   leg = new TLegend(0.82,0.85,0.47,showMC?0.69:0.68);
 //   leg->SetHeader(LegendFromType(InputPattern).c_str());
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
    leg->SetTextFont(43);
    leg->SetTextSize(20);
 
-   if(Data13TeV){leg->AddEntry(Data13TeV, "Observed"        ,"P");}
+   if(Data13TeV){leg->AddEntry(Data13TeV, "Observed"        ,"PE");}
    if(Pred13TeV){TH1D* PredLeg13TeV = (TH1D*)Pred13TeV->Clone("RescLeg13");
       PredLeg13TeV->SetFillColor(Pred13TeVErr->GetFillColor());
       PredLeg13TeV->SetFillStyle(Pred13TeVErr->GetFillStyle());
@@ -588,11 +597,9 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    //Redraw axis ticks
    gPad->RedrawAxis(); 
 
-   //add CMS label and save
-   DrawPreliminary(LegendFromType(InputPattern), SQRTS, IntegratedLuminosityFromE(SQRTS), true);
-   c1->SetLogy(true);
-
    c1->cd();
+   //add CMS label and save
+   DrawPreliminary(LegendFromType(InputPattern), SQRTS, IntegratedLuminosityFromE(SQRTS));
    if(r==0)  SaveCanvas(c1, InputPattern, string("RescaleNoRatio_") + HistoSuffix + "_" + DataName);
    else {
    c1->cd();
@@ -609,7 +616,7 @@ void MassPrediction(string InputPattern, unsigned int CutIndex, string HistoSuff
    frameR->SetTitle("");
    frameR->SetStats(kFALSE);
    frameR->GetXaxis()->SetTitle("");
-   frameR->GetXaxis()->SetTitle("Mass (GeV/#font[12]{c}^{2})");
+   frameR->GetXaxis()->SetTitle("Mass (GeV)");
    frameR->GetYaxis()->SetTitle("Obs / Pred");
    frameR->SetMaximum(2.00);
    frameR->SetMinimum(0.00);
@@ -727,16 +734,16 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
 
    std::vector<std::string> PtLimitsNames;
    if(TypeMode!=3) {
-     PtLimitsNames.push_back("  45 < p_{T} <   60 GeV/#font[12]{c}");
-     PtLimitsNames.push_back("  60 < p_{T} <   80 GeV/#font[12]{c}");
-     PtLimitsNames.push_back("  80 < p_{T} < 100 GeV/#font[12]{c}");
-     PtLimitsNames.push_back("100 < p_{T}           GeV/#font[12]{c}");
+     PtLimitsNames.push_back("  55 < p_{T} <   60 GeV");
+     PtLimitsNames.push_back("  60 < p_{T} <   80 GeV");
+     PtLimitsNames.push_back("  80 < p_{T} < 100 GeV");
+     PtLimitsNames.push_back("100 < p_{T}           GeV");
    }
    else {
-     PtLimitsNames.push_back("  80 < p_{T} < 120 GeV/#font[12]{c}");
-     PtLimitsNames.push_back("120 < p_{T} < 170 GeV/#font[12]{c}");
-     PtLimitsNames.push_back("170 < p_{T} < 240 GeV/#font[12]{c}");
-     PtLimitsNames.push_back("240 < p_{T}           GeV/#font[12]{c}");
+     PtLimitsNames.push_back("  80 < p_{T} < 120 GeV");
+     PtLimitsNames.push_back("120 < p_{T} < 170 GeV");
+     PtLimitsNames.push_back("170 < p_{T} < 240 GeV");
+     PtLimitsNames.push_back("240 < p_{T}           GeV");
    }
 
    c1 = new TCanvas("c1","c1,",600,600);          legend.clear();
@@ -750,10 +757,10 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    Histos[3] = CtrlPt_S4_Is;                     legend.push_back(PtLimitsNames[3]);
    char YAxisTitle[100];
    sprintf(YAxisTitle,"Fraction of tracks / %0.3f",((TH1D*)Histos[0])->GetBinWidth(1));
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  dEdxS_Legend, YAxisTitle,TypeMode!=5?0:0.7,TypeMode!=5?0.5:1.0, 0,0);
-   DrawLegend(Histos,legend,"", "P", 0.77, 0.92, 0.43, 0.05);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  dEdxS_Legend, YAxisTitle,TypeMode!=5?0:0.7,TypeMode!=5?0.5:1.0, -10.0, -10.0);
+   DrawLegend(Histos,legend,"", "P", 0.93, 0.88, 0.40, 0.05);
    c1->SetLogy(true);
-   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_IsSpectrum");
    delete c1;
 
@@ -766,8 +773,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    Histos[1] = CtrlPt_S2_Im;                     legend.push_back(PtLimitsNames[1]);
    Histos[2] = CtrlPt_S3_Im;                     legend.push_back(PtLimitsNames[2]);
    Histos[3] = CtrlPt_S4_Im;                     legend.push_back(PtLimitsNames[3]);
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  dEdxM_Legend, "arbitrary units", 3.0,5, 0,0);
-   DrawLegend(Histos,legend,"","P", 0.77, 0.92, 0.43, 0.05);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  dEdxM_Legend, "arbitrary units", 3.0,5, -10.0, -10.0);
+   DrawLegend(Histos,legend,"","P", 0.93, 0.88, 0.40, 0.05);
    c1->SetLogy(true);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_ImSpectrum");
@@ -785,10 +792,10 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    Histos[3] = CtrlPt_S4_TOF;                    legend.push_back(PtLimitsNames[3]);
    sprintf(YAxisTitle,"Fraction of tracks / %0.3f",((TH1D*)Histos[0])->GetBinWidth(1));
 //   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", "fraction of tracks", 0.5,2.2, 1E-6,1); 
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", YAxisTitle, 1.0, 1.4, 0, 0); 
-   DrawLegend(Histos,legend, "" ,"P", 0.80, 0.92, 0.43, 0.05);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", YAxisTitle, 1.0, 1.4, -10.0, -10.0); 
+   DrawLegend(Histos,legend, "" ,"P", 0.93, 0.88, 0.40, 0.05);
    c1->SetLogy(true);
-   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_TOFSpectrum");
    c1->SetLogy(false);
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_TOFSpectrumNoLog");
@@ -805,10 +812,10 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    Histos[2] = CtrlIs_S3_TOF;                     legend.push_back("0.10 < I_{as} < 0.20");
    Histos[3] = CtrlIs_S4_TOF;                     legend.push_back("0.20 < I_{as}");
    sprintf(YAxisTitle,"Fraction of tracks / %0.3f",((TH1D*)Histos[0])->GetBinWidth(1));
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", YAxisTitle, 1,1.4, 0.000005,0.6);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", YAxisTitle, 1,1.4, 0.000005,0.8);
    CtrlIs_S4_TOF->Draw("E1 same"); //redraw this histogram to make sure it is on top of the other ones
-   DrawLegend(Histos,legend, "","P", 0.77, 0.92, 0.43, 0.05);
-   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);   
+   DrawLegend(Histos,legend, "","P", 0.93, 0.88, 0.40, 0.05);
+   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));   
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Is_TOFSpectrumLog");
 
    c1->SetLogy(false);
@@ -825,8 +832,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    Histos[0] = CtrlIm_S1_TOF;                     legend.push_back("3.5<I_{as}<3.8");
    Histos[1] = CtrlIm_S2_TOF;                     legend.push_back("3.8<I_{as}<4.1");
    Histos[2] = CtrlIm_S3_TOF;                     legend.push_back("4.1<I_{as}<4.4");
-   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", "arbitrary units", 1,1.7, 0,0);
-   DrawLegend(Histos,legend,"","P", 0.77, 0.92, 0.43, 0.05);
+   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", "arbitrary units", 1,1.7, -10.0, -10.0);
+   DrawLegend(Histos,legend,"","P", 0.93, 0.88, 0.40, 0.05);
    c1->SetLogy(false);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Im_TOFSpectrum");
@@ -846,8 +853,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
      Histos[1] = CtrlPt_S2_TOF_Binned[i];                    legend.push_back(PtLimitsNames[1]);
      Histos[2] = CtrlPt_S3_TOF_Binned[i];                    legend.push_back(PtLimitsNames[2]);
      Histos[3] = CtrlPt_S4_TOF_Binned[i];                    legend.push_back(PtLimitsNames[3]);
-     DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", "arbitrary units", 0,2, 0,0);
-     DrawLegend(Histos,legend,LegendTitle,"P", 0.77, 0.92, 0.43, 0.05);
+     DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta", "arbitrary units", 0,2, -10.0, -10.0);
+     DrawLegend(Histos,legend,LegendTitle,"P", 0.93, 0.88, 0.40, 0.05);
      c1->SetLogy(true);
      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
      if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Control_")+Data+"_Pt_TOFSpectrum_Binned"+Bin);
@@ -873,8 +880,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(10);
    ((TH1D*)Histos[1])->Rebin(10);  
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (Gev/c)", "u.a.", 0,1500, 0,0);
-   DrawLegend(Histos,legend,"","P");
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (GeV)", "u.a.", 0,1500, -10.0, -10.0);
+   DrawLegend(Histos,legend,"","P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_PSpectrum");
    delete Histos[0]; delete Histos[1];
@@ -888,8 +895,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(2); 
    ((TH1D*)Histos[1])->Rebin(2);
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  dEdxM_Legend, "u.a.", 0,6, 0,0);
-   DrawLegend(Histos,legend,"", "P");
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  dEdxM_Legend, "u.a.", 0,6, -10.0, -10.0);
+   DrawLegend(Histos,legend,"", "P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_ISpectrum");
    delete Histos[0]; delete Histos[1];
@@ -903,13 +910,14 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(2); 
    ((TH1D*)Histos[1])->Rebin(2);
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "1/#beta", "u.a.", 0,0, 0,0);
-   DrawLegend(Histos,legend,"", "P");
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "1/#beta", "u.a.", 0,0, -10.0, -10.0);
+   DrawLegend(Histos,legend,"", "P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_TOFSpectrum");
    delete Histos[0]; delete Histos[1];
    delete c1;
 
+   if(CutIndex_Flip>0 && TypeMode>=2){
    //Show P, I and TOF distribution in the region with TOF < 1(observed and predicted)
    TH2D* Pred_P_Flip                = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_P_Flip");
    TH2D* Pred_I_Flip                 = (TH2D*)GetObjectFromPath(InputFile, Data+"/Pred_I_Flip");
@@ -926,8 +934,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(10);
    ((TH1D*)Histos[1])->Rebin(10);  
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (Gev/c)", "u.a.", 0,1500, 0,0);
-   DrawLegend(Histos,legend,"","P");
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "p (GeV)", "u.a.", 0,1500, -10.0, -10.0);
+   DrawLegend(Histos,legend,"","P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_PSpectrum_Flip");
    delete Histos[0]; delete Histos[1];
@@ -941,8 +949,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(2); 
    ((TH1D*)Histos[1])->Rebin(2);
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  dEdxM_Legend, "u.a.", 0,6, 0,0);
-   DrawLegend(Histos,legend,"","P");
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  dEdxM_Legend, "u.a.", 0,6, -10.0, -10.0);
+   DrawLegend(Histos,legend,"","P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_ISpectrum_Flip");
    delete Histos[0]; delete Histos[1];
@@ -956,12 +964,13 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    ((TH1D*)Histos[1])->Scale(1/std::max(((TH1D*)Histos[1])->Integral(),1.0));
    ((TH1D*)Histos[0])->Rebin(2); 
    ((TH1D*)Histos[1])->Rebin(2);
-   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "1/#beta", "u.a.", 0,0, 0,0);
-   DrawLegend(Histos,legend, "" ,"P");
+   DrawSuperposedHistos((TH1**)Histos, legend, "Hist E1",  "1/#beta", "u.a.", 0,0, -10.0, -10.0);
+   DrawLegend(Histos,legend, "" ,"P", 0.93, 0.88);
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    if(TypeMode>=2)SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_TOFSpectrum_Flip");
    delete Histos[0]; delete Histos[1];
    delete c1;
+   }
    }
 
 
@@ -997,8 +1006,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
      Histos[0] = (TH1D*)(Data_Ias->ProjectionY("IasD",CutIndex+1,CutIndex+1,"o"));   legend.push_back("Observed");
      Histos[1] = (TH1D*)(Pred_Ias->ProjectionY("IasH",CutIndex+1,CutIndex+1,"o"));   legend.push_back("Prediction");
      ((TH1D*)Histos[1])->Scale(factor);
-     DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "I_{as} ", "Tracks", 0,0, 0.05, 400000);
-     DrawLegend(Histos,legend,"","P");
+     DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "I_{as} ", "Tracks", 0,0, 0.05, 500000);
+     DrawLegend(Histos,legend,"","P", 0.93, 0.88);
      c1->SetLogy(true);
      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
      SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_IasSpectrum");
@@ -1008,7 +1017,6 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
    if(TypeMode!=2){  
       for(int S=0;S<2;S++){
    	 if(TypeMode==0 && S>0)continue;
-
          string suffix = "";
          if(S==1)suffix = "_Flip";
          TH1D* H_D                   = (TH1D*)GetObjectFromPath(InputFile, Data+"/H_D"+suffix);
@@ -1024,7 +1032,6 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
          double max = 1; double min = 1000;
          double xmin=100; double xmax=0;
 	 double binZero=-8, binOne=-1;
-
          for(int CutIndex_=1;CutIndex_<H_P->GetNbinsX();CutIndex_++){
             float PtCut   = HCuts_Pt ->GetBinContent(CutIndex_+1);
             //float ICut    = HCuts_I  ->GetBinContent(CutIndex_+1);
@@ -1116,8 +1123,8 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
          frame->Draw("AXIS");
 	 
          TLegend* LEG;
-	 if(S==0) LEG = new TLegend(0.31,0.72,0.77,0.92);
-	 else LEG = new TLegend(0.15,0.72,0.6,0.92);
+	 if(S==0) LEG = new TLegend(0.50,0.68,0.93,0.88);
+	 else LEG = new TLegend(0.15,0.68,0.6,0.88);
          LEG->SetFillColor(0);
          LEG->SetFillStyle(0);
          LEG->SetBorderSize(0);
@@ -1129,19 +1136,19 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
          string Data1, Data2, Data3;
 
 	 if(TypeMode==0){
-	   P1 = std::make_pair(55.0, -1.0);  L1 = "Predicted (p_{T} > 55 GeV/#font[12]{c})";
-	   P2 = std::make_pair(65.0, -1.0);  L2 = "Predicted (p_{T} > 65 GeV/#font[12]{c})";
-	   P3 = std::make_pair(75.0, -1.0);  L3 = "Predicted (p_{T} > 75 GeV/#font[12]{c})";
-           Data1 = "Observed (p_{T} > 55 GeV/#font[12]{c})";
-           Data2 = "Observed (p_{T} > 65 GeV/#font[12]{c})";
-           Data3 = "Observed (p_{T} > 75 GeV/#font[12]{c})";
+	   P1 = std::make_pair(65.0, -1.0);  L1 = "Predicted (p_{T} > 65 GeV)";
+	   P2 = std::make_pair(75.0, -1.0);  L2 = "Predicted (p_{T} > 75 GeV)";
+	   P3 = std::make_pair(85.0, -1.0);  L3 = "Predicted (p_{T} > 85 GeV)";
+           Data1 = "Observed (p_{T} > 65 GeV)";
+           Data2 = "Observed (p_{T} > 75 GeV)";
+           Data3 = "Observed (p_{T} > 85 GeV)";
 	 }else if(TypeMode==3){
-	   P1 = std::make_pair(110.0, -1.0);  L1 = "Predicted (p_{T} > 110 GeV/#font[12]{c})";
-	   P2 = std::make_pair(170.0, -1.0);  L2 = "Predicted (p_{T} > 170 GeV/#font[12]{c})";
-	   P3 = std::make_pair(230.0, -1.0);  L3 = "Predicted (p_{T} > 230 GeV/#font[12]{c})";
-           Data1 = "Observed (p_{T} > 110 GeV/#font[12]{c})";
-           Data2 = "Observed (p_{T} > 170 GeV/#font[12]{c})";
-           Data3 = "Observed (p_{T} > 230 GeV/#font[12]{c})";
+	   P1 = std::make_pair(110.0, -1.0);  L1 = "Predicted (p_{T} > 110 GeV)";
+	   P2 = std::make_pair(170.0, -1.0);  L2 = "Predicted (p_{T} > 170 GeV)";
+	   P3 = std::make_pair(230.0, -1.0);  L3 = "Predicted (p_{T} > 230 GeV)";
+           Data1 = "Observed (p_{T} > 110 GeV)";
+           Data2 = "Observed (p_{T} > 170 GeV)";
+           Data3 = "Observed (p_{T} > 230 GeV)";
 	 }else if(TypeMode==4 && S==0){
 	   P1 = std::make_pair(  -1.0 , 1.075);  L1 = "Predicted (1/#beta > 1.075)";
 	   P2 = std::make_pair(  -1.0 , 1.100);  L2 = "Predicted (1/#beta > 1.100)";
@@ -1157,14 +1164,13 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
            Data2 = "Observed (1/#beta < 0.900)";
            Data3 = "Observed (1/#beta < 0.875)";
 	 }else if(TypeMode==5){
-	   P1 = std::make_pair( 75.0, -1.0);  L1 = "Predicted (p_{T} >   75 GeV/#font[12]{c})";
-	   P2 = std::make_pair(100.0, -1.0);  L2 = "Predicted (p_{T} > 100 GeV/#font[12]{c})";
-	   P3 = std::make_pair(125.0, -1.0);  L3 = "Predicted (p_{T} > 125 GeV/#font[12]{c})";
-           Data1 = "Observed (p_{T} >   75 GeV/#font[12]{c})";
-           Data2 = "Observed (p_{T} > 100 GeV/#font[12]{c})";
-           Data3 = "Observed (p_{T} > 125 GeV/#font[12]{c})";
+	   P1 = std::make_pair( 75.0, -1.0);  L1 = "Predicted (p_{T} >   75 GeV)";
+	   P2 = std::make_pair(100.0, -1.0);  L2 = "Predicted (p_{T} > 100 GeV)";
+	   P3 = std::make_pair(125.0, -1.0);  L3 = "Predicted (p_{T} > 125 GeV)";
+           Data1 = "Observed (p_{T} >   75 GeV)";
+           Data2 = "Observed (p_{T} > 100 GeV)";
+           Data3 = "Observed (p_{T} > 125 GeV)";
 	 }
-
 
          c1->cd();
 	 if(r==1) t1->cd();
@@ -1206,7 +1212,7 @@ void PredictionAndControlPlot(string InputPattern, string Data, unsigned int Cut
          LEG->AddEntry(mapPred[P3], L3.c_str(),"FL");
          LEG->Draw("same");
 
-         DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+         DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
 	 if(r==0) {
 	   c1->SetLogy(1);
 	   SaveCanvas(c1,InputPattern,string("Prediction_")+Data+"_NPredVsNObs"+suffix);
@@ -1378,6 +1384,13 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     TFile* InputFile = new TFile((InputPattern + "Histos.root").c_str());
     if (!InputFile) std::cerr << "File could not be opened!" << std::endl;
 
+    TH1D* HCuts_Pt  = (TH1D*) GetObjectFromPath (InputFile, "HCuts_Pt");
+    TH1D* HCuts_Is  = (TH1D*) GetObjectFromPath (InputFile, "HCuts_I");
+    TH1D* HCuts_TOF = (TH1D*) GetObjectFromPath (InputFile, "HCuts_TOF");
+    char PtCutStr [1024]; sprintf (PtCutStr, "p_{T}>%.0f GeV", HCuts_Pt ->GetBinContent(CutIndex+1));
+    char ICutStr  [1024]; sprintf (ICutStr,  "I_{as}>%.2f", HCuts_Is ->GetBinContent(CutIndex+1));
+    char TOFCutStr[1024]; sprintf (TOFCutStr,"1/#beta>%.3f", HCuts_TOF->GetBinContent(CutIndex+1));
+
     vector < pair<stSample, Color_t> > SamplesToDraw;
     SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("Data13TeV"             , samples)], kBlack      ));
     SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("MC_13TeV_DYToMuMu"     , samples)], kBlue   - 3 ));
@@ -1386,10 +1399,16 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     SamplesToDraw.push_back (make_pair(samples [JobIdToIndex("GMStau_13TeV_M494"     , samples)], kOrange + 7 ));
     pair < TH1F*, TH1F* > * histos = new pair < TH1F*, TH1F* >[SamplesToDraw.size()];
 
-    const char * AxisLabels [17] = {"Initial", "No. of hits", "No. of dE/dx hits", "nDof", "Track purity", "Chi2",
-	    "Min Pt", "Min Ias", "Min TOF", "Dxy", "Track Isolation", "E/p Isolation", "Pterr", "Dz", 
-	    "Pt", "Ias", "TOF"};
+//    const char * AxisLabels [16] = {"Initial", "#hit #geq 8", "dE/dx #hit #geq 6", "nDof #geq 8", "high purity track", "#chi^{2}/nDof < 5",
+//	    "pT > 55", "#beta^{-1}>1", "d_{xy}<5mm", "tracker iso < 50", "E/p iso < 0.3", "pT_{err} < 25%", "d_{z}<5mm", 
+//	    "pT", "I_{as}", "#beta^{-1}"};
+    const char * AxisLabels [16] = {"Triggered", "#hit>7", "#dEdxHit>5", "nDof>7", "Track Qual.", "#chi^{2}/nDof<5",
+	    "p_{T}>55 GeV", "1/#beta>1", "dXY<5 mm", "TkIso<50", "E/p<0.3", "#sigma_{p_{T}}/p_{T}<25 %", "dZ<5 mm", PtCutStr, ICutStr, TOFCutStr};
+
     unsigned int NumberOfCuts = sizeof(AxisLabels)/sizeof(const char *);
+    TypeMode = TypeFromPattern(InputPattern);
+    if(CutIndex==0)NumberOfCuts-=3;
+    else if (TypeMode==0)NumberOfCuts-=1; //TkOnly does not have TOF cut
 
     // initialize histograms and fill them
     for (unsigned int sample_i = 0; sample_i < SamplesToDraw.size(); sample_i++){
@@ -1409,16 +1428,16 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
         Num.push_back (st.Qual ->GetBinContent (1));          Eff.push_back (Num[ 4]/ Num[ 0]);
         Num.push_back (st.Chi2 ->GetBinContent (1));          Eff.push_back (Num[ 5]/ Num[ 0]);
         Num.push_back (st.MPt  ->GetBinContent (1));          Eff.push_back (Num[ 6]/ Num[ 0]);
-        Num.push_back (st.MI   ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
-        Num.push_back (st.MTOF ->GetBinContent (1));          Eff.push_back (Num[ 8]/ Num[ 0]);
-        Num.push_back (st.Dxy  ->GetBinContent (1));          Eff.push_back (Num[ 9]/ Num[ 0]);
-        Num.push_back (st.TIsol->GetBinContent (1));          Eff.push_back (Num[10]/ Num[ 0]);
-        Num.push_back (st.EIsol->GetBinContent (1));          Eff.push_back (Num[11]/ Num[ 0]);
-        Num.push_back (st.Pterr->GetBinContent (1));          Eff.push_back (Num[12]/ Num[ 0]);
-        Num.push_back (st.Dz   ->GetBinContent (1));          Eff.push_back (Num[13]/ Num[ 0]);
-        Num.push_back (st.Pt   ->GetBinContent (CutIndex+1)); Eff.push_back (Num[14]/ Num[ 0]);
-        Num.push_back (st.I    ->GetBinContent (CutIndex+1)); Eff.push_back (Num[15]/ Num[ 0]);
-        Num.push_back (st.TOF  ->GetBinContent (CutIndex+1)); Eff.push_back (Num[16]/ Num[ 0]);
+//        Num.push_back (st.MI   ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
+        Num.push_back (st.MTOF ->GetBinContent (1));          Eff.push_back (Num[ 7]/ Num[ 0]);
+        Num.push_back (st.Dxy  ->GetBinContent (1));          Eff.push_back (Num[ 8]/ Num[ 0]);
+        Num.push_back (st.TIsol->GetBinContent (1));          Eff.push_back (Num[ 9]/ Num[ 0]);
+        Num.push_back (st.EIsol->GetBinContent (1));          Eff.push_back (Num[10]/ Num[ 0]);
+        Num.push_back (st.Pterr->GetBinContent (1));          Eff.push_back (Num[11]/ Num[ 0]);
+        Num.push_back (st.Dz   ->GetBinContent (1));          Eff.push_back (Num[12]/ Num[ 0]);
+        Num.push_back (st.Pt   ->GetBinContent (CutIndex+1)); Eff.push_back (Num[13]/ Num[ 0]);
+        Num.push_back (st.I    ->GetBinContent (CutIndex+1)); Eff.push_back (Num[14]/ Num[ 0]);
+        Num.push_back (st.TOF  ->GetBinContent (CutIndex+1)); Eff.push_back (Num[15]/ Num[ 0]);
 
         for (unsigned int cut_i = 1; cut_i <= NumberOfCuts; cut_i++){
             if (std::isnan(Eff[cut_i-1])) Eff[cut_i-1] = 0.0;
@@ -1440,9 +1459,10 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     // ----------------------------------
     TCanvas* c1 = new TCanvas ("c1", "c1", 600, 600);
     c1->SetLogy(setLog);
-    c1->SetGridx();
+    c1->SetGridx(false);
+    c1->SetGridy(false);
     c1->SetBottomMargin(1.3*c1->GetBottomMargin());
-    double Dx = 0.60, Dy = 3*0.03, x = 0.17, y = 0.82;
+    double Dx = 0.60, Dy = 3*0.03, x = 0.20, y = 0.75;
     TLegend* leg = new TLegend(x+Dx, y+Dy, x, y);
     leg->SetFillColor(0);
     leg->SetFillStyle(0);
@@ -1452,48 +1472,52 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
 
     TH1F h ("Name", "Title", NumberOfCuts, 0, NumberOfCuts);
     h.SetStats(0);
-    h.GetYaxis()->SetTitle ("number of tracks that pass");
+    h.GetYaxis()->SetTitle ("Track Efficiency");
     h.GetYaxis()->SetRangeUser(ylow,yhigh);
     h.GetXaxis()->SetNdivisions(NumberOfCuts);
     h.GetXaxis()->SetLabelOffset (99); // disable label
     h.Draw("hist");
 
-    // draw the preselection/selection division line
     TLine SelectionLine;
-    SelectionLine.SetLineWidth(4);
-    SelectionLine.SetLineStyle(7);
-    SelectionLine.DrawLine (NumberOfCuts - 3 - 0.08, ylow, NumberOfCuts - 3 - 0.08, yhigh);
-    // draw preselection/selection text
-    TText SelectionText;
-    SelectionText.SetTextAngle(0);
-    SelectionText.SetTextAlign(22);
-    SelectionText.SetTextFont(72);
-    SelectionText.SetTextColorAlpha(41, 0.80);
-    SelectionText.SetTextSize(0.05);
-    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(8),
-            setLog ? TMath::Power(yhigh*ylow,0.20) : (yhigh + ylow)/5, "Preselection");
-    SelectionText.SetTextAngle(75);
-    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(NumberOfCuts-1),
-            setLog ? TMath::Power(yhigh*ylow,0.20) : (yhigh + ylow)/5, "Selection");
+    if(CutIndex!=0){
+	    // draw the preselection/selection division line
+	    SelectionLine.SetLineWidth(4);
+	    SelectionLine.SetLineStyle(7);
+//	    SelectionLine.DrawLine (NumberOfCuts - 3 - 0.08, ylow, NumberOfCuts - 3 - 0.08, yhigh); Don't draw the line -- JOZE
+	    // draw preselection/selection text
+//	    TText SelectionText;
+//	    SelectionText.SetTextAngle(0);
+//	    SelectionText.SetTextAlign(22);
+//	    SelectionText.SetTextFont(72);
+//	    SelectionText.SetTextColorAlpha(41, 0.80);
+//	    SelectionText.SetTextSize(0.05);
+//	    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(8),
+//		    setLog ? TMath::Power(yhigh*ylow,0.20) : (yhigh + ylow)/5, "Preselection");
+//	    SelectionText.SetTextAngle(75);
+//	    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(NumberOfCuts-1),
+//		    setLog ? TMath::Power(yhigh*ylow,0.20) : (yhigh + ylow)/5, "Selection");
+    }
 
     for (unsigned int sample_i=0; sample_i < SamplesToDraw.size(); sample_i++){
         leg->AddEntry (histos[sample_i].first, SamplesToDraw[sample_i].first.Legend.c_str(), "L");
         histos[sample_i].first->Draw("same");
     }
     // now put the axis labels -- each cut at each respective bin
-    TText T;
+    TLatex T;
     T.SetTextAngle(35);
     T.SetTextAlign(33);
     T.SetTextSize (0.03);
 
     double Y = histos[0].first->GetYaxis()->GetBinLowEdge(1);
     for (unsigned int cut_i = 0; cut_i < NumberOfCuts; cut_i++)
-        T.DrawText (histos[0].first->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
+        T.DrawLatex (histos[0].first->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
 
     leg->Draw();
     SQRTS=13; string LegendTitle = LegendFromType(InputPattern);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
     char SaveName [128]; sprintf (SaveName, "CutFlowPlot_Abs_%u", CutIndex);
+    c1->SetGridx(false);
+    c1->SetGridy(false);
     SaveCanvas(c1, InputPattern, SaveName);
     delete c1;
     delete leg;
@@ -1501,11 +1525,10 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     // ----------------------------------
     // Draw the Cut Efficiency histograms
     // ----------------------------------
-    ylow = 0.0; yhigh = 1.2;
+    ylow = 0.0; yhigh = 1.35;
     c1 = new TCanvas ("c1", "c1", 600, 600);
     c1->SetLogy(false); // Efficiency should not be in logscale -- ever!
-    c1->SetGridx();
-    c1->SetGridy();
+    //c1->SetGridx();
     c1->SetBottomMargin(1.3*c1->GetBottomMargin());
     leg = new TLegend(x+Dx, y+Dy, x, y);
     leg->SetFillColor(0);
@@ -1516,28 +1539,30 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
 
     h.Reset();
     h.SetStats(0);
-    h.GetYaxis()->SetTitle ("fraction of tracks that pass");
+    h.GetYaxis()->SetTitle ("track efficiency");
     h.GetYaxis()->SetRangeUser(ylow,yhigh);
     h.GetXaxis()->SetNdivisions(NumberOfCuts);
     h.GetYaxis()->SetNdivisions(6);
     h.GetXaxis()->SetLabelOffset (99); // disable label
     h.Draw("");
 
-    // draw the preselection/selection division line
-    SelectionLine.SetLineWidth(4);
-    SelectionLine.SetLineStyle(7);
-    SelectionLine.DrawLine (NumberOfCuts - 3 - 0.08, ylow, NumberOfCuts - 3 - 0.08, yhigh);
-    // draw preselection/selection text
-    SelectionText.SetTextAngle(0);
-    SelectionText.SetTextAlign(22);
-    SelectionText.SetTextFont(72);
-    SelectionText.SetTextColorAlpha(41, 0.80);
-    SelectionText.SetTextSize(0.05);
-    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(8),
-            (yhigh + ylow)/5, "Preselection");
-    SelectionText.SetTextAngle(75);
-    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(NumberOfCuts-1),
-            (yhigh + ylow)/5, "Selection");
+    if(CutIndex!=0){
+	    // draw the preselection/selection division line
+	    SelectionLine.SetLineWidth(2);
+	    SelectionLine.SetLineStyle(7);
+//	    SelectionLine.DrawLine (NumberOfCuts - 3 - 0.08, ylow, NumberOfCuts - 3 - 0.08, yhigh); Don't draw it! JOZE
+	    // draw preselection/selection text
+	//  SelectionText.SetTextAngle(0);
+	//  SelectionText.SetTextAlign(22);
+	//  SelectionText.SetTextFont(72);
+	//  SelectionText.SetTextColorAlpha(41, 0.80);
+	//  SelectionText.SetTextSize(0.05);
+	//  SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(8),
+	//           (yhigh + ylow)/5, "Preselection");
+	//    SelectionText.SetTextAngle(75);
+	//    SelectionText.DrawText (histos[0].first->GetXaxis()->GetBinCenter(NumberOfCuts-1),
+	//            (yhigh + ylow)/5, "Selection");
+    }
 
     for (unsigned int sample_i=0; sample_i < SamplesToDraw.size(); sample_i++){
         leg->AddEntry (histos[sample_i].second, SamplesToDraw[sample_i].first.Legend.c_str(), "L");
@@ -1549,12 +1574,14 @@ void CutFlowPlot(string InputPattern, unsigned int CutIndex, double ylow, double
     T.SetTextSize (0.03);
     Y = histos[0].second->GetYaxis()->GetBinLowEdge(1);
     for (unsigned int cut_i = 0; cut_i < NumberOfCuts; cut_i++)
-        T.DrawText (histos[0].second->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
+        T.DrawLatex (histos[0].second->GetXaxis()->GetBinCenter(cut_i+1), Y, AxisLabels[cut_i]);
 
     leg->Draw();
     SQRTS=13; LegendTitle = LegendFromType(InputPattern);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
     sprintf (SaveName, "CutFlowPlot_Eff_%u", CutIndex);
+    c1->SetGridx(false);
+    c1->SetGridy(false);
     SaveCanvas(c1, InputPattern, SaveName);
     delete c1;
     delete leg;
@@ -1687,7 +1714,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    double ArrT    [8][20];
 
    std::vector<int> Index;   std::vector<int> Plot;
-   //variation on TOF cut 60, 0.05 1.05->1.2
+   //variation on TOF cut 65, 0.05 1.05->1.2
    Index.push_back(226);      Plot.push_back(0);
    Index.push_back(227);      Plot.push_back(0);
    Index.push_back(228);      Plot.push_back(0);
@@ -1695,7 +1722,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    Index.push_back(230);      Plot.push_back(0);
    Index.push_back(231);      Plot.push_back(0);
    Index.push_back(232);      Plot.push_back(0);
-   //variation on I cut 60, 0.05->0.225 1.05
+   //variation on I cut 65, 0.05->0.225 1.05
    Index.push_back(226);      Plot.push_back(1);
    Index.push_back(240);      Plot.push_back(1);
    Index.push_back(254);      Plot.push_back(1);
@@ -1705,22 +1732,22 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    Index.push_back(310);      Plot.push_back(1);
    Index.push_back(324);      Plot.push_back(1);
 
-   //variation on Pt cut 60->90 0.15 1.05
+   //variation on Pt cut 65->90 0.15 1.05
    Index.push_back( 282);     Plot.push_back(2);
    Index.push_back( 492);     Plot.push_back(2);
    Index.push_back( 702);     Plot.push_back(2);
    Index.push_back( 912);     Plot.push_back(2);
    Index.push_back(1122);     Plot.push_back(2);
-   Index.push_back(1332);     Plot.push_back(2);
+//   Index.push_back(1332);     Plot.push_back(2);
 
 
-   //variation on Pt cut 60->90 0.1 1.1 
+   //variation on Pt cut 65->90 0.1 1.1 
    Index.push_back(256);     Plot.push_back(3);
    Index.push_back(466);     Plot.push_back(3);
    Index.push_back(676);     Plot.push_back(3);
    Index.push_back(886);     Plot.push_back(3);
    Index.push_back(1096);    Plot.push_back(3);
-   Index.push_back(1306);    Plot.push_back(3);
+//   Index.push_back(1306);    Plot.push_back(3);
 
    //variation on Pt cut 60->90 0.15 1.05 
 //   Index.push_back(72);      Plot.push_back(4);
@@ -1738,7 +1765,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    Index.push_back(680);     Plot.push_back(4);
    Index.push_back(890);     Plot.push_back(4);
    Index.push_back(1100);    Plot.push_back(4);
-   Index.push_back(1310);    Plot.push_back(4);
+//   Index.push_back(1310);    Plot.push_back(4);
 
    //Not used
    Index.push_back(82 + 4);  Plot.push_back(5);
@@ -1754,7 +1781,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    Index.push_back(802+ 4);  Plot.push_back(5);
 
 
-   //variation on Pt cut 55->115 0.05 1.05
+   //variation on Pt cut 60->115 0.05 1.05
    Index.push_back(16);      Plot.push_back(6);
    Index.push_back(226);     Plot.push_back(6);
    Index.push_back(436);     Plot.push_back(6);
@@ -1763,10 +1790,11 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    Index.push_back(1066);    Plot.push_back(6);
    Index.push_back(1276);    Plot.push_back(6);
    Index.push_back(1486);    Plot.push_back(6);
-   Index.push_back(1696);    Plot.push_back(6);
 
-
+std::cout<<"DA\n";
    for(unsigned int i=0;i<Index.size();i++){      
+std::cout<<"DB " << i << "\n";
+
       int CutIndex = Index[i];
       const double& A=H_A->GetBinContent(CutIndex+1);
       const double& B=H_B->GetBinContent(CutIndex+1);
@@ -1831,7 +1859,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       Sum  = sqrt(Sum/(N-1));
       Stat = sqrt(Stat)/N;
       StatB= StatB/N;
-      Syst = sqrt(Sum*Sum - Stat*Stat);
+      Syst = sqrt(std::max(0.0, Sum*Sum - Stat*Stat) );
     //printf("pT>%6.2f I> %6.2f TOF>%6.2f : ", HCuts_Pt ->GetBinContent(CutIndex+1), HCuts_I  ->GetBinContent(CutIndex+1), HCuts_TOF->GetBinContent(CutIndex+1));
     //printf("A =%6.2E, B=%6.2E, C=%6.2E, D=%6.2E E =%6.2E, F=%6.2E, G=%6.2E, H=%6.2E\n", A,B,C,D, E, F, G, H);
 
@@ -1850,6 +1878,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
          ArrN[Plot[i]]++;
       }
    }
+std::cout<<"DC\n";
 
    TGraphErrors* graph_T0 = new TGraphErrors(ArrPredN[0][0],ArrT [0],ArrPred[0][0],0,ArrErr[0][0]);   graph_T0->SetLineColor(1);  graph_T0->SetMarkerColor(1);   graph_T0->SetMarkerStyle(20);
    TGraphErrors* graph_T1 = new TGraphErrors(ArrPredN[1][0],ArrT [0],ArrPred[1][0],0,ArrErr[1][0]);   graph_T1->SetLineColor(2);  graph_T1->SetMarkerColor(2);   graph_T1->SetMarkerStyle(21); 
@@ -1863,6 +1892,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    TGraphErrors* graph_P1 = new TGraphErrors(ArrPredN[1][6],ArrPt[6],ArrPred[1][6],0,ArrErr[1][6]);   graph_P1->SetLineColor(2);  graph_P1->SetMarkerColor(2);   graph_P1->SetMarkerStyle(21);
    TGraphErrors* graph_P2 = new TGraphErrors(ArrPredN[2][6],ArrPt[6],ArrPred[2][6],0,ArrErr[2][6]);   graph_P2->SetLineColor(4);  graph_P2->SetMarkerColor(4);   graph_P2->SetMarkerStyle(22);
    TGraphErrors* graph_P3 = new TGraphErrors(ArrPredN[3][6],ArrPt[6],ArrPred[3][6],0,ArrErr[3][6]);   graph_P3->SetLineColor(8);  graph_P3->SetMarkerColor(8);   graph_P3->SetMarkerStyle(23);
+std::cout<<"DD\n";
 
    TLegend* LEG = NULL;
    LEG = new TLegend(0.50,0.65,0.80,0.90);
@@ -1892,6 +1922,8 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    SaveCanvas(c1,InputPattern,string("Systematics_")+DataName+"_TOF_Value");
    delete c1;
 
+std::cout<<"DD4\n";
+
    c1 = new TCanvas("c1", "c1",600,600);
    TMultiGraph* MGI = new TMultiGraph();
    c1->SetLogy(true);
@@ -1909,6 +1941,8 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1,InputPattern,string("Systematics_")+DataName+"_I_Value");
    delete c1;
+
+std::cout<<"DE\n";
 
    c1 = new TCanvas("c1", "c1",600,600);
    c1->SetLogy(true);
@@ -1928,6 +1962,8 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
    SaveCanvas(c1,InputPattern,string("Systematics_")+DataName+"_P_Value");
    delete c1;
 
+std::cout<<"DF\n";
+
    for(unsigned int p=0;p<3;p++){
       string Title; string Name;
       if(p==0){ Title = "1/#beta selection";  Name="TOF_";  }
@@ -1944,6 +1980,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       graph_s->GetYaxis()->SetTitleOffset(1.40);
       graph_s->GetXaxis()->SetTitle(Title.c_str());
       graph_s->Draw("AC*");
+      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Sigma");
       delete c1;
 
@@ -1957,6 +1994,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       graph_d->GetYaxis()->SetTitleOffset(1.40);
       graph_d->GetXaxis()->SetTitle(Title.c_str());
       graph_d->Draw("AC*");
+      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Dist");
       delete c1;
 
@@ -1970,7 +2008,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       graph_sum->GetYaxis()->SetTitleOffset(1.40);
       graph_sum->GetXaxis()->SetTitle(Title.c_str());
       graph_sum->Draw("AC*");
-      graph_sum->GetYaxis()->SetRangeUser(0,0.5);
+      graph_sum->GetYaxis()->SetRangeUser(0,0.3);
 
       if(p==2){
          TGraph* graph_sum2 = new TGraph(ArrN[p+1],ArrPt[p+1],ArrSum[p+1]);
@@ -1996,6 +2034,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
          LEG->AddEntry(graph_sum,  "I_{as}>0.10 & 1/#beta>1.20", "L");
          LEG->Draw();
       }
+      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Sum");
       delete c1;
 
@@ -2009,7 +2048,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       graph_stat->GetYaxis()->SetTitleOffset(1.40);
       graph_stat->GetXaxis()->SetTitle(Title.c_str());
       graph_stat->Draw("AC*");
-      graph_stat->GetYaxis()->SetRangeUser(0,0.25);
+      graph_stat->GetYaxis()->SetRangeUser(0,0.3);
 
       if(p==2){
          TGraph* graph_stat2 = new TGraph(ArrN[p+1],ArrPt[p+1],ArrStat[p+1]);
@@ -2036,6 +2075,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
 
          LEG->Draw();
       }
+      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Stat");
       delete c1;
 
@@ -2077,6 +2117,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
 
          LEG->Draw();
       }
+      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"StatB");
       delete c1;
 
@@ -2091,7 +2132,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
       graph_syst->GetXaxis()->SetTitle(Title.c_str());
       graph_syst->Draw("AC*");
       graph_syst->GetXaxis()->SetRangeUser(40,100);
-      graph_syst->GetYaxis()->SetRangeUser(0,0.25);
+      graph_syst->GetYaxis()->SetRangeUser(0,0.3);
 
       if(p==2){
          TGraph* graph_syst2 = new TGraph(ArrN[p+1],ArrPt[p+1],ArrSyst[p+1]);
@@ -2117,6 +2158,7 @@ void GetSystematicOnPrediction(string InputPattern, string DataName){
          LEG->AddEntry(graph_syst,  "I_{as}>0.10 & 1/#beta>1.20", "L");
          LEG->Draw();
       }
+      DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,InputPattern,string(string("Systematics_")+DataName+"_")+Name+"Syst");
       delete c1;
     }
@@ -2143,7 +2185,7 @@ void SignalMassPlot(string InputPattern, unsigned int CutIndex){
       Mass->Scale(1.0/Mass->Integral());
 
       char YAxisLegend[1024];
-      sprintf(YAxisLegend,"#tracks / %2.0f GeV/c^{2}",Mass->GetXaxis()->GetBinWidth(1));
+      sprintf(YAxisLegend,"#tracks / %2.0f GeV",Mass->GetXaxis()->GetBinWidth(1));
 
 
       TCanvas* c1 = new TCanvas("c1","c1", 600, 600);
@@ -2151,7 +2193,7 @@ void SignalMassPlot(string InputPattern, unsigned int CutIndex){
 //    Mass->SetAxisRange(Min,Max,"Y");
       Mass->SetTitle("");
 //      Mass->SetStats(kFALSE);
-      Mass->GetXaxis()->SetTitle("m (GeV/c^{2})");
+      Mass->GetXaxis()->SetTitle("m (GeV)");
       Mass->GetYaxis()->SetTitle(YAxisLegend);
       Mass->SetLineWidth(2);
       Mass->SetLineColor(Color[0]);
@@ -2159,6 +2201,7 @@ void SignalMassPlot(string InputPattern, unsigned int CutIndex){
       Mass->SetMarkerStyle(Marker[0]);
       Mass->Draw("HIST E1");
       c1->SetLogy(true);
+      DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
       SaveCanvas(c1,SavePath,samples[s].Name);   
       delete c1;
    }
@@ -2255,14 +2298,14 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
    double Max = 1E4;
 
    char YAxisLegend[1024];
-   sprintf(YAxisLegend,"#tracks / %2.0f GeV/c^{2}",Signal1Mass->GetXaxis()->GetBinWidth(1));
+   sprintf(YAxisLegend,"#tracks / %2.0f GeV",Signal1Mass->GetXaxis()->GetBinWidth(1));
 
    c1 = new TCanvas("c1","c1", 600, 600);
    Signal1Mass->SetAxisRange(0,1250,"X");
    Signal1Mass->SetAxisRange(Min,Max,"Y");
    Signal1Mass->SetTitle("");
    Signal1Mass->SetStats(kFALSE);
-   Signal1Mass->GetXaxis()->SetTitle("m (GeV/c^{2})");
+   Signal1Mass->GetXaxis()->SetTitle("m (GeV)");
    Signal1Mass->GetYaxis()->SetTitle(YAxisLegend);
    Signal1Mass->SetLineWidth(2);
    Signal1Mass->SetLineColor(Color[0]);
@@ -2315,7 +2358,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
    c1->SetLogz(true);
    Data_PtIs->SetTitle("");
    Data_PtIs->SetStats(kFALSE);
-   Data_PtIs->GetXaxis()->SetTitle("p (GeV/c)");
+   Data_PtIs->GetXaxis()->SetTitle("p (GeV)");
    Data_PtIs->GetYaxis()->SetTitle(dEdxS_Legend.c_str());
    Data_PtIs->SetAxisRange(0,1750,"X");
    Data_PtIs->SetMarkerSize (0.2);
@@ -2330,7 +2373,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
    c1->SetLogz(true);
    Data_PIm->SetTitle("");
    Data_PIm->SetStats(kFALSE);
-   Data_PIm->GetXaxis()->SetTitle("p (GeV/c)");
+   Data_PIm->GetXaxis()->SetTitle("p (GeV)");
    Data_PIm->GetYaxis()->SetTitle(dEdxM_Legend.c_str());
    Data_PIm->SetAxisRange(0,1750,"X");
    Data_PIm->SetAxisRange(0,TypeMode==5?3:15,"Y");
@@ -2378,7 +2421,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
    c1->SetLogz(true);
    Data_PtTOF->SetTitle("");
    Data_PtTOF->SetStats(kFALSE);
-   Data_PtTOF->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+   Data_PtTOF->GetXaxis()->SetTitle("p_{T} (GeV)");
    Data_PtTOF->GetYaxis()->SetTitle("1/#beta");
    Data_PtTOF->SetAxisRange(0,1750,"X");
    Data_PtTOF->SetMarkerSize (0.2);
@@ -2392,7 +2435,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
    c1 = new TCanvas("c1","c1", 600, 600);
    Signal3PtIs->SetTitle("");
    Signal3PtIs->SetStats(kFALSE);
-   Signal3PtIs->GetXaxis()->SetTitle("p (GeV/c)");
+   Signal3PtIs->GetXaxis()->SetTitle("p (GeV)");
    Signal3PtIs->GetYaxis()->SetTitle(dEdxS_Legend.c_str());
    Signal3PtIs->SetAxisRange(0,1750,"X");
    Signal3PtIs->Scale(1/Signal3PtIs->Integral());
@@ -2426,7 +2469,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
 //   c1->SetLogz(true);
    Signal1PIm->SetTitle("");
    Signal1PIm->SetStats(kFALSE);
-   Signal1PIm->GetXaxis()->SetTitle("p (GeV/c)");
+   Signal1PIm->GetXaxis()->SetTitle("p (GeV)");
    Signal1PIm->GetYaxis()->SetTitle(dEdxM_Legend.c_str());
    Signal1PIm->SetAxisRange(0,1750,"X");
    Signal1PIm->SetAxisRange(0,TypeMode==5?3:15,"Y");
@@ -2540,7 +2583,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
    c1 = new TCanvas("c1","c1", 600, 600);
    Signal3PtTOF->SetTitle("");
    Signal3PtTOF->SetStats(kFALSE);
-   Signal3PtTOF->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+   Signal3PtTOF->GetXaxis()->SetTitle("p_{T} (GeV)");
    Signal3PtTOF->GetYaxis()->SetTitle("1/#beta");
    Signal3PtTOF->SetAxisRange(0,1750,"X");
    Signal3PtTOF->Scale(1/Signal3PtTOF->Integral());
@@ -2573,7 +2616,7 @@ void Make2DPlot_Core(string InputPattern, unsigned int CutIndex){
 //   c1 = new TCanvas("c1","c1", 600, 600);
 //   Data_PIm_075->SetTitle("");
 //   Data_PIm_075->SetStats(kFALSE);
-//   Data_PIm_075->GetXaxis()->SetTitle("p (GeV/c)");
+//   Data_PIm_075->GetXaxis()->SetTitle("p (GeV)");
 //   Data_PIm_075->GetYaxis()->SetTitle(dEdxM_Legend.c_str());
 //   Data_PIm_075->SetAxisRange(3,10,"Y");
 //   Data_PIm_075->SetAxisRange(0,2000,"X");
@@ -2926,7 +2969,11 @@ void CheckPrediction(string InputPattern, string HistoSuffix, string DataType){
       DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta Cut", "Tracks", 0, 0, 1, 2200000);
     }
     Histos[1]->Draw("E1 same");
-    DrawLegend((TObject**)Histos,legend,LegendTitle,"P", 0.5);
+    char LegendWithCuts[1024];
+    if(ICut>-1 && PtCut>-1) sprintf(LegendWithCuts, "p_{T} > %.0f GeV & I_{as} > %.2f", PtCut, ICut);
+    else if(PtCut>-1)       sprintf(LegendWithCuts, "p_{T} > %.0f GeV", PtCut);
+    else if(ICut>-1)        sprintf(LegendWithCuts, "I_{as} > %.2f", ICut);
+    DrawLegend((TObject**)Histos,legend,LegendWithCuts,"P", 0.93, 0.88, 0.45, 0.045);
     c1->SetLogy(true);
     DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
 
@@ -2959,7 +3006,7 @@ void CheckPrediction(string InputPattern, string HistoSuffix, string DataType){
 
   c1 = new TCanvas("c1","c1,",600,600);
   DrawSuperposedHistos((TH1**)Histos, legend, "E1",  "1/#beta Cut", "Data/MC", 0, 0, 0,0);
-  DrawLegend((TObject**)Histos,legend,LegendTitle,"P");
+  DrawLegend((TObject**)Histos,legend,LegendTitle,"P", 0.93, 0.88, 0.45, 0.045);
   c1->SetLogy(false);
   DrawPreliminary(LegendTitle, SQRTS, IntegratedLuminosityFromE(SQRTS));
   SaveCanvas(c1,SavePath,"Pred_Ratio_" + DataType + HistoSuffix);
@@ -3525,7 +3572,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
 
    string S1 = "DY_13TeV_M400_Q1"; //double Q1=1;
    string S2 = "DY_13TeV_M400_Q2"; //double Q2=1;
-   string S3 = "PPStau_13TeV_M1599"; //double Q3=1;
+   string S3 = "DY_13TeV_M1000_Q1"; //double Q3=1;
 
    string Da = "Data13TeV";
    string outName = "2DPlotsS";
@@ -3566,11 +3613,11 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    c1->SetLogz(true);
    Data_PIm->SetTitle("");
    Data_PIm->SetStats(kFALSE);
-   Data_PIm->GetXaxis()->SetTitle("p (GeV/#font[12]{c})");
+   Data_PIm->GetXaxis()->SetTitle("p (GeV)");
    Data_PIm->GetYaxis()->SetTitle(dEdxM_Legend.c_str());
    Data_PIm->GetYaxis()->SetTitleOffset(1.40);
    Data_PIm->GetZaxis()->SetTitleOffset(1.60);
-   Data_PIm->GetZaxis()->SetTitle("Tracks / [ 2.4 (GeV/#font[12]{c}) #times 0.03 (MeV/cm) ]");
+   Data_PIm->GetZaxis()->SetTitle("Tracks / [ 2.4 (GeV) #times 0.03 (MeV/cm) ]");
    Data_PIm->GetZaxis()->CenterTitle(true);
    printf("%f - %f\n", Data_PIm->GetXaxis()->GetBinWidth(3), Data_PIm->GetYaxis()->GetBinWidth(3) );
    Data_PIm->SetAxisRange(50,1750,"X");
@@ -3587,7 +3634,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
 //   c1->SetLogz(true);
    Signal3PIm->SetTitle("");
    Signal3PIm->SetStats(kFALSE);
-   Signal3PIm->GetXaxis()->SetTitle("p (GeV/#font[12]{c})");
+   Signal3PIm->GetXaxis()->SetTitle("p (GeV)");
    Signal3PIm->GetYaxis()->SetTitle(dEdxM_Legend.c_str());
    Signal3PIm->SetAxisRange(50,1750,"X");
    Signal3PIm->GetYaxis()->SetTitleOffset(1.40);
@@ -3637,13 +3684,13 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
-   leg->AddEntry(Data_PIm,    "Data (#sqrt{s} = 13 TeV)"    ,"F");
+   leg->AddEntry(Data_PIm,    "Data (13 TeV)"               ,"F");
    leg->AddEntry(Signal3PIm,  samples[S3i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal2PIm,  samples[S2i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal1PIm,  samples[S1i].Legend.c_str()   ,"F");
-   leg->AddEntry(box,         "Excluded"                    ,"F");
+   //leg->AddEntry(box,         "Excluded"                    ,"F");
    leg->Draw();
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1, outpath, outName + "_PIm", false);
    delete c1;
    delete leg;
@@ -3665,7 +3712,7 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    //leg->AddEntry(Data_PIm,    "Data (#sqrt{s}=8 TeV)"       ,"F");
 //   leg->AddEntry(box,         "Excluded"                    ,"F");
    leg->Draw();
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1, outpath, outName + "_PImData", false);
    delete c1;
    delete leg;
@@ -3692,13 +3739,13 @@ void Make2DPlot_Special(string InputPattern, string InputPattern2){//, unsigned 
    leg->SetFillColor(0);
    leg->SetFillStyle(0);
    leg->SetBorderSize(0);
-   leg->AddEntry(Data_PIm,    "Data (#sqrt{s} = 13 TeV)"     ,"F");
+   leg->AddEntry(Data_PIm,    "Data (13 TeV)"     ,"F");
    leg->AddEntry(Signal3PIm,  samples[S3i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal2PIm,  samples[S2i].Legend.c_str()   ,"F");
    leg->AddEntry(Signal1PIm,  samples[S1i].Legend.c_str()   ,"F");
 //   leg->AddEntry(box,         "Excluded"                    ,"F");
    leg->Draw();
-   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS), true);
+   DrawPreliminary("", SQRTS, IntegratedLuminosityFromE(SQRTS));
    SaveCanvas(c1, outpath, outName + "_PImSignal", false);
    delete c1;
    delete leg;
@@ -3734,8 +3781,8 @@ void CompareRecoAndGenPt(string InputPattern){
   c1 = new TCanvas("c1","c1", 600, 600);
   Signal1genrecopt->SetTitle("");
   Signal1genrecopt->SetStats(kFALSE);
-  Signal1genrecopt->GetXaxis()->SetTitle("gen p_{T} (GeV/c)");
-  Signal1genrecopt->GetYaxis()->SetTitle("reco p_{T} (GeV/c)");
+  Signal1genrecopt->GetXaxis()->SetTitle("gen p_{T} (GeV)");
+  Signal1genrecopt->GetYaxis()->SetTitle("reco p_{T} (GeV)");
   Signal1genrecopt->GetYaxis()->SetTitleOffset(1.70);
   Signal1genrecopt->SetAxisRange(0,1200,"X");
   Signal1genrecopt->SetAxisRange(0,1200,"Y");

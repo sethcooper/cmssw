@@ -175,6 +175,8 @@ class muonTimingCalculator{
          fclose(pFile);
       }
 
+      std::map<unsigned int, std::unordered_map<unsigned int, float> > getOffsetMapPerRun(){return t0OffsetMapPerRuns;}    
+
       void setRun(unsigned int currentRun){
          std::map<unsigned int, std::unordered_map<unsigned int, float> >::iterator it, itPrev=t0OffsetMapPerRuns.begin();
          for(it=t0OffsetMapPerRuns.begin(); it!=t0OffsetMapPerRuns.end(); it++){

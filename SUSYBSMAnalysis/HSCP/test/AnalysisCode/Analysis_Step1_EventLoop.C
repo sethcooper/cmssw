@@ -104,12 +104,14 @@ edm::LumiReWeighting LumiWeightsMCSyst;
 //reweight::PoissonMeanShifter PShift(0.6);//0.6 for upshift, -0.6 for downshift
 
 TH3F* dEdxTemplates = NULL;
-std::unordered_map<unsigned int,double> TrackerGains;
+dedxGainCorrector trackerCorrector;
 double dEdxSF [2] = {
    1.00000,   // [0]  unchanged
    1.21836    // [1]  Pixel data to SiStrip data
 };
-
+dedxHIPEmulator HIPemulator;
+dedxHIPEmulator HIPemulatorUp ("ratePdfPixel_Up", "ratePdfStrip_Up");
+dedxHIPEmulator HIPemulatorDown ("ratePdfPixel_Down", "ratePdfStrip_Down");
 
 bool useClusterCleaning = true;
 /////////////////////////// CODE PARAMETERS /////////////////////////////
@@ -233,19 +235,36 @@ void Analysis_Step1_EventLoop(string MODE="COMPILE", int TypeMode_=0, string Inp
       return;
    }
 
+std::cout<<"A\n";
+
    //initialize LumiReWeighting
    //FIXME  pileup scenario must be updated based on data/mc
-   if(samples[0].Pileup=="S10"){   for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
-   }else{                          for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
+   if(samples[0].Pileup=="S15"){        for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Startup2015_25ns[i]);
+   }else if(samples[0].Pileup=="NoPU"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(TrueDist2015_f[i]); //Push same as data to garantee no PU reweighting
+   }else if (samples[0].Pileup=="S10"){ for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Summer2012[i]);
+   }else{                               for(int i=0; i<60; ++i) BgLumiMC.push_back(Pileup_MC_Fall11[i]);
    }
-   for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2012_f[i]);
-   for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2012_XSecShiftUp_f[i]);
+std::cout<<"A1\n";
+
+   for(int i=0; i<60; ++i) TrueDist    .push_back(TrueDist2015_f[i]);
+   for(int i=0; i<60; ++i) TrueDistSyst.push_back(TrueDist2015_XSecShiftUp_f[i]);
+std::cout<<"A2\n";
+
    LumiWeightsMC     = edm::LumiReWeighting(BgLumiMC, TrueDist);
+std::cout<<"A3\n";
+
    LumiWeightsMCSyst = edm::LumiReWeighting(BgLumiMC, TrueDistSyst);
+
+std::cout<<"B\n";
+
 
    //create histogram file and run the analyis
    HistoFile = new TFile((string(Buffer)+"/Histos_"+samples[0].Name+"_"+samples[0].FileName+".root").c_str(),"RECREATE");
+std::cout<<"C\n";
+
    Analysis_Step1_EventLoop(Buffer);
+std::cout<<"Z\n";
+
    HistoFile->Write();
    HistoFile->Close();
    return;
@@ -334,28 +353,36 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
    vertexCollHandle.getByLabel(ev,"offlinePrimaryVertices");
    if(!vertexCollHandle.isValid()){printf("Vertex Collection NotFound\n");return false;}
    const std::vector<reco::Vertex>& vertexColl = *vertexCollHandle;
-   if(st){st->BS_NVertex->Fill(vertexColl.size(), Event_Weight);
-     st->BS_NVertex_NoEventWeight->Fill(vertexColl.size());
-   }
    if(vertexColl.size()<1){printf("NO VERTEX\n"); return false;}
 
    int highestPtGoodVertex = -1;
    int goodVerts=0;
+   double dzMin=10000;
    for(unsigned int i=0;i<vertexColl.size();i++){
+     if(vertexColl[i].isFake() || fabs(vertexColl[i].z())>24 || vertexColl[i].position().rho()>2 || vertexColl[i].ndof()<=4)continue; //only consider good vertex
+     goodVerts++;
      if(st) st->BS_dzAll->Fill( track->dz (vertexColl[i].position()),Event_Weight);
      if(st) st->BS_dxyAll->Fill(track->dxy(vertexColl[i].position()),Event_Weight);
-     if(fabs(vertexColl[i].z())<15 && sqrt(vertexColl[i].x()*vertexColl[i].x()+vertexColl[i].y()*vertexColl[i].y())<2 && vertexColl[i].ndof()>3){ goodVerts++;}else{continue;} //only consider good vertex
-       if(highestPtGoodVertex<0)highestPtGoodVertex = i;
-//     if(fabs(track->dz (vertexColl[i].position())) < fabs(dz) ){
+//     if(highestPtGoodVertex<0){
+//        printf("debug Nvert=%3i vertIndex=%3i dxy=%+6.2f dz=%+6.2f\n", (int)vertexColl.size(), (int) i, track->dxy (vertexColl[i].position()), track->dz (vertexColl[i].position()));
+//     }
+
+
+//     if(highestPtGoodVertex<0)highestPtGoodVertex = i;
+     if(fabs(track->dz (vertexColl[i].position())) < fabs(dzMin) ){
+         dzMin = fabs(track->dz (vertexColl[i].position()));
+         highestPtGoodVertex = i;
 //       dz  = track->dz (vertexColl[i].position());
 //       dxy = track->dxy(vertexColl[i].position());
-//     }
+     }
    }if(highestPtGoodVertex<0)highestPtGoodVertex=0;
-   double dz  = track->dz (vertexColl[0].position());
-   double dxy = track->dxy(vertexColl[0].position());
 
-   
-
+   if(st){st->BS_NVertex->Fill(vertexColl.size(), Event_Weight);
+     st->BS_NVertex_NoEventWeight->Fill(vertexColl.size());
+   }
+   double dz  = track->dz (vertexColl[highestPtGoodVertex].position());
+   double dxy = track->dxy(vertexColl[highestPtGoodVertex].position());
+ 
    bool PUA = (vertexColl.size()<15);
    bool PUB = (vertexColl.size()>=15);
 
@@ -958,13 +985,14 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
    //Initialize histo common to all samples
    InitHistos(NULL);
-   vector <unsigned int> ChangeGains = get_ChangeGains();
-   unsigned int RunIndex = 1;
 
    for(unsigned int s=0;s<samples.size();s++){
       bool isData   = (samples[s].Type==0);
       bool isMC     = (samples[s].Type==1);
       bool isSignal = (samples[s].Type>=2);
+
+std::cout<<"D\n";
+
 
       if(isData){ 
          dEdxSF [0] = 1.00000;
@@ -976,16 +1004,13 @@ void Analysis_Step1_EventLoop(char* SavePath)
          dEdxTemplates = loadDeDxTemplate("../../data/MC13TeV_Deco_SiStripDeDxMip_3D_Rcd_v2_CCwCI.root", true);
       }
 
+std::cout<<"E\n";
 
-      if(isData){
-         char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
-         char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
-         string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
-         TFile *gainsFile = new TFile ("../../data/Data13TeVGains_v2.root");
-         LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
-         gainsFile->Close();
-      }else{  //FIXME check gain for MC
+      if(isData){    trackerCorrector.LoadDeDxCalibration("../../data/Data13TeVGains_v2.root"); 
+      }else{ trackerCorrector.TrackerGains = NULL; //FIXME check gain for MC
       }
+
+std::cout<<"F\n";
 
       //check that the plot container exist for this sample, otherwise create it
       if(plotsMap.find(samples[s].Name)==plotsMap.end()){plotsMap[samples[s].Name] = stPlots();}
@@ -1015,18 +1040,22 @@ void Analysis_Step1_EventLoop(char* SavePath)
       }
 
       //needed for bookeeping
-      bool* HSCPTk          = new bool[CutPt.size()];
-      bool* HSCPTk_SystP    = new bool[CutPt.size()];
-      bool* HSCPTk_SystI    = new bool[CutPt.size()];
-      bool* HSCPTk_SystT    = new bool[CutPt.size()];
-      bool* HSCPTk_SystM    = new bool[CutPt.size()];
-      bool* HSCPTk_SystPU   = new bool[CutPt.size()];
-      double* MaxMass       = new double[CutPt.size()];
-      double* MaxMass_SystP = new double[CutPt.size()];
-      double* MaxMass_SystI = new double[CutPt.size()];
-      double* MaxMass_SystT = new double[CutPt.size()];
-      double* MaxMass_SystM = new double[CutPt.size()];
-      double* MaxMass_SystPU= new double[CutPt.size()];
+      bool* HSCPTk              = new bool[CutPt.size()];
+      bool* HSCPTk_SystP        = new bool[CutPt.size()];
+      bool* HSCPTk_SystI        = new bool[CutPt.size()];
+      bool* HSCPTk_SystT        = new bool[CutPt.size()];
+      bool* HSCPTk_SystM        = new bool[CutPt.size()];
+      bool* HSCPTk_SystPU       = new bool[CutPt.size()];
+      bool* HSCPTk_SystHUp      = new bool[CutPt.size()];
+      bool* HSCPTk_SystHDown    = new bool[CutPt.size()];
+      double* MaxMass           = new double[CutPt.size()];
+      double* MaxMass_SystP     = new double[CutPt.size()];
+      double* MaxMass_SystI     = new double[CutPt.size()];
+      double* MaxMass_SystT     = new double[CutPt.size()];
+      double* MaxMass_SystM     = new double[CutPt.size()];
+      double* MaxMass_SystPU    = new double[CutPt.size()];
+      double* MaxMass_SystHUp   = new double[CutPt.size()];
+      double* MaxMass_SystHDown = new double[CutPt.size()];
 
       moduleGeom::loadGeometry("../../data/CMS_GeomTree.root");
       muonTimingCalculator tofCalculator;
@@ -1065,6 +1094,8 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
 	 if(SampleWeight==0) continue; //If sample weight 0 don't run, happens Int Lumi before change = 0
 
+std::cout<<"G\n";
+
          //Loop on the events
          printf("Progressing Bar                   :0%%       20%%       40%%       60%%       80%%       100%%\n");
          printf("Building Mass for %10s (%1i/%1i) :",samples[s].Name.c_str(),period+1,(samples[s].Type>=2?RunningPeriods:1));
@@ -1076,22 +1107,11 @@ void Analysis_Step1_EventLoop(char* SavePath)
             if(ientry%TreeStep==0){printf(".");fflush(stdout);}
             if(checkDuplicates && duplicateChecker.isDuplicate(ev.eventAuxiliary().run(), ev.eventAuxiliary().event()))continue;
 
-            //if run changes, update conditions
+            //if run change, update conditions
             if(CurrentRun != ev.eventAuxiliary().run()){
                CurrentRun = ev.eventAuxiliary().run();
                tofCalculator.setRun(CurrentRun);
-               if (CurrentRun > ChangeGains[RunIndex]){
-                  do{
-                     RunIndex++;
-                     if (ChangeGains.size() < RunIndex){ cerr << "RunIndex out of bounds!" << endl; exit(EXIT_FAILURE);}
-                  } while (CurrentRun > ChangeGains[RunIndex]);
-                  char FirstRun [20]; sprintf (FirstRun, "%u", ChangeGains[RunIndex-1]);
-                  char EndRun   [20]; sprintf (EndRun,   "%u", ChangeGains[RunIndex]);
-                  string GainsDir = string("Gains_")+FirstRun+string("_to_")+EndRun;
-                  TFile *gainsFile = new TFile ("../../data/Data13TeVGains_v2.root");
-                  LoadDeDxCalibration(TrackerGains, GainsDir, gainsFile); 
-                  gainsFile->Close();
-               }
+               trackerCorrector.setRun(CurrentRun);
             }
 
 
@@ -1192,12 +1212,23 @@ void Analysis_Step1_EventLoop(char* SavePath)
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystT  [CutIndex] = false;   }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystM  [CutIndex] = false;   }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystPU [CutIndex] = false; }
+            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystHUp[CutIndex] = false; }
+            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  HSCPTk_SystHDown[CutIndex] = false; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass       [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystP [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystI [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystT [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystM [CutIndex] = -1; }
             for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystPU[CutIndex] = -1; }
+            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystHUp [CutIndex] = -1; }
+            for(unsigned int CutIndex=0;CutIndex<CutPt.size();CutIndex++){  MaxMass_SystHDown[CutIndex] = -1; }
+
+            HIPemulator.setEventRate(); //take it from a pdf
+            HIPemulatorUp.setEventRate(HIPemulator.getEventRatePixel()*1.25, HIPemulator.getEventRateStrip()*1.80);  // deltaPixel = 3.653981e+02, basePixel = 1.332625e+03; deltaStrip = 4.662832e+02, baseStrip = 5.958308e+02, from Run257805
+            HIPemulatorDown.setEventRate(HIPemulator.getEventRatePixel()*0.75, HIPemulator.getEventRateStrip()*0.20); 
+
+//           if (HIPemulator.getEventRatePixel()>0 && HIPemulator.getEventRateStrip()>0)
+//              fprintf(stderr, "HIPs: %lf\t%lf\t%lf\t%lf\t%lf\t%lf\n", HIPemulator.getEventRatePixel(), HIPemulatorUp.getEventRatePixel(), HIPemulatorDown.getEventRatePixel(), HIPemulator.getEventRateStrip(), HIPemulatorUp.getEventRateStrip(), HIPemulatorDown.getEventRateStrip());
 
             //loop on HSCP candidates
             for(unsigned int c=0;c<hscpColl.size();c++){
@@ -1252,19 +1283,23 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, TrackerGains.size()>0?&TrackerGains:NULL, true, true, 99, false, 1);
-               DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
-               DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
+               DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, true, NULL);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, true, (!isData)?&HIPemulator:NULL);
+               DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, true, (!isData)?&HIPemulatorUp:NULL);
+               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, true, (!isData)?&HIPemulatorDown:NULL);
+               DeDxData* dedxSObj  = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
+               DeDxData* dedxMObj  = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
+               DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements()>0?&dedxMUpObjTmp:NULL;
+               DeDxData* dedxMDownObj = dedxMDownObjTmp.numberOfMeasurements()>0?&dedxMDownObjTmp:NULL;
                if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
 
                //compute systematic uncertainties on signal
                if(isSignal){
                   //FIXME to be measured on 2015 data, currently assume 2012
                   bool   PRescale = true;
-                  double IRescale = 0.05; // added to the Ias value
-                  double MRescale = 1.03;
-		  double TRescale = -0.005; // added to the 1/beta value
+                  double IRescale =-0.05; // added to the Ias value
+                  double MRescale = 0.95;
+		  double TRescale =-0.015; //-0.005 (used in 2012); // added to the 1/beta value
 		  
 		  double genpT = -1.0;
 		  for(unsigned int g=0;g<genColl.size();g++) {
@@ -1303,11 +1338,13 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                   // compute systematic due to momentum scale
                   if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
+                     double RescalingFactor = RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())/track->pt();
+
                      if(TypeMode==5 && isSemiCosmicSB)continue;
- 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p()*PRescale,dedxMObj->dEdx(),!isData);
-		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p()*PRescale,tof->inverseBeta());
+ 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p()*RescalingFactor,dedxMObj->dEdx(),!isData);
+		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p()*RescalingFactor,tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*RescalingFactor, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1330,7 +1367,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1347,13 +1384,16 @@ void Analysis_Step1_EventLoop(char* SavePath)
                      }
                   }
 
+
+
+
                   // compute systematic due to Mass shift
                   if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){
                      if(TypeMode==5 && isSemiCosmicSB)continue;
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx()*MRescale,!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1376,7 +1416,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
  		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),(tof->inverseBeta()+TRescale));
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/(tof->inverseBeta()+TRescale)))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1399,7 +1439,7 @@ void Analysis_Step1_EventLoop(char* SavePath)
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
 		     double MassComb = -1;
-		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p()*PRescale, (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
+		     if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5);
 		     else if(dedxMObj) MassComb = Mass;
 		     if(tof) MassComb=MassTOF;
 
@@ -1460,6 +1500,20 @@ void Analysis_Step1_EventLoop(char* SavePath)
 	       if(tof && dedxMObj)MassComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5 ) ;
 	       if(dedxMObj) MassComb = Mass;
 	       if(tof)MassComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
+
+               double MassUp    = -1; if(dedxMUpObj) MassUp=GetMass(track->p(),dedxMUpObj->dEdx(),!isData);
+               double MassUpComb = -1;
+               if(tof && dedxMUpObj)MassUpComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMUpObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5 ) ;
+               if(dedxMUpObj) MassUpComb = MassUp;
+               if(tof)MassUpComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
+               double MassDown    = -1; if(dedxMDownObj) MassDown=GetMass(track->p(),dedxMDownObj->dEdx(),!isData);
+               double MassDownComb = -1;
+               if(tof && dedxMDownObj)MassDownComb=GetMassFromBeta(track->p(), (GetIBeta(dedxMDownObj->dEdx(),!isData) + (1/tof->inverseBeta()))*0.5 ) ;
+               if(dedxMDownObj) MassDownComb = MassDown;
+               if(tof)MassDownComb=GetMassFromBeta(track->p(),(1/tof->inverseBeta()));
+
                bool PassNonTrivialSelection=false;
 
                //loop on all possible selection (one of them, the optimal one, will be used later)
@@ -1470,7 +1524,12 @@ void Analysis_Step1_EventLoop(char* SavePath)
 
                   if(CutIndex!=0)PassNonTrivialSelection=true;
                   HSCPTk[CutIndex] = true;
+                  HSCPTk_SystHUp[CutIndex] = true;
+                  HSCPTk_SystHDown[CutIndex] = true;
+
                   if(Mass>MaxMass[CutIndex]) MaxMass[CutIndex]=Mass;
+                  if(MassUp>MaxMass_SystHUp[CutIndex]) MaxMass_SystHUp[CutIndex]=Mass;
+                  if(MassDown>MaxMass_SystHDown[CutIndex]) MaxMass_SystHDown[CutIndex]=Mass;
 
                   //Fill Mass Histograms
                   if(isMC)MCTrPlots->Mass->Fill(CutIndex, Mass,Event_Weight);
@@ -1481,6 +1540,19 @@ void Analysis_Step1_EventLoop(char* SavePath)
                   }
                   if(isMC)MCTrPlots->MassComb->Fill(CutIndex, MassComb, Event_Weight);
                   SamplePlots      ->MassComb->Fill(CutIndex, MassComb, Event_Weight);
+
+
+                  //Fill Mass Histograms for different Ih syst
+
+                           SamplePlots->Mass_SystHUp  ->Fill(CutIndex, MassUp,Event_Weight);
+                           SamplePlots->Mass_SystHDown->Fill(CutIndex, MassDown,Event_Weight);
+                           if(tof){
+                              SamplePlots->MassTOF_SystH ->Fill(CutIndex, MassTOF , Event_Weight);
+                           }
+                           SamplePlots->MassComb_SystHUp  ->Fill(CutIndex, MassUpComb, Event_Weight);
+                           SamplePlots->MassComb_SystHDown->Fill(CutIndex, MassDownComb, Event_Weight);
+ 
+
                } //end of Cut loop
                if(PassNonTrivialSelection) stPlots_FillTree(SamplePlots, ev.eventAuxiliary().run(),ev.eventAuxiliary().event(), c, track->pt(), dedxSObj ? dedxSObj->dEdx() : -1, tof ? tof->inverseBeta() : -1, Mass, TreeDZ, TreeDXY, OpenAngle, track->eta(), track->phi(), -1);
             }// end of Track Loop
@@ -1515,6 +1587,15 @@ void Analysis_Step1_EventLoop(char* SavePath)
                  SamplePlots->HSCPE_SystPU       ->Fill(CutIndex,Event_Weight*PUSystFactor);
                  SamplePlots->MaxEventMass_SystPU->Fill(CutIndex,MaxMass_SystPU[CutIndex], Event_Weight*PUSystFactor);
               }
+              if(HSCPTk_SystHUp[CutIndex]){
+                 SamplePlots->HSCPE_SystHUp     ->Fill(CutIndex,Event_Weight);
+                 SamplePlots->MaxEventMass_SystHUp   ->Fill(CutIndex,MaxMass_SystHUp   [CutIndex], Event_Weight);
+              }
+              if(HSCPTk_SystHDown[CutIndex]){
+                 SamplePlots->HSCPE_SystHDown   ->Fill(CutIndex,Event_Weight);
+                 SamplePlots->MaxEventMass_SystHDown ->Fill(CutIndex,MaxMass_SystHDown [CutIndex], Event_Weight);
+              }
+
            }
          }printf("\n");// end of Event Loop
       }//end of period loop
@@ -1524,12 +1605,16 @@ void Analysis_Step1_EventLoop(char* SavePath)
       delete [] HSCPTk_SystT;
       delete [] HSCPTk_SystM;
       delete [] HSCPTk_SystPU;
+      delete [] HSCPTk_SystHUp;
+      delete [] HSCPTk_SystHDown;
       delete [] MaxMass;
       delete [] MaxMass_SystP;
       delete [] MaxMass_SystI;
       delete [] MaxMass_SystT;
       delete [] MaxMass_SystM;
       delete [] MaxMass_SystPU;
+      delete [] MaxMass_SystHUp;
+      delete [] MaxMass_SystHDown;
 
       stPlots_Clear(SamplePlots, true);
       if(isMC)stPlots_Clear(MCTrPlots, true);
