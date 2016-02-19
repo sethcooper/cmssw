@@ -1001,7 +1001,7 @@ bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv, uint8_t
    if(crosstalkInv==1)ampls = CrossTalkInv(ampls,0.10,0.04, true);
       
 
-  // ----------------  Compute Number of Maxima   --------------------------
+  // ----------------  COMPTAGE DU NOMBRE DE MAXIMA   --------------------------
   //----------------------------------------------------------------------------
          Int_t NofMax=0; Int_t recur255=1; Int_t recur254=1;
          bool MaxOnStart=false;bool MaxInMiddle=false, MaxOnEnd =false;
