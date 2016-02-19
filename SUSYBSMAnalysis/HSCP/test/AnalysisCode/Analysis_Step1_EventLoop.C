@@ -1283,10 +1283,10 @@ std::cout<<"G\n";
 
                //Compute dE/dx on the fly
                //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-               DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, true, NULL);
-               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, true, (!isData)?&HIPemulator:NULL);
-               DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, true, (!isData)?&HIPemulatorUp:NULL);
-               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, true, (!isData)?&HIPemulatorDown:NULL);
+               DeDxData dedxSObjTmp  = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.00, NULL);
+               DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulator:NULL);
+               DeDxData dedxMUpObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulatorUp:NULL);
+               DeDxData dedxMDownObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.15, (!isData)?&HIPemulatorDown:NULL);
                DeDxData* dedxSObj  = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
                DeDxData* dedxMObj  = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
                DeDxData* dedxMUpObj = dedxMUpObjTmp.numberOfMeasurements()>0?&dedxMUpObjTmp:NULL;
