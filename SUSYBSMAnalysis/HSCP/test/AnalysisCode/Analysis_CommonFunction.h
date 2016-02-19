@@ -562,7 +562,7 @@ class dedxHIPEmulator{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool trimPixel=false, dedxHIPEmulator* hipEmulator=NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool dropPixel=false, dedxHIPEmulator* hipEmulator=NULL);
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
@@ -765,7 +765,7 @@ HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, 
 
 
 
-DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, bool trimPixel, dedxHIPEmulator* hipEmulator){
+DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto, bool usePixel, bool useClusterCleaning, bool reverseProb, bool useTruncated, std::unordered_map<unsigned int,double>* TrackerGains, bool useStrip, bool mustBeInside, size_t MaxStripNOM, bool correctFEDSat, int crossTalkInvAlgo, double dropLowerDeDxValue, bool dropPixel, dedxHIPEmulator* hipEmulator){
      if(!dedxHits) return DeDxData(-1, -1, -1);
 //     if(templateHisto)usePixel=false; //never use pixel for discriminator
 
@@ -851,7 +851,7 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
      }
 
      if(dropLowerDeDxValue>0){
-         if (!trimPixel){
+         if (!dropPixel){
             vect.clear();
             for(unsigned int p=0;p<vectPixel.size();p++){vect.push_back(vectPixel[p]);}
             std::sort(vectStrip.begin(), vectStrip.end(), std::greater<double>() );
