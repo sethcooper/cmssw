@@ -562,7 +562,7 @@ class dedxHIPEmulator{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, bool dedxHIPEmulator* hipEmulator=NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL);
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
