@@ -2,6 +2,7 @@
 
 #include "Analysis_Global.h"
 #include "Analysis_PlotFunction.h"
+#include "TVector3.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 // general purpose code 
@@ -313,10 +314,12 @@ void FindRangeBetweenTwoGraphs(TGraph* obs, TGraph* th, double Min, double Max, 
 // Genertic code related to samples processing in FWLITE --> functions below will be loaded only if FWLITE compiler variable is defined
 
 #ifdef FWLITE
+bool isGoodGenHSCP(const reco::GenParticle& gen, bool onlyCharged=false);   
 double DistToHSCP        (const susybsm::HSCParticle& hscp, const std::vector<reco::GenParticle>& genColl, int& IndexOfClosest);
 int    HowManyChargedHSCP(const std::vector<reco::GenParticle>& genColl);
 double FastestHSCP       (const fwlite::ChainEvent& ev);
 void   GetGenHSCPBeta    (const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged=true);
+void   GetGenHSCPDecayLength (const std::vector<reco::GenParticle>& genColl, double& length1, double& length2, bool onlyCharged);    
 
 // compute the distance between a "reconstructed" HSCP candidate and the closest generated HSCP
 double DistToHSCP (const susybsm::HSCParticle& hscp, const std::vector<reco::GenParticle>& genColl, int& IndexOfClosest){
@@ -341,16 +344,23 @@ double DistToHSCP (const susybsm::HSCParticle& hscp, const std::vector<reco::Gen
    return RMin;
 }
 
+//selection of gen HSCP
+bool isGoodGenHSCP(const reco::GenParticle& gen, bool onlyCharged){
+   if(gen.status()!=1)return false;
+   if(gen.pt()<5)return false;
+   int AbsPdg=abs(gen.pdgId());
+   if(AbsPdg<1000000 && AbsPdg!=17)return false;
+   if(onlyCharged && (AbsPdg==1000993 || AbsPdg==1009313 || AbsPdg==1009113 || AbsPdg==1009223 || AbsPdg==1009333 || AbsPdg==1092114 || AbsPdg==1093214 || AbsPdg==1093324))return false; //Skip neutral gluino RHadrons
+   if(onlyCharged && (AbsPdg==1000622 || AbsPdg==1000642 || AbsPdg==1006113 || AbsPdg==1006311 || AbsPdg==1006313 || AbsPdg==1006333))return false;  //skip neutral stop RHadrons
+   if(onlyCharged && AbsPdg==1000022)return false; //skip neutralino
+   return true;
+}
+
 // count the number of charged generated HSCP in the event --> this is needed to reweights the events for different gluino ball fraction starting from f=10% samples
 int HowManyChargedHSCP (const std::vector<reco::GenParticle>& genColl){
    int toReturn = 0;
    for(unsigned int g=0;g<genColl.size();g++){
-      if(genColl[g].pt()<5)continue;
-      if(genColl[g].status()!=1)continue;
-      int AbsPdg=abs(genColl[g].pdgId());
-      if(AbsPdg<1000000 && AbsPdg!=17)continue;
-      if(AbsPdg==1000993 || AbsPdg==1009313 || AbsPdg==1009113 || AbsPdg==1009223 || AbsPdg==1009333 || AbsPdg==1092114 || AbsPdg==1093214 || AbsPdg==1093324)continue; //Skip neutral gluino RHadrons
-      if(AbsPdg==1000622 || AbsPdg==1000642 || AbsPdg==1006113 || AbsPdg==1006311 || AbsPdg==1006313 || AbsPdg==1006333)continue;  //skip neutral stop RHadrons
+      if(!isGoodGenHSCP(genColl[g]))continue;
       toReturn++;
    }
    return toReturn;
@@ -360,15 +370,65 @@ int HowManyChargedHSCP (const std::vector<reco::GenParticle>& genColl){
 void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged){
    beta1=-1; beta2=-1;
    for(unsigned int g=0;g<genColl.size();g++){
-      if(genColl[g].pt()<5)continue;
-      if(genColl[g].status()!=1)continue;
-      int AbsPdg=abs(genColl[g].pdgId());
-      if(AbsPdg<1000000 && AbsPdg!=17)continue;
-      if(onlyCharged && (AbsPdg==1000993 || AbsPdg==1009313 || AbsPdg==1009113 || AbsPdg==1009223 || AbsPdg==1009333 || AbsPdg==1092114 || AbsPdg==1093214 || AbsPdg==1093324))continue; //Skip neutral gluino RHadrons
-      if(onlyCharged && (AbsPdg==1000622 || AbsPdg==1000642 || AbsPdg==1006113 || AbsPdg==1006311 || AbsPdg==1006313 || AbsPdg==1006333))continue;  //skip neutral stop RHadrons
+      if(!isGoodGenHSCP(genColl[g], onlyCharged))continue;
       if(beta1<0){beta1=genColl[g].p()/genColl[g].energy();}else if(beta2<0){beta2=genColl[g].p()/genColl[g].energy();return;}
    }
 }
+
+
+// returns the generated decay length of the two firsts HSCP in the events
+ void  GetGenHSCPDecayLength (const std::vector<reco::GenParticle>& genColl, double& length1, double& length2, bool onlyCharged){
+   length1=-1; length2=-1;
+   for(unsigned int g=0;g<genColl.size();g++){
+      if(!isGoodGenHSCP(genColl[g], onlyCharged))continue;
+
+      //code below copied from disapearing track source code.  FIXME we should make sure that the logic is ok.
+      //https://raw.githubusercontent.com/OSU-CMS/DisappTrks/master/SignalMC/plugins/DecayAnalyzer.cc  
+      const reco::Candidate* mother   = &genColl[g];
+      const reco::Candidate* daughter = &genColl[g];
+
+      // Descend the decay chain until no daughters have the same PDG ID as mcParticle.
+      while (true) {
+        bool foundDauSamePdgId = false;
+        for (unsigned int i=0; i<daughter->numberOfDaughters(); i++) {
+          if (daughter->daughter(i)->pdgId() == genColl[g].pdgId()) {
+            foundDauSamePdgId = true;
+            mother = daughter;
+            daughter = daughter->daughter(i);
+            break;
+          }
+        }
+        if (!foundDauSamePdgId) break;
+      }
+
+      // Now daughter has no daughters with the same PDG ID as mcParticle.
+      // Next choose the daughter with the outermost production vertex, in case there are multiple vertices
+      // (e.g., an electron delta ray can produce a vertex before the decay vertex)
+       double radiusLastVtx = -99;
+       int idxDauLastVtx = -99;
+       for(unsigned int i=0; i<daughter->numberOfDaughters(); i++) {
+         double radius = daughter->daughter(i)->vertex().R();
+         if (radius > radiusLastVtx) {
+           radiusLastVtx = radius;
+           idxDauLastVtx = i;
+         }
+       }
+       if(idxDauLastVtx<0)continue;
+ 
+       mother = daughter;
+       daughter = daughter->daughter(idxDauLastVtx);
+
+       TVector3 source (genColl[g].vx (), genColl[g].vy (), genColl[g].vz ());
+       TVector3 decay  (daughter->vx (), daughter->vy (), daughter->vz ()); 
+       double ctau = (decay - source).Mag () / (genColl[g].p4 ().Beta () * genColl[g].p4 ().Gamma ());
+
+      if(length1<0){length1=ctau;}else if(length2<0){length2=ctau;return;}
+   }
+   if(length1<0){length1=9999;}
+   if(length2<0){length2=9999;}
+}
+
+ 
 
 double FastestHSCP(const fwlite::ChainEvent& ev){
    //get the collection of generated Particles
@@ -376,18 +436,14 @@ double FastestHSCP(const fwlite::ChainEvent& ev){
    genCollHandle.getByLabel(ev, "genParticlesSkimmed");
    if(!genCollHandle.isValid()){
       genCollHandle.getByLabel(ev, "genParticles");
-      if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");return -1;}
+      if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound (from FastestHSCP)\n");return -1;}
    }
 
    std::vector<reco::GenParticle> genColl = *genCollHandle;
 
    double MaxBeta=-1;
    for(unsigned int g=0;g<genColl.size();g++){
-      if(genColl[g].pt()<5)continue;
-      if(genColl[g].status()!=1)continue;
-      int AbsPdg=abs(genColl[g].pdgId());
-      if(AbsPdg<1000000 && AbsPdg!=17)continue;
-
+      if(!isGoodGenHSCP(genColl[g]))continue;
       double beta=genColl[g].p()/genColl[g].energy();
       if(MaxBeta<beta)MaxBeta=beta;
    }
@@ -407,7 +463,6 @@ bool passTriggerPatterns(edm::TriggerResultsByName& tr, std::string pattern){
   return false;
 }
 
-#include "TVector3.h"
 double deltaROpositeTrack(const susybsm::HSCParticleCollection& hscpColl, const susybsm::HSCParticle& hscp){
    reco::TrackRef track1=hscp.trackRef();
 
@@ -561,11 +616,10 @@ reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
-void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId);
+void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId, bool crossTalkInvAlgo);
 void printClusterCleaningMessage (uint8_t exitCode);
 std::vector<int> convert(const vector<unsigned char>& input);
 std::vector<int> CrossTalkInv(const std::vector<int>&  Q, const float x1=0.10, const float x2=0.04, bool way=true,float threshold=20,float thresholdSat=25);
-
 
 
 class dedxGainCorrector{
@@ -775,7 +829,7 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
      for(unsigned int h=0;h<dedxHits->size();h++){
         DetId detid(dedxHits->detId(h));  
         if(!usePixel && detid.subdetId()<3)continue; // skip pixels
-        if(!useStrip && detid.subdetId()>=3)continue; // skip strips
+        if(!useStrip && detid.subdetId()>=3)continue; // skip strips        
         if(useClusterCleaning && !clusterCleaning(dedxHits->stripCluster(h), crossTalkInvAlgo))continue;
          //printStripCluster(stdout, dedxHits->stripCluster(h), dedxHits->detId(h));
 
@@ -901,14 +955,14 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
 
 
 
-void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId)
+void printStripCluster(FILE* pFile, const SiStripCluster*   cluster, const DetId& DetId, bool crossTalkInvAlgo)
 {
         if(!cluster)return;
         const vector<unsigned char>&  ampls       = cluster->amplitudes();
 
         int Charge=0;
         for(unsigned int i=0;i<ampls.size();i++){Charge+=ampls[i];}
-        char clusterCleaningOutput = clusterCleaning(cluster) ? 'V' : 'X';
+        char clusterCleaningOutput = clusterCleaning(cluster, crossTalkInvAlgo) ? 'V' : 'X';
 
         fprintf(pFile,"DetId = %7i --> %4i = %3i ",DetId.rawId(),Charge,ampls[0]);
         for(unsigned int i=1;i<ampls.size();i++){

@@ -97,6 +97,7 @@ process.Out = cms.OutputModule("PoolOutputModule",
          "keep GenRunInfoProduct_*_*_*",
          "keep GenEventInfoProduct_generator_*_*",
          "keep *_genParticlesSkimmed_*_*",
+         "keep *_genParticlePlusGeant_*_*",
          "keep *_offlinePrimaryVertices_*_*",
          "keep recoTracks_generalTracks_*_*",
          "keep recoTracks_standAloneMuons_*_*",
@@ -133,6 +134,9 @@ if(isData and len(LUMITOPROCESS)>0):
 if(isBckg or isData):
    process.Out.SelectEvents.SelectEvents =  cms.vstring('HSCPTuplePath')
    process.Out.outputCommands.extend(["drop triggerTriggerEvent_hltTriggerSummaryAOD_*_*"])
+else:
+   process.Out.SelectEvents = cms.untracked.PSet()
+
 
 ########################################################################
 

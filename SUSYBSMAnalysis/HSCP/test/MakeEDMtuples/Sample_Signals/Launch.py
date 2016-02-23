@@ -14,7 +14,7 @@ DATASETMASK = '/*HSCP*/RunIISpring15DR74-Asympt25ns*/GEN-SIM-RECO'
 ISLOCAL     = False
 
 def initProxy():
-   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600 and  int(commands.getstatusoutput('(export X509_USER_PROXY=~/x509_user_proxy/x509_proxy;voms-proxy-init --noregen;voms-proxy-info -all) | grep timeleft | tail -n 1')[1].split(':')[2])<8 )):
+#   if(not os.path.isfile(os.path.expanduser('~/x509_user_proxy/x509_proxy')) or ((time.time() - os.path.getmtime(os.path.expanduser('~/x509_user_proxy/x509_proxy')))>600 and  int(commands.getstatusoutput('(export X509_USER_PROXY=~/x509_user_proxy/x509_proxy;voms-proxy-init --noregen;voms-proxy-info -all) | grep timeleft | tail -n 1')[1].split(':')[2])<8 )):
       print "You are going to run on a sample over grid using either CRAB or the AAA protocol, it is therefore needed to initialize your grid certificate"
       os.system('mkdir -p ~/x509_user_proxy; voms-proxy-init --voms cms -valid 192:00 --out ~/x509_user_proxy/x509_proxy')#all must be done in the same command to avoid environement problems.  Note that the first sourcing is only needed in Louvain
 
@@ -63,7 +63,7 @@ def filesFromDataset(dataset):
 
 #get the list of sample to process from das and datasetmask query
 print("Initialize your grid proxy in case you need to access remote samples\n")
-initProxy()
+#initProxy()
 
 command_out = commands.getstatusoutput('das_client.py --limit=0 --query "dataset='+DATASETMASK+'"')
 datasetList = command_out[1].split()

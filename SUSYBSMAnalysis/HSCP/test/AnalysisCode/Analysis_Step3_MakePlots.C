@@ -66,13 +66,14 @@ void Analysis_Step3_MakePlots()
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
-/*   CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
-   CutFlowPlot(InputPattern, 0);
+/*   CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
+*/   
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
-   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
+/*   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
 */
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
 
@@ -1639,7 +1640,7 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
     stPlots* SignPlots = new stPlots[samples.size()];  
     for(unsigned int s=0;s<samples.size();s++){
        if(samples[s].Type!=2)continue;
-       if (samples[s].Name!="Gluino_13TeV_M1000_f10" && samples[s].Name!="Gluino_13TeV_M1400_f10" && samples[s].Name!="Stop_13TeV_M1000" && samples[s].Name!="GMStau_13TeV_M494") continue;
+       if (samples[s].Name!="Gluino_13TeV_M1000_f10" && samples[s].Name!="Gluino_13TeV_M1400_f10" && samples[s].Name!="Stop_13TeV_M1000" && samples[s].Name!="GMStau_13TeV_M494" &&  samples[s].Name!="AMSB_13TeV_500_10cm" && samples[s].Name!="AMSB_13TeV_500_100cm" && samples[s].Name!="AMSB_13TeV_500_1000cm") continue;
 
        //Note that loading the plots for ALL signal samples is too much, and it's likely that the code either stops or is killed without error message
        if(!stPlots_InitFromFile(InputFile, SignPlots[s],samples[s].Name)){printf("Missing sample %s\n",samples[s].Name.c_str());continue;}
@@ -1650,6 +1651,8 @@ void SelectionPlot(string InputPattern, unsigned int CutIndex, unsigned int CutI
     SQRTS=13; stPlots_Draw(Data13TeVPlots, InputPattern + "/Selection_Data13TeV", LegendTitle, CutIndex);
     SQRTS=13; stPlots_Draw(MCTr13TeVPlots, InputPattern + "/Selection_MCTr_13TeV", LegendTitle, CutIndex);
     SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_Comp_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("Gluino_13TeV_M1000_f10",samples)], &SignPlots[JobIdToIndex("Gluino_13TeV_M1400_f10",samples)], &SignPlots[JobIdToIndex("Stop_13TeV_M1000",samples)], &SignPlots[JobIdToIndex("GMStau_13TeV_M494",samples)]);
+    SQRTS=13; stPlots_DrawComparison(InputPattern + "/Selection_CompAMSB_13TeV", LegendTitle, CutIndex, CutIndexTight, &Data13TeVPlots, &MCTr13TeVPlots,&SignPlots[JobIdToIndex("AMSB_13TeV_500_10cm",samples)], &SignPlots[JobIdToIndex("AMSB_13TeV_500_100cm",samples)], &SignPlots[JobIdToIndex("AMSB_13TeV_500_1000cm",samples)]);
+
 
 //    if(TypeMode!=3) {SQRTS=7; stPlots_Draw(Data7TeVPlots, InputPattern + "/Selection_Data7TeV", LegendTitle, CutIndex);}
 //    SQRTS=8; stPlots_Draw(MCTr8TeVPlots  , InputPattern + "/Selection_MCTr_8TeV"  , LegendTitle, CutIndex);

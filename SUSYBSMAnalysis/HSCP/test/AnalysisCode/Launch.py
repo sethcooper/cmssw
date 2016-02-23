@@ -33,6 +33,8 @@ if CMSSW_VERSION == 'CMSSW_VERSION':
 
 
 def skipSamples(type, name):
+   if(name.find("AMSB")!=-1 and type!=0):return True; #only consider AMSB in TkOnly analysis
+
    if(type==3):
       if(name.find("Gluino")==-1 and name.find("Stop")==-1 and name.find("Stau")==-1 and name.find("o3")==-1):return True;
    elif(type==4):

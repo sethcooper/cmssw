@@ -61,7 +61,7 @@ void InitHistos(stPlots* st=NULL);
 void Analysis_Step1_EventLoop(char* SavePath);
 
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic=false);
-bool   PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev, stPlots* st=NULL, const double& GenBeta=-1, bool RescaleP=false, const double& RescaleI=0.0, const double& RescaleT=0.0);
+bool   PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev, stPlots* st=NULL, const double& GenBeta=-1, bool RescaleP=false, const double& RescaleI=0.0, const double& RescaleT=0.0);
 bool PassSelection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const fwlite::ChainEvent& ev, const int& CutIndex=0, stPlots* st=NULL, const bool isFlip=false, const double& GenBeta=-1, bool RescaleP=false, const double& RescaleI=0.0, const double& RescaleT=0.0);
 void Analysis_FillControlAndPredictionHist(const susybsm::HSCParticle& hscp, const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, stPlots* st=NULL);
 double SegSep(const susybsm::HSCParticle& hscp, const fwlite::ChainEvent& ev, double& minPhi, double& minEta);
@@ -268,7 +268,18 @@ std::cout<<"Z\n";
    return;
 }
 
-
+TVector3 getOuterHitPos(const DeDxHitInfo* dedxHits){
+     TVector3 point(0,0,0);
+     if(!dedxHits)return point;
+     double outerDistance=-1;
+     for(unsigned int h=0;h<dedxHits->size();h++){
+        DetId detid(dedxHits->detId(h));  
+        moduleGeom* geomDet = moduleGeom::get(detid.rawId());
+        TVector3 hitPos = geomDet->toGlobal(TVector3(dedxHits->pos(h).x(), dedxHits->pos(h).y(), dedxHits->pos(h).z())); 
+        if(hitPos.Mag()>outerDistance){outerDistance=hitPos.Mag();  point=hitPos;}
+     }
+     return point;
+} 
 
 // check if the event is passing trigger or not --> note that the function has two part (one for 2011 analysis and the other one for 2012)
 bool PassTrigger(const fwlite::ChainEvent& ev, bool isData, bool isCosmic)
@@ -315,7 +326,7 @@ double TreeDXY = -1;
 double TreeDZ = -1;
 bool isCosmicSB = false;
 bool isSemiCosmicSB = false;
-bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT)
+bool PassPreselection(const susybsm::HSCParticle& hscp, const DeDxHitInfo* dedxHits,  const reco::DeDxData* dedxSObj, const reco::DeDxData* dedxMObj, const reco::MuonTimeExtra* tof, const reco::MuonTimeExtra* dttof, const reco::MuonTimeExtra* csctof, const fwlite::ChainEvent& ev, stPlots* st, const double& GenBeta, bool RescaleP, const double& RescaleI, const double& RescaleT)
 {
    if(TypeMode==1 && !(hscp.type() == HSCParticleType::trackerMuon || hscp.type() == HSCParticleType::globalMuon))return false;
    if( (TypeMode==2 || TypeMode==4) && hscp.type() != HSCParticleType::globalMuon)return false;
@@ -395,6 +406,16 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
 
    if(TypeMode!=3 && track->hitPattern().numberOfValidPixelHits()<GlobalMinNOPH)return false;
    if(TypeMode!=3 && track->validFraction()<GlobalMinFOVH)return false;
+
+   int missingHitsTillLast = track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS);;
+   double validFractionTillLast = track->found()<=0?-1:track->found() / float(track->found() + missingHitsTillLast);
+  
+   if(st){st->BS_TNOHFractionTillLast->Fill(validFractionTillLast,Event_Weight);
+	  st->BS_TNOMHTillLast->Fill(missingHitsTillLast,Event_Weight);
+   }
+
+   if(TypeMode!=3 && missingHitsTillLast>GlobalMaxNOMHTillLast)return false;
+   if(TypeMode!=3 && validFractionTillLast<GlobalMinFOVHTillLast)return false;
 
    if(st){st->TNOH  ->Fill(0.0,Event_Weight);
      if(dedxSObj){
@@ -642,6 +663,12 @@ bool PassPreselection(const susybsm::HSCParticle& hscp,  const reco::DeDxData* d
           if(DZSB  && OASB)st->BS_Dxy_Cosmic->Fill(dxy, Event_Weight);
           if(DXYSB && OASB)st->BS_Dz_Cosmic->Fill(dz, Event_Weight);
           if(DXYSB && DZSB)st->BS_OpenAngle_Cosmic->Fill(OpenAngle,Event_Weight);
+
+
+          TVector3 outerHit = getOuterHitPos(dedxHits);
+          TVector3 vertex(vertexColl[highestPtGoodVertex].position().x(), vertexColl[highestPtGoodVertex].position().y(), vertexColl[highestPtGoodVertex].position().z());
+          st->BS_LastHitDXY  ->Fill((outerHit).Perp(),Event_Weight);
+          st->BS_LastHitD3D  ->Fill((outerHit).Mag(),Event_Weight);
 
           st->BS_P  ->Fill(track->p(),Event_Weight);
           st->BS_Pt ->Fill(track->pt(),Event_Weight);
@@ -1116,24 +1143,32 @@ std::cout<<"G\n";
             if(samples[s].Type>0){Event_Weight = SampleWeight * GetPUWeight(ev, samples[s].Pileup, PUSystFactor, LumiWeightsMC, LumiWeightsMCSyst);}else{Event_Weight = 1;}
             std::vector<reco::GenParticle> genColl;
             double HSCPGenBeta1=-1, HSCPGenBeta2=-1;
+            double HSCPDLength1=-1, HSCPDLength2=-1;
             if(isSignal){
                //get the collection of generated Particles
                fwlite::Handle< std::vector<reco::GenParticle> > genCollHandle;
-               genCollHandle.getByLabel(ev, "genParticlesSkimmed");
+               genCollHandle.getByLabel(ev, "genParticlePlusGeant");
                if(!genCollHandle.isValid()){
-                  genCollHandle.getByLabel(ev, "genParticles");
-                  if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound\n");continue;}
+                  genCollHandle.getByLabel(ev, "genParticlesSkimmed");
+                  if(!genCollHandle.isValid()){
+                     genCollHandle.getByLabel(ev, "genParticles");
+                     if(!genCollHandle.isValid()){printf("GenParticle Collection NotFound BUG\n");continue;}
+                  }
                }
 
                genColl = *genCollHandle;
                int NChargedHSCP=HowManyChargedHSCP(genColl);
                Event_Weight*=samples[s].GetFGluinoWeight(NChargedHSCP);
 
+               GetGenHSCPDecayLength(genColl,HSCPDLength1,HSCPDLength2,true);
+               SamplePlots->Gen_DecayLength->Fill(HSCPDLength1, Event_Weight); SamplePlots->Gen_DecayLength->Fill(HSCPDLength2, Event_Weight);
+
                GetGenHSCPBeta(genColl,HSCPGenBeta1,HSCPGenBeta2,false);
                if(HSCPGenBeta1>=0)SamplePlots->Beta_Gen      ->Fill(HSCPGenBeta1, Event_Weight);  if(HSCPGenBeta2>=0)SamplePlots->Beta_Gen       ->Fill(HSCPGenBeta2, Event_Weight);
                GetGenHSCPBeta(genColl,HSCPGenBeta1,HSCPGenBeta2,true);
                if(HSCPGenBeta1>=0)SamplePlots->Beta_GenCharged->Fill(HSCPGenBeta1, Event_Weight); if(HSCPGenBeta2>=0)SamplePlots->Beta_GenCharged->Fill(HSCPGenBeta2, Event_Weight);
 
+               
 	       for(unsigned int g=0;g<genColl.size();g++) {
 		 if(genColl[g].pt()<5)continue;
 		 if(genColl[g].status()!=1)continue;
@@ -1304,7 +1339,7 @@ std::cout<<"G\n";
 		  
 
                   //DEBUG TOF
-/*                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
+/*                  if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
                      const reco::MuonTimeExtra* dttofaod = &TOFDTCollH->get(hscp.muonRef().key());
                      if((dttof->inverseBeta()>0 && dttof->inverseBeta()<0.8 && fabs( dttof->inverseBeta()-dttofaod->inverseBeta())>0.2) ){
                         printf("event = %i\n", (int) ientry);
@@ -1324,7 +1359,7 @@ std::cout<<"G\n";
 
 
                   // compute systematic due to momentum scale
-                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
+                  if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   PRescale, 0, 0)){
                      double RescalingFactor = RescaledPt(track->pt(),track->eta(),track->phi(),track->charge())/track->pt();
 
                      if(TypeMode==5 && isSemiCosmicSB)continue;
@@ -1349,7 +1384,7 @@ std::cout<<"G\n";
                   }
 
                   // compute systematic due to dEdx (both Ias and Ih)
-                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0)){
+                  if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, IRescale, 0)){
                      if(TypeMode==5 && isSemiCosmicSB)continue;
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
@@ -1375,7 +1410,7 @@ std::cout<<"G\n";
 
 
                   // compute systematic due to Mass shift
-                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){
+                  if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){
                      if(TypeMode==5 && isSemiCosmicSB)continue;
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx()*MRescale,!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
@@ -1398,7 +1433,7 @@ std::cout<<"G\n";
                   }
 
                   // compute systematic due to TOF
-                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, TRescale)){
+                  if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, TRescale)){
                      if(TypeMode==5 && isSemiCosmicSB)continue;
  		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),(tof->inverseBeta()+TRescale));
@@ -1421,7 +1456,7 @@ std::cout<<"G\n";
                   }
 
                   // compute systematics due to PU
-                  if(PassPreselection( hscp,  dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){
+                  if(PassPreselection( hscp,  dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev,  NULL, -1,   0, 0, 0)){
                      if(TypeMode==5 && isSemiCosmicSB)continue;
 		     double Mass     = -1; if(dedxMObj) Mass=GetMass(track->p(),dedxMObj->dEdx(),!isData);
 		     double MassTOF  = -1; if(tof)MassTOF = GetTOFMass(track->p(),tof->inverseBeta());
@@ -1445,8 +1480,8 @@ std::cout<<"G\n";
                }//End of systematic computation for signal
 
                //check if the canddiate pass the preselection cuts
-               if(isMC)PassPreselection( hscp, dedxSObj, dedxMObj, tof, dttof, csctof, ev, MCTrPlots   );
-               if(    !PassPreselection( hscp, dedxSObj, dedxMObj, tof, dttof, csctof, ev, SamplePlots, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1)) continue;
+               if(isMC)PassPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev, MCTrPlots   );
+               if(    !PassPreselection( hscp, dedxHits, dedxSObj, dedxMObj, tof, dttof, csctof, ev, SamplePlots, isSignal?genColl[ClosestGen].p()/genColl[ClosestGen].energy():-1)) continue;
                if(TypeMode==5 && isSemiCosmicSB)continue;
 
                //fill the ABCD histograms and a few other control plots

@@ -137,7 +137,7 @@ bool Combine(string InputPattern, string signal7, string signal8);
 bool useSample(int TypeMode, string sample);
 
 double MinRange = 0;
-double MaxRange = 1999;
+double MaxRange = 9999;
 int    CurrentSampleIndex;
 
 std::vector<stSample> samples;

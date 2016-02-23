@@ -114,8 +114,9 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
 
        //Compute dE/dx on the fly
        //computedEdx(dedxHits, Data/MC scaleFactor, templateHistoForDiscriminator, usePixel, useClusterCleaning, reverseProb)
-       DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
-       DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1);
+       DeDxData dedxSObjTmp = computedEdx(dedxHits, dEdxSF, dEdxTemplates, true, useClusterCleaning, TypeMode==5, false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, NULL);
+       DeDxData dedxMObjTmp = computedEdx(dedxHits, dEdxSF, NULL,          true, useClusterCleaning, false      , false, trackerCorrector.TrackerGains, true, true, 99, false, 1, 0.0, NULL);
+
        DeDxData* dedxSObj = dedxSObjTmp.numberOfMeasurements()>0?&dedxSObjTmp:NULL;
        DeDxData* dedxMObj = dedxMObjTmp.numberOfMeasurements()>0?&dedxMObjTmp:NULL;
        //if(TypeMode==5)OpenAngle = deltaROpositeTrack(hscpColl, hscp); //OpenAngle is a global variable... that's uggly C++, but that's the best I found so far
@@ -161,9 +162,10 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
    fprintf(pFile, "Path %50s --> %1i\n","HLT_Mu50_v*"                 , (int) passTriggerPatterns(tr, "HLT_Mu50_v*"));
 
    if(!track.isNull()) {
+          double validFractionTillLast = track->found()<=0?-1:track->found() / float(track->found() + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS));
 	   fprintf(pFile,"------------------------------------------ INNER TRACKER ------------------------------------------\n");
 	   fprintf(pFile,"Quality = %i Chi2/NDF=%6.2f dz=+%6.2f dxy=%+6.2f V3D=%+6.2f (nGoodVert=%i) charge:%+i\n",track->qualityMask(), track->chi2()/track->ndof(), dz, dxy, v3d, goodVerts, track->charge());
-	   fprintf(pFile,"P=%7.2f  Pt=%7.2f+-%6.2f [%6.2f%%] (Cut=%6.2f) Eta=%+6.2f  Phi=%+6.2f  NOH=%2i\n",track->p(),track->pt(), track->ptError(), track->ptError()/track->pt(), PtCut, track->eta(), track->phi(), track->found() );
+	   fprintf(pFile,"P=%7.2f  Pt=%7.2f+-%6.2f [%6.2f%%] (Cut=%6.2f) Eta=%+6.2f  Phi=%+6.2f  NOH=%2i FOVH=%6.2f NOMMH=%2i FOVHTL=%6.2f\n",track->p(),track->pt(), track->ptError(), track->ptError()/track->pt(), PtCut, track->eta(), track->phi(), track->found(), track->validFraction(),track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::MISSING_INNER_HITS) + track->hitPattern().trackerLayersWithoutMeasurement(reco::HitPattern::TRACK_HITS), validFractionTillLast );
 
 	   fprintf(pFile,"------------------------------------------ DEDX INFO ----------------------------------------------\n");
 	   fprintf(pFile,"dEdx for selection     :%6.2f (Cut=%6.2f) NOM %2i NOS %2i\n",dedxSObj->dEdx(),ICut,dedxSObj->numberOfMeasurements(),dedxSObj->numberOfSaturatedMeasurements());
@@ -176,7 +178,7 @@ void DumpCandidateInfo(const susybsm::HSCParticle& hscp, const fwlite::ChainEven
 	   for(unsigned int h=0;h<dedxHits->size();h++){
 	      DetId detid(dedxHits->detId(h));
 	      if(detid.subdetId()<3){fprintf(pFile,"DetId = %7i --> Pixel Hit\n", detid.rawId());
-	      }else{printStripCluster(pFile, dedxHits->stripCluster(h), dedxHits->detId(h));      
+	      }else{printStripCluster(pFile, dedxHits->stripCluster(h), dedxHits->detId(h), true);      
 	      }
 	   }
    }
