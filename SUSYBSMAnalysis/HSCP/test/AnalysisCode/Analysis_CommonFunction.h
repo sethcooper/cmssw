@@ -481,8 +481,8 @@ class dedxHIPEmulator{
       double eventRatePixel;
       double eventRateStrip;
    public:
-      dedxHIPEmulator(){
-	   ratePdfPixel = new TH1D("ratePdfPixel","",20,0,10);
+      dedxHIPEmulator(const char* ratePdfPixelName = NULL, const char* ratePdfStripName = NULL){
+	   ratePdfPixel = new TH1D(ratePdfPixelName==NULL?"ratePdfPixel":ratePdfPixelName,"",20,0,10);
 	   ratePdfPixel->SetBinContent(2,116789);
 	   ratePdfPixel->SetBinContent(3,2501600);
 	   ratePdfPixel->SetBinContent(4,7088437);
@@ -501,7 +501,7 @@ class dedxHIPEmulator{
            ratePdfPixel->Scale(1.0/ratePdfPixel->Integral());
 
 
-	   ratePdfStrip = new TH1D("ratePdfStrip","",20,0,10);
+	   ratePdfStrip = new TH1D(ratePdfStripName==NULL?"ratePdfStrip":ratePdfStripName,"",20,0,10);
 	   ratePdfStrip->SetBinContent(4,122);
 	   ratePdfStrip->SetBinContent(5,312);
 	   ratePdfStrip->SetBinContent(6,1848);
@@ -523,18 +523,23 @@ class dedxHIPEmulator{
      ~dedxHIPEmulator(){}
 
      void setEventRate(double ratePixel=-1, double rateStrip=-1){
-        if(ratePixel<0){eventRatePixel = ratePdfPixel->GetRandom();}else{eventRatePixel = ratePixel;}
-        if(rateStrip<0){eventRateStrip = ratePdfStrip->GetRandom();}else{eventRateStrip = rateStrip;}  
+        if(ratePixel<0){
+           eventRatePixel = ratePdfPixel->GetRandom();
+           eventRatePixel -= 3.2;//2.4; //subtract rate already present in the MC
+           eventRatePixel *= 100; //for random generator usage
+        }else{eventRatePixel = ratePixel;}
+        if(rateStrip<0){
+           eventRateStrip = ratePdfStrip->GetRandom();
+           eventRateStrip -= 1.1;//0.8; //subtract rate already present in the MC
+           eventRateStrip *= 100; //for random generator usage
+        }else{eventRateStrip = rateStrip;}  
 
-        eventRatePixel -= 3.2;//2.4; //subtract rate already present in the MC
-        eventRateStrip -= 1.1;//0.8; //subtract rate already present in the MC
-
-        eventRatePixel *= 100; //for random generator usage
-        eventRateStrip *= 100; //for random generator usage
-        
         eventRatePixel = std::max(eventRatePixel, 0.0);
         eventRateStrip = std::max(eventRateStrip, 0.0);
      }
+
+     double getEventRatePixel() { return eventRatePixel; }
+     double getEventRateStrip() { return eventRateStrip; }
 
      double fakeHIP(unsigned int subDet, double dedx){
         if(subDet< 3 && rand()%10000<eventRatePixel)dedx = ( 0.6 + ((rand()%15000)/10000.0) );
@@ -557,7 +562,7 @@ class dedxHIPEmulator{
 
 
 TH3F* loadDeDxTemplate(string path, bool splitByModuleType=false);
-reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0,  dedxHIPEmulator* hipEmulator=NULL);
+reco::DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* templateHisto=NULL, bool usePixel=false, bool useClusterCleaning=true, bool reverseProb=false, bool useTruncated=false, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool useStrip=true, bool mustBeInside=false, size_t MaxStripNOM=999, bool correctFEDSat=false, int crossTalkInvAlgo=0, double dropLowerDeDxValue=0.0, dedxHIPEmulator* hipEmulator=NULL);
 HitDeDxCollection getHitDeDx(const DeDxHitInfo* dedxHits, double* scaleFactors, std::unordered_map<unsigned int,double>* TrackerGains=NULL, bool correctFEDSat=false, int crossTalkInvAlgo=0);
 
 bool clusterCleaning(const SiStripCluster*   cluster,  int crosstalkInv=0, uint8_t* exitCode=NULL);
