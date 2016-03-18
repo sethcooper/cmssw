@@ -1475,9 +1475,8 @@ TGraph* CheckSignalUncertainty(FILE* pFile, FILE* talkFile, string InputPattern,
          if(modelSample[s].ModelName().find("1o3")!=string::npos) SystI[N]=-0.25; SystErrP[N]       = 0;
          if(modelSample[s].ModelName().find("2o3")!=string::npos) SystI[N]=-0.10; SystErrI[N]       = 0;
       }
-      bool UpIsGreater = fabs(tmp.Eff_SYSTHUp - tmp.Eff) > fabs(tmp.Eff_SYSTHDown - tmp.Eff);
       SystM[N]       = (tmp.Eff_SYSTM  - tmp.Eff)/tmp.Eff;  SystErrM[N]       = (tmp.EffE_SYSTM)/tmp.Eff;
-      SystH[N]       = UpIsGreater?((tmp.Eff_SYSTHUp - tmp.Eff)/tmp.Eff):((tmp.Eff_SYSTHDown - tmp.Eff)/tmp.Eff);  SystErrH[N] = UpIsGreater ? tmp.EffE_SYSTHUp/tmp.Eff : tmp.EffE_SYSTHDown/tmp.Eff;
+      SystH[N]       = (tmp.Eff_SYSTHUp - tmp.Eff)/tmp.Eff;  SystErrH[N]       = (tmp.EffE_SYSTHUp)/tmp.Eff;
       SystPU[N]      = (tmp.Eff_SYSTPU - tmp.Eff)/tmp.Eff;  SystErrPU[N]      = (tmp.EffE_SYSTPU)/tmp.Eff;
       SystT[N]       = (tmp.Eff_SYSTT  - tmp.Eff)/tmp.Eff;  SystErrT[N]       = (tmp.EffE_SYSTT )/tmp.Eff;
       SystRe[N]      = -0.02; SystErrRe[N]      = 0.0;
@@ -2079,9 +2078,9 @@ void Optimize(string InputPattern, string Data, string signal, bool shape, bool 
    CurrentSampleIndex        = JobIdToIndex(signal,samples); 
    if(CurrentSampleIndex<0){  printf("There is no signal corresponding to the JobId Given\n");  return;  } 
 
-   if(Data.find("7TeV")!=string::npos){SQRTS=7.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS); }
-   if(Data.find("8TeV")!=string::npos){SQRTS=8.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);  }
-   if(Data.find("13TeV")!=string::npos){SQRTS=13.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);  }
+   if(Data.find("7TeV")!=string::npos){SQRTS=7.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);
+   if(Data.find("8TeV")!=string::npos){SQRTS=8.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);
+   if(Data.find("13TeV")!=string::npos){SQRTS=13.0;} //IntegratedLuminosity = IntegratedLuminosityFromE(SQRTS);
 
    //For muon only don't run on neutral samples as near zero efficiency can make jobs take very long time
    if((signal.find("Gluino")!=string::npos || signal.find("Stop")!=string::npos) && signal.find("N")!=string::npos && TypeMode==3) return;
@@ -2288,7 +2287,7 @@ void makeDataCard(string outpath, string rootPath, string ChannelName, string Si
    double LumiUnc   = 1.0;
    if(SQRTS==7 ) LumiUnc=1.022;
    if(SQRTS==8 ) LumiUnc=1.044;
-   if(SQRTS==13) LumiUnc=1.046;
+   if(SQRTS==13) LumiUnc=1.027;
 
    if(isnan(float(PredRelErr)))PredRelErr= 1.2;
 
@@ -2602,7 +2601,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
       saveVariationHistoForLimit(MassSignProj, MassSignProjP , signal, "mom");
       saveVariationHistoForLimit(MassSignProj, MassSignProjI , signal, "ias");
       saveVariationHistoForLimit(MassSignProj, MassSignProjM , signal, "ih");
-      saveVariationHistoForLimit(MassSignProj, fabs(EffHUp-Eff)>fabs(Eff-EffHDown)?MassSignProjHUp:MassSignProjHDown , signal, "hip");
+      saveVariationHistoForLimit(MassSignProj, MassSignProjHUp, signal, "hip");
       saveVariationHistoForLimit(MassSignProj, MassSignProjT , signal, "tof");
       saveVariationHistoForLimit(MassSignProj, MassSignProjPU, signal, "pu");
 
@@ -2617,7 +2616,7 @@ bool runCombine(bool fastOptimization, bool getXsection, bool getSignificance, s
    double UncEffP=(EffP-Eff)/Eff;
    double UncEffI=(EffI-Eff)/Eff;
    double UncEffM=(EffM-Eff)/Eff;
-   double UncEffH= fabs(EffHUp-Eff)>fabs(Eff-EffHDown)?((EffHUp-Eff)/Eff):((Eff-EffHDown)/Eff);
+   double UncEffH= (EffHUp-Eff)/Eff;
    double UncEffPU=(EffPU-Eff)/Eff;
    double UncEffT=(EffT-Eff)/Eff;
    double UncEffRe  = -0.02;

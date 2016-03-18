@@ -35,7 +35,7 @@
 
 //double IntegratedLuminosity13TeV               = 72.63; //pb
 //double IntegratedLuminosity13TeV               = 84.557; //pb
-double IntegratedLuminosity13TeV               = 2439.264; //pb
+double IntegratedLuminosity13TeV               = 2490.518; //2439.264; //pb
 
 double               SQRTS                     = 13;
 int                  RunningPeriods            = 1;
@@ -81,7 +81,7 @@ unsigned int       GlobalMinNOH       =   8;//7AMSB;      // cut on number of (v
 int                GlobalMinNOPH      =   2;      // cut on number of (valid) track pixel hits 
 double             GlobalMinFOVH      =   0.8;//0.0AMSB;    // cut on fraction of valid track hits
 unsigned int       GlobalMaxNOMHTillLast = 99999;//1AMSB;     // cut on the number of missing hits from IP till last hit (excluding hits behind the last hit)
-double             GlobalMinFOVHTillLast = 99999;//0.85AMSB;   // cut on the fraction of valid hits divided by total expected hits until the last one
+double             GlobalMinFOVHTillLast =-99999;//0.85AMSB;   // cut on the fraction of valid hits divided by total expected hits until the last one
 unsigned int       GlobalMinNOM       =   6;//7AMSB;      // cut on number of dEdx hits (generally equal to #strip+#pixel-#ClusterCleaned hits, but this depend on estimator used)
 double             GlobalMinNDOF      =   8;      // cut on number of     DegreeOfFreedom used for muon TOF measurement
 double             GlobalMinNDOFDT    =   6;      // cut on number of DT  DegreeOfFreedom used for muon TOF measurement
@@ -110,11 +110,17 @@ std::string        dEdxM_Legend    = "I_{h} (MeV/cm)";
 //double             dEdxC_Data      = 2.879;
 //double             dEdxK_MC        = 2.683;
 //double             dEdxC_MC        = 2.453;
-// below are the new constants computed with harm2_SP_in for both MC and Data
-double             dEdxK_Data      = 2.535;
-double             dEdxC_Data      = 3.339;
-double             dEdxK_MC        = 2.535;
-double             dEdxC_MC        = 3.339;
+// below are the new constants computed with harm2_SP_in for both MC and Data USED FOR THE PAS
+//double             dEdxK_Data      = 2.535;
+//double             dEdxC_Data      = 3.339;
+//double             dEdxK_MC        = 2.535;
+//double             dEdxC_MC        = 3.339;
+// below are the new constants computed with hhybrid2_SP_in for both MC and Data USED FOR THE PAPER
+double             dEdxK_Data      = 2.684;
+double             dEdxC_Data      = 3.375;
+double             dEdxK_MC        = 2.684;
+double             dEdxC_MC        = 3.375;
+
 
 //below is for harm2_SP where 20% of the lower dEdx hits are drop
 //double             dEdxK_Data      = 2.40;

@@ -360,11 +360,11 @@ bool isGoodGenHSCP(const reco::GenParticle& gen, bool onlyCharged){
 int HowManyChargedHSCP (const std::vector<reco::GenParticle>& genColl){
    int toReturn = 0;
    for(unsigned int g=0;g<genColl.size();g++){
-      if(!isGoodGenHSCP(genColl[g]))continue;
-      toReturn++;
+      if(isGoodGenHSCP(genColl[g], true))toReturn++;
    }
    return toReturn;
 }
+
 
 // returns the generated beta of the two firsts HSCP in the events
 void  GetGenHSCPBeta (const std::vector<reco::GenParticle>& genColl, double& beta1, double& beta2, bool onlyCharged){
@@ -905,11 +905,12 @@ DeDxData computedEdx(const DeDxHitInfo* dedxHits, double* scaleFactors, TH3* tem
      }
 
      if(dropLowerDeDxValue>0){
+         std::vector <double> tmp (vect.size());
+         std::copy (vect.begin(), vect.end(), tmp.begin());
+         std::sort(tmp.begin(), tmp.end(), std::greater<double>() );
+         int nTrunc = tmp.size()*dropLowerDeDxValue;
          vect.clear();
-         for(unsigned int p=0;p<vectPixel.size();p++){vect.push_back(vectPixel[p]);}
-         std::sort(vectStrip.begin(), vectStrip.end(), std::greater<double>() );
-         int nTrunc = vectStrip.size()*dropLowerDeDxValue;
-         for(unsigned int s=0;s+nTrunc<vectStrip.size();s++){vect.push_back(vectStrip[s]);}
+         for(unsigned int t=0;t+nTrunc<tmp.size();t++){vect.push_back(tmp[t]);}
      }
 
      double result;

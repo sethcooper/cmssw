@@ -61,27 +61,27 @@ void Analysis_Step3_MakePlots()
    string InputPattern;				unsigned int CutIndex;     unsigned int CutIndex_Flip=1;  unsigned int CutIndexTight;
    std::vector<string> Legends;                 std::vector<string> Inputs;
 
-//   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
+   Make2DPlot_Special("Results/Type0/", "Results/Type0/");
 
    InputPattern = "Results/Type0/";   CutIndex = 4; CutIndexTight = 29;
    MassPrediction(InputPattern, CutIndex,      "Mass", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass", false, "13TeV_Tight");
    CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
-/*   CutFlowPlot(InputPattern, 0);
+   CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
    CutFlowPlot(InputPattern, CutIndexTight);
-*/   
+   
    SelectionPlot(InputPattern, CutIndex, CutIndexTight);
-/*   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
-*/
+   PredictionAndControlPlot(InputPattern, "Data13TeV", CutIndex, 0);
+
    InputPattern = "Results/Type2/";   CutIndex = 16; CutIndexTight = 299; CutIndex_Flip=12;
 
    MassPrediction(InputPattern, CutIndex,      "Mass"     , false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndexTight, "Mass"     , false, "13TeV_Tight");
    MassPrediction(InputPattern, 1,             "Mass_Flip", false, "13TeV_Loose");
    MassPrediction(InputPattern, CutIndex_Flip, "Mass_Flip", false, "13TeV_Tight");
-/*   CutFlow(InputPattern, CutIndex);
+   CutFlow(InputPattern, CutIndex);
    CutFlow(InputPattern, CutIndexTight);
    CutFlowPlot(InputPattern, 0);
    CutFlowPlot(InputPattern, CutIndex);
@@ -92,10 +92,11 @@ void Analysis_Step3_MakePlots()
 //  std::cout<<"A\n";
    CheckPrediction(InputPattern, "_Flip", "Data13TeV");
 //  std::cout<<"B\n";
-//   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
+
+   GetSystematicOnPrediction(InputPattern, "Data13TeV");  //FOR IMPOSSIBLE REASON, THIS FUNCTION CRASHES IF IT IS RUN TOGETHER WITH THE OTHER FUNCTIONS
 
   std::cout<<"ALL DONE WITH THE PLOTTING CODE\n";
-*/
+
   exit(0);//all done
 
   //FIXME:  Bellow this line, all the code in THIS FUNCTION is what was used for run1 paper.
