@@ -118,15 +118,15 @@ def setTagsProbes(process, options):
     process.tnpPairingEleIDs.decay       = cms.string("tagEle probeEle")
     process.tnpPairingEleIDs.checkCharge = cms.bool(False)
 
-    process.tnpPairingPhoIDs             = process.tnpPairingEleHLT.clone()
-    process.tnpPairingPhoIDs.decay       = cms.string("tagEle probePho")
-    process.tnpPairingPhoIDs.checkCharge = cms.bool(False)
+    #process.tnpPairingPhoIDs             = process.tnpPairingEleHLT.clone()
+    #process.tnpPairingPhoIDs.decay       = cms.string("tagEle probePho")
+    #process.tnpPairingPhoIDs.checkCharge = cms.bool(False)
 
     ######################## probe passing ID ##########################
     import EgammaAnalysis.TnPTreeProducer.egmElectronIDModules_cff as egmEleID
-    import EgammaAnalysis.TnPTreeProducer.egmPhotonIDModules_cff   as egmPhoID
+    #import EgammaAnalysis.TnPTreeProducer.egmPhotonIDModules_cff   as egmPhoID
     egmEleID.setIDs(process, options)
-    egmPhoID.setIDs(process, options)
+    #egmPhoID.setIDs(process, options)
 
 ###################################################################################
 ################  --- SEQUENCES
@@ -174,60 +174,63 @@ def setSequences(process, options):
 #        process.probeEleCutBasedLoose     +
 #        process.probeEleCutBasedMedium    +
 #        process.probeEleCutBasedTight     +
-        process.probeEleCutBasedVeto80X   +
-        process.probeEleCutBasedLoose80X  +
-        process.probeEleCutBasedMedium80X +
-        process.probeEleCutBasedTight80X  +
-        process.probeEleMVA80Xwp90        +
-        process.probeEleMVA80Xwp80        +
-        process.probeEleCutBasedVeto94X   +
-        process.probeEleCutBasedLoose94X  +
-        process.probeEleCutBasedMedium94X +
-        process.probeEleCutBasedTight94X  +
-        process.probeEleCutBasedVeto94XV2   +
-        process.probeEleCutBasedLoose94XV2  +
-        process.probeEleCutBasedMedium94XV2 +
-        process.probeEleCutBasedTight94XV2  +
-        process.probeEleMVA94XwpLnoiso        +
-        process.probeEleMVA94Xwp90noiso        +
-        process.probeEleMVA94Xwp80noiso        +
-        process.probeEleMVA94XwpLiso        +
-        process.probeEleMVA94Xwp90iso        +
-        process.probeEleMVA94Xwp80iso        +
-        process.probeEleMVA94XwpLnoisoV2        +
-        process.probeEleMVA94Xwp90noisoV2        +
-        process.probeEleMVA94Xwp80noisoV2        +
-        process.probeEleMVA94XwpLisoV2        +
-        process.probeEleMVA94Xwp90isoV2        +
-        process.probeEleMVA94Xwp80isoV2        +
-        process.probeEleMVA94XwpHZZisoV2        +
+        #process.probeEleCutBasedVeto80X   +
+        #process.probeEleCutBasedLoose80X  +
+        #process.probeEleCutBasedMedium80X +
+        #process.probeEleCutBasedTight80X  +
+        #process.probeEleMVA80Xwp90        +
+        #process.probeEleMVA80Xwp80        +
+        #process.probeEleCutBasedVeto94X   +
+        #process.probeEleCutBasedLoose94X  +
+        #process.probeEleCutBasedMedium94X +
+        #process.probeEleCutBasedTight94X  +
+        #process.probeEleCutBasedVeto94XV2   +
+        #process.probeEleCutBasedLoose94XV2  +
+        #process.probeEleCutBasedMedium94XV2 +
+        #process.probeEleCutBasedTight94XV2  +
+        #process.probeEleMVA94XwpLnoiso        +
+        #process.probeEleMVA94Xwp90noiso        +
+        #process.probeEleMVA94Xwp80noiso        +
+        #process.probeEleMVA94XwpLiso        +
+        #process.probeEleMVA94Xwp90iso        +
+        #process.probeEleMVA94Xwp80iso        +
+        #process.probeEleMVA94XwpLnoisoV2        +
+        #process.probeEleMVA94Xwp90noisoV2        +
+        #process.probeEleMVA94Xwp80noisoV2        +
+        #process.probeEleMVA94XwpLisoV2        +
+        #process.probeEleMVA94Xwp90isoV2        +
+        #process.probeEleMVA94Xwp80isoV2        +
+        #process.probeEleMVA94XwpHZZisoV2        +
+        process.probeEleHEEPv60 +
+        process.probeEleHEEPv70 +
         process.probeEle 
         )
     if not options['useAOD'] : process.ele_sequence += process.probeEleHLTsafe
 
     process.pho_sequence = cms.Sequence(
-        process.goodPhotons               +
-        process.egmPhotonIDSequence       +
+        process.goodPhotons               
+        #process.goodPhotons               +
+        #process.egmPhotonIDSequence       +
         #process.probePhoCutBasedLoose     +
         #process.probePhoCutBasedMedium    +
         #process.probePhoCutBasedTight     +
         #process.probePhoMVA               +
-        process.probePhoCutBasedLoose80X  +
-        process.probePhoCutBasedMedium80X +
-        process.probePhoCutBasedTight80X  +
-        process.probePhoMVA80Xwp90       +
-        process.probePhoMVA80Xwp80       +
-        process.probePhoCutBasedLoose94X  +
-        process.probePhoCutBasedMedium94X +
-        process.probePhoCutBasedTight94X  +
-        process.probePhoCutBasedLoose100XV2  +
-        process.probePhoCutBasedMedium100XV2 +
-        process.probePhoCutBasedTight100XV2  +
-        process.probePhoMVA94Xwp90       +
-        process.probePhoMVA94Xwp80       +
-        process.probePhoMVA94XV2wp90       +
-        process.probePhoMVA94XV2wp80       +
-        process.probePho                
+        #process.probePhoCutBasedLoose80X  +
+        #process.probePhoCutBasedMedium80X +
+        #process.probePhoCutBasedTight80X  +
+        #process.probePhoMVA80Xwp90       +
+        #process.probePhoMVA80Xwp80       +
+        #process.probePhoCutBasedLoose94X  +
+        #process.probePhoCutBasedMedium94X +
+        #process.probePhoCutBasedTight94X  +
+        #process.probePhoCutBasedLoose100XV2  +
+        #process.probePhoCutBasedMedium100XV2 +
+        #process.probePhoCutBasedTight100XV2  +
+        #process.probePhoMVA94Xwp90       +
+        #process.probePhoMVA94Xwp80       +
+        #process.probePhoMVA94XV2wp90       +
+        #process.probePhoMVA94XV2wp80       +
+        #process.probePho                
         )
 
     process.hlt_sequence = cms.Sequence( process.probeElePassHLT )

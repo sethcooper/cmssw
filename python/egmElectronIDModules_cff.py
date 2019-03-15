@@ -20,6 +20,7 @@ def setIDs(process, options):
     my_id_modules = [
         'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
         'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV60_cff',
+        'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV70_cff',
         'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring16_GeneralPurpose_V1_cff',
         'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V1_cff',
         'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Fall17_noIso_V1_cff',
@@ -140,6 +141,10 @@ def setIDs(process, options):
     process.probeEleCutBasedMedium94XV2.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-medium"  )
     process.probeEleCutBasedTight94XV2.selection  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"  )
 
+    process.probeEleHEEPv60 = process.probeEleCutBasedVeto.clone()
+    process.probeEleHEEPv60.selection = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV60")
+    process.probeEleHEEPv70 = process.probeEleCutBasedVeto.clone()
+    process.probeEleHEEPv70.selection = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV70")
     
     process.tagEleCutBasedTight = cms.EDProducer(eleProducer,
                                                      input     = cms.InputTag("goodElectrons"),
@@ -147,7 +152,8 @@ def setIDs(process, options):
                                                      selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"),
                                                      id_cut    = cms.bool(True)
                                                 )    
-    process.tagEleCutBasedTight.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight")
+    #process.tagEleCutBasedTight.selection = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight")
+    process.tagEleCutBasedTight.selection = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV70")
 
     if options['addSUSY'] :
 

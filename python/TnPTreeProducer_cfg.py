@@ -4,6 +4,8 @@ import sys
 
 process = cms.Process("tnpEGM")
 
+print sys.argv
+
 ###################################################################
 ## argument line options
 ###################################################################
@@ -24,21 +26,21 @@ varOptions.register(
     )
 
 varOptions.register(
-    "doPhoID", True,
+    "doPhoID", False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Include tree for photon ID SF"
     )
 
 varOptions.register(
-    "doTrigger", False,
+    "doTrigger", True,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Include tree for Trigger SF"
     )
 
 varOptions.register(
-    "doRECO", False,
+    "doRECO", True,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "Include tree for Reco SF"
@@ -63,7 +65,8 @@ varOptions.register(
     #"GT","auto",
     #"GT","101X_dataRun2_Prompt_v9",
     #"GT","94X_dataRun2_ReReco_EOY17_v6",
-    "GT","94X_mc2017_realistic_v12",
+    #"GT","94X_mc2017_realistic_v12",
+    "GT","102X_dataRun2_v8",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Global Tag to be used"
@@ -78,7 +81,7 @@ varOptions.register(
     )
 
 varOptions.register(
-    "isAOD", True,
+    "isAOD", False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "use AOD"
@@ -149,7 +152,8 @@ else:
     options['TnPHLTTagFilters']    = cms.vstring("hltEle32L1DoubleEGWPTightGsfTrackIsoFilter","hltEGL1SingleEGOrFilter")
     #options['TnPHLTTagFilters']    = cms.vstring("hltEle32L1DoubleEGWPTightGsfTrackIsoFilter")
     options['TnPHLTProbeFilters']  = cms.vstring()
-    options['HLTFILTERTOMEASURE']  = cms.vstring("hltEle32L1DoubleEGWPTightGsfTrackIsoFilter")
+    #options['HLTFILTERTOMEASURE']  = cms.vstring("hltEle32L1DoubleEGWPTightGsfTrackIsoFilter")
+    options['HLTFILTERTOMEASURE']  = cms.vstring("hltEle35noerWPTightGsfTrackIsoFilter","hltEG200HEFilter")#"hltEle115CaloIdVTGsfTrkIdTGsfDphiFilter","hltEG200HEFilter")
     options['GLOBALTAG']           = 'auto:run2_data'
 
 if varOptions.GT != "auto" :
@@ -161,8 +165,10 @@ if varOptions.GT != "auto" :
 ###################################################################
 #from EgammaAnalysis.TnPTreeProducer.etc.tnpInputTestFiles_cff import filesMiniAOD_Preliminary2018 as inputs
 #if options['useAOD'] : from EgammaAnalysis.TnPTreeProducer.etc.tnpInputTestFiles_cff import filesAOD_23Sep2016 as inputs #switch to 2017 samples if want to cmsRun on AOD
-#if options['useAOD'] : 
-from EgammaAnalysis.TnPTreeProducer.etc.tnpInputTestFiles_cff import filesAOD_Preliminary2017 as inputs #switch to 2017 samples if want to cmsRun on AOD
+if options['useAOD']: 
+    from EgammaAnalysis.TnPTreeProducer.etc.tnpInputTestFiles_cff import filesAOD_Preliminary2017 as inputs #switch to 2017 samples if want to cmsRun on AOD
+else:
+    from EgammaAnalysis.TnPTreeProducer.etc.tnpInputTestFiles_cff import filesMiniAOD_Preliminary2017 as inputs #switch to 2017 samples if want to cmsRun on AOD
 #if options['useAOD'] : from EgammaAnalysis.TnPTreeProducer.etc.tnpInputTestFiles_cff import filesAOD_empty as inputs #switch to 2017 samples if want to cmsRun on AOD
     
 options['INPUT_FILE_NAME'] = inputs['data']
@@ -200,7 +206,10 @@ process.MessageLogger.cerr.threshold = ''
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.source = cms.Source("PoolSource",
-                            fileNames = options['INPUT_FILE_NAME'],
+                            #fileNames = options['INPUT_FILE_NAME'],
+                            fileNames = cms.untracked.vstring(
+                                '/store/data/Run2017B/SingleElectron/MINIAOD/31Mar2018-v1/60000/66EAEA69-3E37-E811-BC12-008CFAC91CD4.root'
+                                )
                             )
 process.maxEvents = cms.untracked.PSet( input = options['MAXEVENTS'])
 #process.maxEvents = cms.untracked.PSet(
@@ -244,9 +253,11 @@ process.tnpEleTrig = cms.EDAnalyzer("TagProbeFitTreeProducer",
                                     allProbes     = cms.InputTag("probeEle"),
                                     flags = cms.PSet(
                                         passingHLT        = cms.InputTag("probeElePassHLT"),
-                                        passingLoose94X   = cms.InputTag("probeEleCutBasedLoose94X" ),
-                                        passingMedium94X  = cms.InputTag("probeEleCutBasedMedium94X"),
-                                        passingTight94X   = cms.InputTag("probeEleCutBasedTight94X" ),
+                                        #passingLoose94X   = cms.InputTag("probeEleCutBasedLoose94X" ),
+                                        #passingMedium94X  = cms.InputTag("probeEleCutBasedMedium94X"),
+                                        #passingTight94X   = cms.InputTag("probeEleCutBasedTight94X" ),
+                                        #passingHEEPv6     = cms.InputTag("probeEleHEEPv60" ),
+                                        passingHEEPv7     = cms.InputTag("probeEleHEEPv70" ),
                                         ),
                                     )
 
@@ -273,76 +284,78 @@ process.tnpEleIDs = cms.EDAnalyzer("TagProbeFitTreeProducer",
 #                                        passingLoose      = cms.InputTag("probeEleCutBasedLoose" ),
 #                                        passingMedium     = cms.InputTag("probeEleCutBasedMedium"),
         #                                        passingTight      = cms.InputTag("probeEleCutBasedTight" ),
-                                        passingVeto80X    = cms.InputTag("probeEleCutBasedVeto80X"  ),
-                                        passingLoose80X   = cms.InputTag("probeEleCutBasedLoose80X" ),
-                                        passingMedium80X  = cms.InputTag("probeEleCutBasedMedium80X"),
-                                        passingTight80X   = cms.InputTag("probeEleCutBasedTight80X" ),
-                                        passingMVA80Xwp90 = cms.InputTag("probeEleMVA80Xwp90" ),
-                                        passingMVA80Xwp80 = cms.InputTag("probeEleMVA80Xwp80" ),
+                                        #passingVeto80X    = cms.InputTag("probeEleCutBasedVeto80X"  ),
+                                        #passingLoose80X   = cms.InputTag("probeEleCutBasedLoose80X" ),
+                                        #passingMedium80X  = cms.InputTag("probeEleCutBasedMedium80X"),
+                                        #passingTight80X   = cms.InputTag("probeEleCutBasedTight80X" ),
+                                        #passingMVA80Xwp90 = cms.InputTag("probeEleMVA80Xwp90" ),
+                                        #passingMVA80Xwp80 = cms.InputTag("probeEleMVA80Xwp80" ),
 
-                                        passingVeto94X    = cms.InputTag("probeEleCutBasedVeto94X"  ),
-                                        passingLoose94X   = cms.InputTag("probeEleCutBasedLoose94X" ),
-                                        passingMedium94X  = cms.InputTag("probeEleCutBasedMedium94X"),
-                                        passingTight94X   = cms.InputTag("probeEleCutBasedTight94X" ),
+                                        #passingVeto94X    = cms.InputTag("probeEleCutBasedVeto94X"  ),
+                                        #passingLoose94X   = cms.InputTag("probeEleCutBasedLoose94X" ),
+                                        #passingMedium94X  = cms.InputTag("probeEleCutBasedMedium94X"),
+                                        #passingTight94X   = cms.InputTag("probeEleCutBasedTight94X" ),
 
-                                        passingVeto94XV2    = cms.InputTag("probeEleCutBasedVeto94XV2"  ),
-                                        passingLoose94XV2   = cms.InputTag("probeEleCutBasedLoose94XV2" ),
-                                        passingMedium94XV2  = cms.InputTag("probeEleCutBasedMedium94XV2"),
-                                        passingTight94XV2   = cms.InputTag("probeEleCutBasedTight94XV2" ),
+                                        #passingVeto94XV2    = cms.InputTag("probeEleCutBasedVeto94XV2"  ),
+                                        #passingLoose94XV2   = cms.InputTag("probeEleCutBasedLoose94XV2" ),
+                                        #passingMedium94XV2  = cms.InputTag("probeEleCutBasedMedium94XV2"),
+                                        #passingTight94XV2   = cms.InputTag("probeEleCutBasedTight94XV2" ),
 
-                                        passingMVA94XwpLnoiso = cms.InputTag("probeEleMVA94XwpLnoiso" ),
-                                        passingMVA94Xwp90noiso = cms.InputTag("probeEleMVA94Xwp90noiso" ),
-                                        passingMVA94Xwp80noiso = cms.InputTag("probeEleMVA94Xwp80noiso" ),
-                                        passingMVA94XwpLiso = cms.InputTag("probeEleMVA94XwpLiso" ),
-                                        passingMVA94Xwp90iso = cms.InputTag("probeEleMVA94Xwp90iso" ),
-                                        passingMVA94Xwp80iso = cms.InputTag("probeEleMVA94Xwp80iso" ),
-                                        passingMVA94XwpLnoisoV2 = cms.InputTag("probeEleMVA94XwpLnoisoV2" ),
-                                        passingMVA94Xwp90noisoV2 = cms.InputTag("probeEleMVA94Xwp90noisoV2" ),
-                                        passingMVA94Xwp80noisoV2 = cms.InputTag("probeEleMVA94Xwp80noisoV2" ),
-                                        passingMVA94XwpLisoV2 = cms.InputTag("probeEleMVA94XwpLisoV2" ),
-                                        passingMVA94Xwp90isoV2 = cms.InputTag("probeEleMVA94Xwp90isoV2" ),
-                                        passingMVA94Xwp80isoV2 = cms.InputTag("probeEleMVA94Xwp80isoV2" ),
+                                        #passingMVA94XwpLnoiso = cms.InputTag("probeEleMVA94XwpLnoiso" ),
+                                        #passingMVA94Xwp90noiso = cms.InputTag("probeEleMVA94Xwp90noiso" ),
+                                        #passingMVA94Xwp80noiso = cms.InputTag("probeEleMVA94Xwp80noiso" ),
+                                        #passingMVA94XwpLiso = cms.InputTag("probeEleMVA94XwpLiso" ),
+                                        #passingMVA94Xwp90iso = cms.InputTag("probeEleMVA94Xwp90iso" ),
+                                        #passingMVA94Xwp80iso = cms.InputTag("probeEleMVA94Xwp80iso" ),
+                                        #passingMVA94XwpLnoisoV2 = cms.InputTag("probeEleMVA94XwpLnoisoV2" ),
+                                        #passingMVA94Xwp90noisoV2 = cms.InputTag("probeEleMVA94Xwp90noisoV2" ),
+                                        #passingMVA94Xwp80noisoV2 = cms.InputTag("probeEleMVA94Xwp80noisoV2" ),
+                                        #passingMVA94XwpLisoV2 = cms.InputTag("probeEleMVA94XwpLisoV2" ),
+                                        #passingMVA94Xwp90isoV2 = cms.InputTag("probeEleMVA94Xwp90isoV2" ),
+                                        #passingMVA94Xwp80isoV2 = cms.InputTag("probeEleMVA94Xwp80isoV2" ),
 
-                                        passingMVA94XwpHZZisoV2 = cms.InputTag("probeEleMVA94XwpHZZisoV2" ),
+                                        #passingMVA94XwpHZZisoV2 = cms.InputTag("probeEleMVA94XwpHZZisoV2" ),
+                                        passingHEEPv6 = cms.InputTag("probeEleHEEPv60"),
+                                        passingHEEPv7 = cms.InputTag("probeEleHEEPv70"),
                                         )
                                     )
 
-process.tnpPhoIDs = cms.EDAnalyzer("TagProbeFitTreeProducer",
-                                    tnpVars.mcTruthCommonStuff, tnpVars.CommonStuffForPhotonProbe,
-                                    tagProbePairs = cms.InputTag("tnpPairingPhoIDs"),                                                                                         
-                                    probeMatches  = cms.InputTag("genProbePho"),
-                                    allProbes     = cms.InputTag("probePho"),
-                                    flags         = cms.PSet(
-#                                        passingLoose      = cms.InputTag("probePhoCutBasedLoose"),
-#                                        passingMedium     = cms.InputTag("probePhoCutBasedMedium"),
-#                                        passingTight      = cms.InputTag("probePhoCutBasedTight"),
-#                                        passingMVA        = cms.InputTag("probePhoMVA"),
-                                         passingLoose80X   = cms.InputTag("probePhoCutBasedLoose80X"),
-                                         passingMedium80X  = cms.InputTag("probePhoCutBasedMedium80X"),
-                                         passingTight80X   = cms.InputTag("probePhoCutBasedTight80X"),
-                                         passingMVA80Xwp90 = cms.InputTag("probePhoMVA80Xwp90"),
-                                         passingMVA80Xwp80 = cms.InputTag("probePhoMVA80Xwp80"),
-                                         
-                                         passingLoose94X   = cms.InputTag("probePhoCutBasedLoose94X"),
-                                         passingMedium94X  = cms.InputTag("probePhoCutBasedMedium94X"),
-                                         passingTight94X   = cms.InputTag("probePhoCutBasedTight94X"),
+#process.tnpPhoIDs = cms.EDAnalyzer("TagProbeFitTreeProducer",
+#                                    tnpVars.mcTruthCommonStuff, tnpVars.CommonStuffForPhotonProbe,
+#                                    tagProbePairs = cms.InputTag("tnpPairingPhoIDs"),                                                                                         
+#                                    probeMatches  = cms.InputTag("genProbePho"),
+#                                    allProbes     = cms.InputTag("probePho"),
+#                                    flags         = cms.PSet(
+##                                        passingLoose      = cms.InputTag("probePhoCutBasedLoose"),
+##                                        passingMedium     = cms.InputTag("probePhoCutBasedMedium"),
+##                                        passingTight      = cms.InputTag("probePhoCutBasedTight"),
+##                                        passingMVA        = cms.InputTag("probePhoMVA"),
+#                                         passingLoose80X   = cms.InputTag("probePhoCutBasedLoose80X"),
+#                                         passingMedium80X  = cms.InputTag("probePhoCutBasedMedium80X"),
+#                                         passingTight80X   = cms.InputTag("probePhoCutBasedTight80X"),
+#                                         passingMVA80Xwp90 = cms.InputTag("probePhoMVA80Xwp90"),
+#                                         passingMVA80Xwp80 = cms.InputTag("probePhoMVA80Xwp80"),
+#                                         
+#                                         passingLoose94X   = cms.InputTag("probePhoCutBasedLoose94X"),
+#                                         passingMedium94X  = cms.InputTag("probePhoCutBasedMedium94X"),
+#                                         passingTight94X   = cms.InputTag("probePhoCutBasedTight94X"),
+#
+#                                         passingLoose100XV2   = cms.InputTag("probePhoCutBasedLoose100XV2"),
+#                                         passingMedium100XV2  = cms.InputTag("probePhoCutBasedMedium100XV2"),
+#                                         passingTight100XV2   = cms.InputTag("probePhoCutBasedTight100XV2"),
+#
+#                                         passingMVA94Xwp90 = cms.InputTag("probePhoMVA94Xwp90"),
+#                                         passingMVA94Xwp80 = cms.InputTag("probePhoMVA94Xwp80"),
+#
+#                                         passingMVA94XV2wp90 = cms.InputTag("probePhoMVA94XV2wp90"),
+#                                         passingMVA94XV2wp80 = cms.InputTag("probePhoMVA94XV2wp80"),
+#                                        )
+#                                    )
 
-                                         passingLoose100XV2   = cms.InputTag("probePhoCutBasedLoose100XV2"),
-                                         passingMedium100XV2  = cms.InputTag("probePhoCutBasedMedium100XV2"),
-                                         passingTight100XV2   = cms.InputTag("probePhoCutBasedTight100XV2"),
-
-                                         passingMVA94Xwp90 = cms.InputTag("probePhoMVA94Xwp90"),
-                                         passingMVA94Xwp80 = cms.InputTag("probePhoMVA94Xwp80"),
-
-                                         passingMVA94XV2wp90 = cms.InputTag("probePhoMVA94XV2wp90"),
-                                         passingMVA94XV2wp80 = cms.InputTag("probePhoMVA94XV2wp80"),
-                                        )
-                                    )
-
-## add pass HLT-safe flag, available for miniAOD only
-if not options['useAOD'] :
-    setattr( process.tnpEleTrig.flags, 'passingHLTsafe', cms.InputTag("probeEleHLTsafe" ) )
-    setattr( process.tnpEleIDs.flags , 'passingHLTsafe', cms.InputTag("probeEleHLTsafe" ) )
+### add pass HLT-safe flag, available for miniAOD only
+#if not options['useAOD'] :
+#    setattr( process.tnpEleTrig.flags, 'passingHLTsafe', cms.InputTag("probeEleHLTsafe" ) )
+#    setattr( process.tnpEleIDs.flags , 'passingHLTsafe', cms.InputTag("probeEleHLTsafe" ) )
 
 # Add SUSY variables to the "variables", add SUSY IDs to the "flags"
 if options['addSUSY'] :
@@ -361,7 +374,7 @@ if options['addSUSY'] :
 
 tnpSetup.customize( process.tnpEleTrig , options )
 tnpSetup.customize( process.tnpEleIDs  , options )
-tnpSetup.customize( process.tnpPhoIDs  , options )
+#tnpSetup.customize( process.tnpPhoIDs  , options )
 tnpSetup.customize( process.tnpEleReco , options )
 
 
